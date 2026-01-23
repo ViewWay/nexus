@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:using-superpowers)",
+      "Bash(find:*)",
+      "Skill(superpowers:brainstorming)",
+      "mcp__web-search-prime__webSearchPrime",
+      "mcp__zread__get_repo_structure",
+      "mcp__zread__read_file",
+      "mcp__web-reader__webReader",
+      "Bash(cargo check:*)",
+      "Bash(1)",
+      "Bash(cargo build:*)",
+      "Bash(pkill:*)",
+      "Bash(killall:*)",
+      "Bash(cargo test:*)"
+    ]
+  }
+}

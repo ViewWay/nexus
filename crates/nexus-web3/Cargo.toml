@@ -1,0 +1,89 @@
+[package]
+name = "nexus-web3"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+description = """
+Blockchain and Web3 support for Nexus framework.
+Nexus框架的区块链和Web3支持。
+Equivalent to: Spring Web3 (community), Web3j
+"""
+
+[lints]
+workspace = true
+
+[dependencies]
+# Alloy - Ethereum primitives / Alloy以太坊原语
+alloy = { workspace = true, optional = true }
+
+# Async runtime / 异步运行时
+nexus-runtime = { path = "../nexus-runtime" }
+
+# HTTP / HTTP (Spring RestTemplate, WebClient)
+http.workspace = true
+hyper = { workspace = true, optional = true }
+hyper-util = { workspace = true, optional = true }
+
+# WebSocket / WebSocket (Spring WebSocket)
+tokio-tungstenite = { workspace = true, optional = true }
+tungstenite = { workspace = true, optional = true }
+
+# Serialization / 序列化 (Spring Jackson)
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling / 错误处理 (Spring @ResponseStatus, @ExceptionHandler)
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Async traits / 异步trait
+async-trait.workspace = true
+futures.workspace = true
+
+# Cryptography / 密码学 (Spring Security Crypto)
+secp256k1 = { version = "0.30", optional = true }
+sha3 = "0.10"
+hmac.workspace = true
+rand.workspace = true
+
+# Hex encoding / 十六进制编码
+hex = "0.4"
+base64 = "0.22"
+
+# Mnemonic / 助记词 (BIP39, BIP32, BIP44)
+bip39 = { version = "2.0", optional = true }
+
+# Time / 时间
+chrono.workspace = true
+time.workspace = true
+
+# Utilities / 工具
+url.workspace = true
+indexmap.workspace = true
+
+[features]
+default = ["ethereum"]
+ethereum = ["dep:alloy", "dep:secp256k1", "dep:hyper", "dep:hyper-util"]
+wallet = ["ethereum", "dep:bip39"]
+rpc = ["ethereum", "dep:tokio-tungstenite", "dep:tungstenite"]
+contract = ["ethereum", "alloy?/contract"]
+http = ["dep:hyper", "dep:hyper-util"]
+ws = ["dep:tokio-tungstenite", "dep:tungstenite"]
+full = ["ethereum", "wallet", "rpc", "contract", "http", "ws"]
+
+# Chain-specific features / 特定链功能
+# Equivalent to: Spring Cloud service discovery
+arbitrum = ["ethereum"]
+optimism = ["ethereum"]
+polygon = ["ethereum"]
+bnb = ["ethereum"]
+base = ["ethereum"]
+
+[dev-dependencies]
+# Testing / 测试 (Spring Test)
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

@@ -1,0 +1,268 @@
+# Third-Party Licenses and Acknowledgments
+# 第三方许可证和致谢
+
+Nexus Framework is an original implementation that has been inspired by and references concepts from the following open-source projects.
+Nexus 框架是一个原创实现，受到以下开源项目的启发并参考了其概念。
+
+**Note**: This framework does not contain code copied from these projects. The implementations are original.
+**注意**：本框架不包含从这些项目复制的代码。实现均为原创。
+
+---
+
+## Rust / Rust
+
+### Axum
+**License**: MIT (https://github.com/tokio-rs/axum)
+**Inspiration**: Extractor pattern, router design, middleware system
+**启发**: 提取器模式、路由器设计、中间件系统
+
+```
+Copyright (c) 2019 Axum Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### Actix Web
+**License**: Apache-2.0 (https://github.com/actix/actix-web)
+**Inspiration**: Actor-based architecture patterns
+**启发**: 基于Actor的架构模式
+
+### Monoio
+**License**: Apache-2.0 (https://github.com/bytedance/monoio)
+**Inspiration**: io-uring driver implementation, thread-per-core architecture
+**启发**: io-uring driver实现、thread-per-core架构
+
+```
+Copyright (c) 2022 ByteDance
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+### Tokio
+**License**: MIT (https://github.com/tokio-rs/tokio)
+**Inspiration**: Async runtime design patterns, task scheduling concepts
+**启发**: 异步运行时设计模式、任务调度概念
+
+---
+
+## Go / Golang
+
+### Gin
+**License**: MIT (https://github.com/gin-gonic/gin)
+**Inspiration**: Simple API design, middleware chain pattern
+**启发**: 简洁的API设计、中间件链模式
+
+### Echo
+**License**: MIT (https://github.com/labstack/echo)
+**Inspiration**: Clean architecture, routing patterns
+**启发**: 清晰架构、路由模式
+
+```
+Copyright (c) 2016 LabStack
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## Java
+
+### Spring Boot
+**License**: Apache-2.0 (https://github.com/spring-projects/spring-boot)
+**Inspiration**: Dependency injection patterns, configuration management
+**启发**: 依赖注入模式、配置管理
+
+### Spring WebFlux
+**License**: Apache-2.0 (https://github.com/spring-projects/spring-framework)
+**Inspiration**: Reactive programming patterns
+**启发**: 响应式编程模式
+
+```
+Copyright 2002-2024 the original author or authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+---
+
+## Python
+
+### FastAPI
+**License**: MIT (https://github.com/tiangolo/fastapi)
+**Inspiration**: Automatic API documentation, type-based validation
+**启发**: 自动API文档、基于类型的验证
+
+### Starlette
+**License**: BSD-3-Clause (https://www.starlette.io/)
+**Inspiration**: ASGI patterns, request/response lifecycle
+**启发**: ASGI模式、请求/响应生命周期
+
+```
+Copyright (c) 2018, Tom Christie
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+---
+
+## Web3 / Blockchain
+
+### Alloy
+**License**: Apache-2.0 (https://github.com/alloy-rs/alloy)
+**Inspiration**: Type-safe Ethereum interaction patterns
+**启发**: 类型安全的以太坊交互模式
+**Note**: We use Alloy as a dependency for Web3 functionality
+**注意**: 我们将 Alloy 作为 Web3 功能的依赖项使用
+
+### Foundry
+**License**: Apache-2.0 (https://github.com/foundry-rs/foundry)
+**Inspiration**: Smart contract testing patterns
+**启发**: 智能合约测试模式
+
+---
+
+## Resilience Patterns
+
+### Resilience4j
+**License**: Apache-2.0 (https://github.com/resilience4j/resilience4j)
+**Inspiration**: Circuit breaker, rate limiter, retry patterns
+**启发**: 熔断器、限流器、重试模式
+
+```
+Copyright 2017 Robert Winkler
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+### Hystrix
+**License**: Apache-2.0 (https://github.com/Netflix/Hystrix)
+**Inspiration**: Circuit breaker pattern concepts
+**启发**: 熔断器模式概念
+
+---
+
+## Observability
+
+### OpenTelemetry Rust
+**License**: Apache-2.0 (https://github.com/open-telemetry/opentelemetry-rust)
+**Inspiration**: Distributed tracing standards, metrics API
+**启发**: 分布式追踪标准、指标API
+**Note**: We use OpenTelemetry as a dependency for observability
+**注意**: 我们将 OpenTelemetry 作为可观测性的依赖项使用
+
+### Tracing (Rust)
+**License**: MIT (https://github.com/tokio-rs/tracing)
+**Inspiration**: Structured logging patterns
+**启发**: 结构化日志模式
+**Note**: We use `tracing` crate as a dependency
+**注意**: 我们将 `tracing` crate 作为依赖项使用
+
+---
+
+## Summary / 总结
+
+The following table summarizes the referenced frameworks and their licenses:
+下表总结了参考的框架及其许可证：
+
+| Framework | Language | License | What Inspired Us |
+|-----------|----------|---------|------------------|
+| Axum | Rust | MIT | Extractor pattern, router design / 提取器模式、路由器设计 |
+| Actix Web | Rust | Apache-2.0 | Actor patterns / Actor模式 |
+| Monoio | Rust | Apache-2.0 | io-uring, thread-per-core / io-uring、thread-per-core |
+| Tokio | Rust | MIT | Runtime concepts / 运行时概念 |
+| Gin | Go | MIT | Simple API / 简洁API |
+| Echo | Go | MIT | Clean architecture / 清晰架构 |
+| Spring Boot | Java | Apache-2.0 | DI patterns / 依赖注入模式 |
+| FastAPI | Python | MIT | Auto docs / 自动文档 |
+| Resilience4j | Java | Apache-2.0 | HA patterns / 高可用模式 |
+| OpenTelemetry | - | Apache-2.0 | Observability / 可观测性 |
+
+---
+
+**Disclaimer / 免责声明**:
+- Nexus Framework is an original implementation / Nexus 框架为原创实现
+- No code is copied from referenced projects / 未复制参考项目的代码
+- All referenced projects are acknowledged with respect / 对所有参考项目表示尊重
+- Users must comply with licenses of any third-party dependencies / 用户必须遵守所有第三方依赖项的许可证

@@ -1,0 +1,58 @@
+# mdBook Configuration / mdBook配置
+#
+# This file configures the mdBook documentation generator.
+# 此文件配置mdBook文档生成器。
+
+[book]
+title = "Nexus Framework Guide / Nexus框架指南"
+authors = ["Nexus Team"]
+language = "zh-CN"
+multilingual = true
+src = "docs/book/src"
+
+[build]
+build-dir = "docs/book/book"
+create-missing = false
+use-default-preprocessors = true
+
+[preprocessor.index]
+
+[preprocessor.links]
+
+[preprocessor.toc]
+command = "mdbook-toc"
+renderer = ["html"]
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "coal"
+smart-punctuation = true
+git-repository-url = "https://github.com/nexus-framework/nexus"
+edit-url-template = "https://github.com/nexus-framework/nexus/edit/main/{path}"
+
+[output.html.search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 2
+boost-paragraph = 1
+expand = true
+heading-split-level = 3
+copy-js = true
+
+[output.html.playground]
+editable = true
+copy-js = true
+copyable = true
+
+[output.html.code]
+kv = true
+
+[output.html.fold]
+enable = true
+level = 0

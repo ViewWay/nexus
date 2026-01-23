@@ -1,0 +1,120 @@
+# Rustfmt configuration / Rustfmt配置
+#
+# This file configures the Rust code formatter.
+# 此文件配置Rust代码格式化器。
+
+# Edition / 版本
+edition = "2024"
+
+# Maximum line width / 最大行宽
+max_width = 100
+
+# Hard tabs or spaces / 硬制表符或空格
+hard_tabs = false
+tab_spaces = 4
+
+# Newline style / 换行符风格
+newline_style = "Unix"
+
+# Use field init shorthand if possible / 尽可能使用字段初始化简写
+use_field_init_shorthand = true
+
+# Use try shorthand / 使用try简写
+use_try_shorthand = true
+
+# Force explicit types for public items / 公共项强制显式类型
+# This improves API documentation / 这改善了API文档
+force_explicit_abi = true
+
+# Format code in doc comments / 格式化文档注释中的代码
+format_code_in_doc_comments = true
+
+# Format strings / 格式化字符串
+format_strings = true
+
+# Normalize comments / 规范化注释
+normalize_comments = true
+
+# Normalize doc attributes / 规范化文档属性
+normalize_doc_attributes = true
+
+# Reorder impl items / 重新排序impl项
+reorder_impl_items = true
+
+# Group imports / 分组导入
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+
+# Remove nested parens / 移除嵌套括号
+remove_nested_parens = true
+
+# Struct field alignment / 结构体字段对齐
+struct_field_align_threshold = 0
+
+# Wrap comments at max_width / 在max_width处换行注释
+wrap_comments = true
+
+# Comment width / 注释宽度
+comment_width = 100
+
+# Match block trailing comma / 匹配块尾随逗号
+match_block_trailing_comma = true
+
+# Trailing semicolon / 尾随分号
+trailing_semicolon = true
+
+# Space before colon / 冒号前空格
+space_before_colon = false
+
+# Space after colon / 冒号后空格
+space_after_colon = true
+
+# Spaces around ranges / 范围周围空格
+spaces_around_ranges = false
+
+# Type punctuation density / 类型标点密度
+type_punctuation_density = "Wide"
+
+# Use small heuristics / 使用小启发式
+use_small_heuristics = "Default"
+
+# Overflow delimited expr / 溢出定界表达式
+overflow_delimited_expr = true
+
+# Blank lines upper bound / 空行上限
+blank_lines_upper_bound = 1
+blank_lines_lower_bound = 0
+
+# Brace style / 花括号风格
+control_brace_style = "AlwaysSameLine"
+brace_style = "AlwaysSameLine"
+
+# Empty item single line / 空项单行
+empty_item_single_line = true
+
+# Enum discrim align threshold / 枚举判别对齐阈值
+enum_discrim_align_threshold = 0
+
+# Fn call width / 函数调用宽度
+fn_call_width = 80
+
+# Fn args layout / 函数参数布局
+fn_args_layout = "Tall"
+
+# Fn single line / 函数单行
+fn_single_line = false
+
+# Where single line / where单行
+where_single_line = false
+
+# Indent style / 缩进风格
+indent_style = "Block"
+
+# Merge derives / 合并派生
+merge_derives = true
+
+# Reorder imports / 重新排序导入
+reorder_imports = true
+
+# Required version / 要求的版本
+# required_version = "1.5.0"

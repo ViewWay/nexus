@@ -1,0 +1,59 @@
+[package]
+name = "nexus-macros"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+description = """
+Procedural macros for Nexus framework.
+Nexus框架的过程宏。
+Equivalent to: Spring Annotation Processing, Spring Boot Configuration
+"""
+
+[lib]
+proc-macro = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# Macro dependencies / 宏依赖 (Spring Annotation Processing)
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true
+darling.workspace = true
+
+# Attribute parsing / 属性解析
+proc-macro-error = "1.0"
+proc-macro-error-attr = "1.0"
+
+# HTTP types / HTTP类型 (Spring Web HTTP)
+http.workspace = true
+
+# Serialization / 序列化 (Spring Jackson, @ConfigurationProperties)
+serde.workspace = true
+serde_json.workspace = true
+
+# Runtime / 运行时
+nexus-runtime = { path = "../nexus-runtime" }
+
+[features]
+default = ["derive", "route"]
+derive = []  # #[derive(Handler, Extractor, Response)]
+route = []  # #[route], #[get], #[post], etc.
+component = []  # Spring @Component equivalent
+autowired = []  # Spring @Autowired equivalent
+config = []  # Spring @ConfigurationProperties equivalent
+scheduled = []  # Spring @Scheduled equivalent
+async = []  # Spring @Async equivalent
+full = ["derive", "route", "component", "autowired", "config", "scheduled", "async"]
+
+[dev-dependencies]
+# Testing / 测试 (Spring Test)
+nexus-core = { path = "../nexus-core" }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+trybuild = "1.0"
