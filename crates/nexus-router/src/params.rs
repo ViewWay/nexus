@@ -73,10 +73,22 @@ impl<'a> PathDeserializer<'a> {
 
     /// Deserialize into type T
     /// 反序列化为类型T
+    ///
+    /// Converts the HashMap of string parameters into the target type.
+    /// This uses serde's deserialization via JSON intermediate format.
+    ///
+    /// 将字符串参数的HashMap转换为目标类型。
+    /// 这使用serde通过JSON中间格式的反序列化。
     pub fn deserialize<T: Deserialize<'a>>(&self) -> Result<T, String> {
-        // TODO: Implement proper deserialization
-        // TODO: 实现正确的反序列化
-        Err("Not implemented".to_string())
+        // Convert HashMap to a JSON value for deserialization
+        // 将HashMap转换为JSON值以进行反序列化
+        let mut map = serde_json::Map::new();
+        for (k, v) in self.params.iter() {
+            map.insert(k.clone(), serde_json::Value::String(v.clone()));
+        }
+
+        let json_value = serde_json::Value::Object(map);
+        T::deserialize(&json_value).map_err(|e| e.to_string())
     }
 }
 
