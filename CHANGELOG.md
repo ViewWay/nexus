@@ -14,10 +14,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] / 未发布
 
 ### Added / 新增
+
+#### CI/CD Pipeline / CI/CD 流水线
+
+- **7 New GitHub Actions Workflows / 7 个新的 GitHub Actions 工作流**
+  - `quality.yml` - Comprehensive code quality checks with 8 job types
+  - `benchmark.yml` - Performance tracking with cargo-criterion
+  - `semver.yml` - Semantic versioning checks with cargo-semver-checks
+  - `codeql.yml` - Security analysis with CodeQL
+  - `outdated.yml` - Weekly outdated dependency checks
+  - `binary-release.yml` - Cross-platform binary releases
+  - `docs.yml` - Automatic documentation publishing to GitHub Pages
+
+#### Configuration Files / 配置文件
+
+- **`.codecov.yml`** - Comprehensive Codecov configuration (480+ lines)
+  - Project coverage target: 80%, PR target: 75%
+  - 10 component-level flags (runtime, core, http, resilience, observability, web3)
+  - PR comments with coverage diff
+  - File and component-level breakdown
+  - Historical trend tracking
+
+- **`.github/codeql-config.yml`** - Custom CodeQL configuration
+  - Excludes tests, benches, examples from scanning
+  - Uses security-extended query suite
+
+- **`.github/workflows/README.md`** - Comprehensive workflow documentation (1050+ lines)
+  - Complete workflow descriptions for all 15 workflows
+  - Local testing commands for 12+ tools
+  - Badge examples, troubleshooting guide
+  - Security best practices and maintenance guidelines
+
+#### CI/CD Enhancements / CI/CD 增强
+
+- **Enhanced Workflows / 增强的工作流**
+  - `ci.yml` - Added dependency-review job with license validation
+  - `coverage.yml` - Added pull_request trigger, enhanced with flags
+  - `release.yml` - Fixed step order, added 5 missing crates
+  - `linux.yml`, `macos.yml`, `windows.yml` - Updated to latest actions
+  - `format.yml` - Limited triggers to main/develop branches
+  - `dependabot.yml` - Enhanced with grouped updates and schedule
+
+- **Code Quality Tools / 代码质量工具**
+  - Added cargo-deny for license, advisory, and bans checks
+  - Added cargo-machete for unused dependency detection
+  - Added cargo-hack for feature powerset testing
+  - Added cargo-criterion for performance benchmarking
+  - Added cargo-semver-checks for API compatibility
+  - Added cargo-public-api for API diff generation
+  - Added cargo-outdated for dependency freshness checks
+
+- **Security Tools / 安全工具**
+  - GitHub dependency-review-action for PR dependency changes
+  - CodeQL comprehensive security scanning
+  - cargo-audit integration for vulnerability scanning
+  - License validation (deny GPL-2.0, GPL-3.0, AGPL-3.0)
+
+#### Documentation / 文档
+
 - Phase 7 documentation and examples complete
 - Migration guide for framework migrants
 - Comprehensive tutorial with step-by-step examples
 - Web3 example application
+
+### Fixed / 修复
+
+#### Workflows / 工作流
+
+- Fixed deprecated actions-rs/toolchain@v1 → dtolnay/rust-toolchain@master
+- Updated all actions/checkout from v3/v4 to v6
+- Fixed release.yml step order (checkout before rust-toolchain)
+- Fixed release.yml permissions (read → write for crates.io publishing)
+- Fixed coverage.yml missing pull_request trigger
+- Fixed format.yml trigger scope (limited to main/develop)
+- Fixed dependabot.yml validation errors (removed reviewers, fixed dependency-type)
+- Removed invalid codecov.txt (was Jest logs, not Codecov config)
+
+#### Configuration / 配置
+
+- Enhanced clippy.toml doc-valid-idents from ~25 to 79 entries
+- Added tech terms: HTTP, HTTPS, TLS, TCP, UDP, DNS, API, REST, GraphQL, gRPC, JSON, YAML
+- Added security terms: OAuth, JWT, OIDC, SSO
+- Added Web3 terms: Ethereum, Solidity
+- Updated .gitignore for coverage reports (codecov.txt, cobertura.xml, tarpaulin-report.*)
+
+#### Code / 代码
+
+- Fixed conflicting `Bean` trait implementation in `nexus-core/src/reflect.rs`
+  - Removed redundant manual `impl Bean for TestBean {}` from test module
+  - Blanket implementation `impl<T: Any> Bean for T` already covers all types
+
+### Changed / 变更
+
+- Modernized all GitHub Actions to use latest versions
+- Standardized on dtolnay/rust-toolchain for Rust toolchain management
+- Organized workflows into Core (8) and Enhanced (7) categories
+- Implemented 50+ types of code quality checks across all workflows
+- Enhanced security scanning at multiple levels (CodeQL, dependency-review, cargo-audit, cargo-deny)
 
 ## [0.1.0-alpha.2] - 2026-01-24
 

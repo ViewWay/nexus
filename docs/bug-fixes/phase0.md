@@ -423,14 +423,48 @@ error: unknown edition `2024`
 
 ---
 
+## Bug #017: Conflicting `Bean` trait implementation
+
+## Bug #017: 冲突的 `Bean` trait 实现
+
+**Date / 日期**: 2026-01-24
+
+**Error / 错误**:
+
+```
+error[E0119]: conflicting implementations of trait `bean::Bean` for type `TestBean`
+   --> crates/nexus-core/src/reflect.rs:108:5
+    |
+108 |     impl Bean for TestBean {}
+    |     ^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `TestBean`
+    |
+   ::: crates/nexus-core/src/bean.rs:53:1
+    |
+ 53 | impl<T: Any> Bean for T {}
+    | ----------------------- first implementation here
+```
+
+**Location / 位置**: `crates/nexus-core/src/reflect.rs`
+
+**Cause / 原因**: A blanket implementation `impl<T: Any> Bean for T` exists in `bean.rs`, which covers all types. The test module in `reflect.rs` had a redundant manual `impl Bean for TestBean {}` that conflicted with the blanket implementation.
+
+**Fix / 修复**: Removed the redundant `impl Bean for TestBean {}` from the test module. The blanket implementation already provides the trait for all types.
+
+**Files Modified / 修改的文件**:
+
+- `/crates/nexus-core/src/reflect.rs`
+
+---
+
 ## Summary / 总结
 
-**Total Bugs Fixed / 总修复 Bug 数**: 16
+**Total Bugs Fixed / 总修复 Bug 数**: 17
 
 **Categories / 类别**:
 
 - Configuration errors: 8 (配置错误)
 - Missing files: 6 (缺失文件)
 - Syntax errors: 2 (语法错误)
+- Trait conflicts: 1 (trait冲突)
 
-**Workspace Status / 工作区状态**: ✅ Configuration fixed, ready for compilation / ✅ 配置已修复，准备编译
+**Workspace Status / 工作区状态**: ✅ All bugs fixed, ready for compilation / ✅ 所有bug已修复，准备编译
