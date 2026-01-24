@@ -60,6 +60,6 @@ By clicking "I agree" in the CLA bot, or by explicitly signing this agreement, o
 ---
 
 **Version / 版本**: 1.0
-**Effective Date / 生效日期**: 2025-01-01
+**Effective Date / 生效日期**: 2026-01-23
 **Project / 项目**: Nexus Framework
 **License / 许可证**: Apache License 2.0

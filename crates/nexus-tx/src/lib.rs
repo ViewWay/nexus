@@ -1,0 +1,77 @@
+//! Nexus Transaction - Transaction management module
+//! Nexus事务 - 事务管理模块
+//!
+//! # Equivalent to Spring Boot / 等价于 Spring Boot
+//!
+//! - `@Transactional` - Transactional
+//! - `TransactionTemplate` - TransactionTemplate
+//! - `TransactionManager` - TransactionManager
+//! - `PlatformTransactionManager` - PlatformTransactionManager
+//! - `@EnableTransactionManagement` - EnableTransactionManagement
+//!
+//! # Example / 示例
+//!
+//! ```rust,no_run,ignore
+//! use nexus_tx::{Transactional, TransactionTemplate};
+//!
+//! struct UserService {
+//!     // ... fields
+//! }
+//!
+//! impl UserService {
+//!     // Equivalent to @Transactional
+//!     #[transactional]
+//!     async fn create_user(&self, user: User) -> Result<User, Error> {
+//!         // Database operations
+//!         Ok(user)
+//!     }
+//!
+//!     // With specific isolation level
+//!     #[transactional(isolation = "SERIALIZABLE")]
+//!     async fn transfer_money(&self, from: u64, to: u64, amount: f64) -> Result<(), Error> {
+//!         // Transfer logic
+//!         Ok(())
+//!     }
+//! }
+//! ```
+
+#![warn(missing_docs)]
+#![warn(unreachable_pub)]
+
+mod error;
+mod isolation;
+mod manager;
+mod propagation;
+mod status;
+mod template;
+mod transaction;
+mod transactional;
+
+pub use error::{TransactionError, TransactionResult};
+pub use isolation::IsolationLevel;
+pub use manager::{TransactionManager, TransactionManagerBuilder};
+pub use propagation::Propagation;
+pub use status::TransactionStatus;
+pub use template::TransactionTemplate;
+pub use transaction::Transaction;
+pub use transactional::{Transactional, TransactionalOptions};
+
+/// Re-exports of commonly used types
+/// 常用类型的重新导出
+pub mod prelude {
+    pub use super::{
+        IsolationLevel, Propagation, Transaction, TransactionError, TransactionManager,
+        TransactionResult, TransactionStatus, TransactionTemplate, Transactional,
+    };
+}
+
+/// Version of the transaction module
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Default transaction timeout in seconds
+/// 默认事务超时时间（秒）
+pub const DEFAULT_TX_TIMEOUT_SECS: u64 = 30;
+
+/// Default transaction name
+/// 默认事务名称
+pub const DEFAULT_TX_NAME: &str = "default";

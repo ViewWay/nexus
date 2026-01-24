@@ -1,31 +1,177 @@
 //! Error types
 //! 错误类型
 //!
-//! # Overview / 概述
+//! # Equivalent to Spring Boot / 等价于 Spring Boot
 //!
-//! This module provides core error types used throughout the framework.
-//! 本模块提供框架中使用的核心错误类型。
+//! - @ResponseStatus
+//! - ResponseEntityExceptionHandler
+//! - @ExceptionHandler
 
-// TODO: Implement error types in Phase 1
-// 将在第1阶段实现错误类型
+#![warn(missing_docs)]
+#![warn(unreachable_pub)]
+
+use std::fmt;
 
 /// Framework error type
 /// 框架错误类型
 #[derive(Debug)]
 pub struct Error {
     kind: ErrorKind,
+    message: String,
 }
+
+impl Error {
+    /// Create a new error
+    /// 创建新错误
+    pub fn new(kind: ErrorKind) -> Self {
+        Self {
+            kind,
+            message: String::new(),
+        }
+    }
+
+    /// Create a new error with a message
+    /// 创建带消息的新错误
+    pub fn with_message(kind: ErrorKind, message: impl Into<String>) -> Self {
+        Self {
+            kind,
+            message: message.into(),
+        }
+    }
+
+    /// Create a new error from ErrorKind
+    /// 从ErrorKind创建新错误
+    ///
+    /// When ErrorKind already contains a message (like NotFound or Internal),
+    /// that message is extracted and used as the error message.
+    pub fn from_kind(kind: ErrorKind) -> Self {
+        let message = match &kind {
+            ErrorKind::NotFound(s) => Some(s.clone()),
+            ErrorKind::Internal(s) => Some(s.clone()),
+            _ => None,
+        };
+        Self {
+            kind,
+            message: message.unwrap_or_default(),
+        }
+    }
+
+    /// Create an internal error with a message
+    /// 创建带消息的内部错误
+    pub fn internal(msg: impl Into<String>) -> Self {
+        Self {
+            kind: ErrorKind::Internal(String::new()),
+            message: msg.into(),
+        }
+    }
+
+    /// Create a not found error with a message
+    /// 创建未找到错误
+    pub fn not_found(msg: impl Into<String>) -> Self {
+        Self {
+            kind: ErrorKind::NotFound(String::new()),
+            message: msg.into(),
+        }
+    }
+
+    /// Get the error kind
+    /// 获取错误类型
+    pub fn kind(&self) -> &ErrorKind {
+        &self.kind
+    }
+
+    /// Get the error message
+    /// 获取错误消息
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.message.is_empty() {
+            write!(f, "{:?}", self.kind)
+        } else {
+            write!(f, "{}: {}", self.kind, self.message)
+        }
+    }
+}
+
+impl std::error::Error for Error {}
 
 /// Error kind
 /// 错误类型
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ErrorKind {
-    /// Bad request / 错误请求
+    /// Bad request (400)
+    /// 错误请求 (400)
     BadRequest,
-    /// Not found / 未找到
-    NotFound,
-    /// Internal error / 内部错误
-    Internal,
+
+    /// Unauthorized (401)
+    /// 未授权 (401)
+    Unauthorized,
+
+    /// Forbidden (403)
+    /// 禁止访问 (403)
+    Forbidden,
+
+    /// Not found (404)
+    /// 未找到 (404)
+    NotFound(String),
+
+    /// Method not allowed (405)
+    /// 方法不允许 (405)
+    MethodNotAllowed,
+
+    /// Conflict (409)
+    /// 冲突 (409)
+    Conflict,
+
+    /// Internal server error (500)
+    /// 内部服务器错误 (500)
+    Internal(String),
+
+    /// Service unavailable (503)
+    /// 服务不可用 (503)
+    ServiceUnavailable,
+
+    /// Custom error with code
+    /// 带代码的自定义错误
+    Custom(u16, String),
+}
+
+impl fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ErrorKind::BadRequest => write!(f, "Bad Request"),
+            ErrorKind::Unauthorized => write!(f, "Unauthorized"),
+            ErrorKind::Forbidden => write!(f, "Forbidden"),
+            ErrorKind::NotFound(s) => write!(f, "Not Found: {}", s),
+            ErrorKind::MethodNotAllowed => write!(f, "Method Not Allowed"),
+            ErrorKind::Conflict => write!(f, "Conflict"),
+            ErrorKind::Internal(s) => write!(f, "Internal Server Error: {}", s),
+            ErrorKind::ServiceUnavailable => write!(f, "Service Unavailable"),
+            ErrorKind::Custom(code, msg) => write!(f, "Error {}: {}", code, msg),
+        }
+    }
+}
+
+impl ErrorKind {
+    /// Get the HTTP status code for this error
+    /// 获取此错误的HTTP状态码
+    pub fn status_code(&self) -> u16 {
+        match self {
+            ErrorKind::BadRequest => 400,
+            ErrorKind::Unauthorized => 401,
+            ErrorKind::Forbidden => 403,
+            ErrorKind::NotFound(_) => 404,
+            ErrorKind::MethodNotAllowed => 405,
+            ErrorKind::Conflict => 409,
+            ErrorKind::Internal(_) => 500,
+            ErrorKind::ServiceUnavailable => 503,
+            ErrorKind::Custom(code, _) => *code,
+        }
+    }
 }
 
 /// Result type alias

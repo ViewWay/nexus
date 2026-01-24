@@ -3,7 +3,7 @@
 ## Version / 版本
 
 **Version**: 0.1.0-alpha
-**Date**: 2025-01-23
+**Date**: 2026-01-23
 **Status**: Draft / 草稿
 
 ---

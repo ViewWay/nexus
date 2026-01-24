@@ -25,6 +25,10 @@ http.workspace = true
 nexus-core = { path = "../nexus-core" }
 nexus-http = { path = "../nexus-http" }
 
+# Serialization / 序列化 (Spring Jackson JSON)
+serde.workspace = true
+serde_json.workspace = true
+
 # Routing / 路由 (Spring MVC Routing)
 matchit = "0.9.1"
 regex.workspace = true

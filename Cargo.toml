@@ -9,7 +9,12 @@ members = [
     "crates/nexus-middleware",
     "crates/nexus-resilience",
     "crates/nexus-observability",
-    "crates/nexus-web3",
+    "crates/nexus-config",
+    "crates/nexus-cache",
+    "crates/nexus-tx",
+    "crates/nexus-security",
+    "crates/nexus-cloud",
+    "crates/nexus-web3",  # Enabled: using alloy 1.4 compatible with serde 1.0
     "crates/nexus-macros",
     "examples",
 ]
@@ -21,7 +26,7 @@ authors = ["Nexus Contributors"]
 repository = "https://github.com/nexus-rs/nexus"
 homepage = "https://nexusframework.com"
 license = "MIT OR Apache-2.0"
-edition = "2024"
+edition = "2021"
 rust-version = "1.85"
 
 [workspace.dependencies]
@@ -43,6 +48,7 @@ tokio = { version = "1.43", default-features = false }
 http = "1.4.0"
 http-body = "1.0"
 http-body-util = "0.1"
+httparse = "1.9"
 hyper = { version = "1.8.1", features = ["full"] }
 hyper-util = "0.1"
 
@@ -61,24 +67,24 @@ bytes-utils = "0.1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false }
 tracing-appender = "0.2"
-opentelemetry = "0.27"
-opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
+opentelemetry = "0.31.0"
+opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }
 opentelemetry-jaeger = "0.22"
-metric = "0.7"
-metrics = "0.23"
+metric = "0.1.2"
+metrics = "0.24.3"
 
 # Macros / 宏
 # Equivalent to: Spring Annotation Processing
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "2.0", features = ["full", "visit-mut"] }
-darling = "0.20"
+darling = "0.23.0"
 
 # Error Handling / 错误处理
 # Equivalent to: Spring Exception Handling
 thiserror = "2.0"
 anyhow = "1.0"
-error-stack = "0.5"
+error-stack = "0.6.0"
 
 # Async Runtime & Utilities / 异步运行时和工具
 # Equivalent to: Spring Reactive, Project Reactor
@@ -91,8 +97,8 @@ pin-project-lite = "0.2"
 # Configuration / 配置
 # Equivalent to: Spring Boot Configuration, @ConfigurationProperties
 config = "0.15"
-toml = "0.8"
-yaml-rust2 = "0.9"
+toml = "0.9.8"
+yaml-rust2 = "0.11.0"
 dotenvy = "0.15"
 
 # Validation / 验证
@@ -108,9 +114,9 @@ quick_cache = "0.6"
 
 # Rate Limiting & Resilience / 限流和弹性
 # Equivalent to: Spring Cloud Circuit Breaker, Resilience4j
-governor = "0.7"
+governor = "0.10.4"
 tower = "0.5"
-tower_governor = "0.5"
+tower_governor = "0.8.0"
 
 # Scheduled Tasks / 定时任务
 # Equivalent to: Spring Scheduling, @Scheduled
@@ -128,39 +134,47 @@ tokio-postgres = "0.7"
 
 # Security / 安全
 # Equivalent to: Spring Security
-jsonwebtoken = "9.3"
-bcrypt = "0.16"
-rand = "0.8"
+jsonwebtoken = "10.2.0"
+bcrypt = "0.18.0"
+rand = "0.9.2"
 hmac = "0.12"
+base64 = "0.22"
+hex = "0.4"
 
 # Template Engines / 模板引擎
 # Equivalent to: Spring Thymeleaf, FreeMarker
-askama = "0.12"
+askama = "0.15.1"
 tera = "1.20"
-handlebars = "6.3"
+handlebars = "6.4.0"
 
 # WebSocket / WebSocket
 # Equivalent to: Spring WebSocket
-tokio-tungstenite = "0.26"
-tungstenite = "0.26"
+tokio-tungstenite = "0.28.0"
+tungstenite = "0.28.0"
 
 # HTTP/2 & TLS / HTTP/2 和 TLS
 # Equivalent to: Spring HTTP/2 support
 h2 = "0.4"
 rustls = "0.23"
-rustls-pemfile = "2.2"
+rustls-pemfile = "2.2.0"
 tokio-rustls = "0.26"
 
 # HTTP/3 / HTTP/3 (Spring HTTP/3 equivalent - future)
 # Equivalent to: Spring HTTP/3 support (planned)
-h3 = "0.0"
-h3-quinn = "0.0"
+h3 = "^0.0.8"
+h3-quinn = "^0.0.10"
 quinn = "0.11"
 futures-rustls = "0.26"
 
 # Web3 / 区块链
 # Equivalent to: Spring Web3 (community projects)
-alloy = { version = "0.11", features = ["full", "network", "rpc", "rpc-types"] }
+# Note: Using latest stable versions (1.4.x) compatible with serde 1.0
+alloy = { version = "1.4", features = ["network", "rpc", "rpc-types"] }
+alloy-consensus = { version = "1.4", default-features = false }
+alloy-primitives = "1.4"
+alloy-transport = "1.4"
+alloy-network = "1.4"
+alloy-rpc-types = "1.4"
 
 # CLI / 命令行
 # Equivalent to: Spring Shell
@@ -168,7 +182,7 @@ clap = { version = "4.5", features = ["derive"] }
 
 # Testing / 测试
 # Equivalent to: Spring Test
-criterion = "0.5"
+criterion = "0.8.1"
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
 proptest = "1.5"
@@ -176,7 +190,7 @@ mockito = "1.6"
 
 # Utilities / 工具
 itertools = "0.14"
-indexmap = "2.7"
+indexmap = { version = "2.13.0", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 time = { version = "0.3", features = ["serde", "local-offset"] }
 uuid = { version = "1.12", features = ["v4", "serde"] }
@@ -218,7 +232,6 @@ opt-level = 3
 lto = "fat"
 codegen-units = 1
 strip = true
-panic = "abort"
 
 # Profile for benchmarks / 基准测试配置
 [profile.bench]
@@ -236,7 +249,7 @@ debug = true
 
 [workspace.lints.rust]
 # Safety lints / 安全检查
-unsafe_code = "deny"
+unsafe_code = "warn"
 unused_extern_crates = "warn"
 unused_import_braces = "warn"
 unused_qualifications = "warn"

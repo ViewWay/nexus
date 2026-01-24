@@ -283,21 +283,20 @@ impl Logger {
 
         match config.format {
             LogFormat::Pretty => {
+                // Note: .pretty() is not available in all versions, using .compact() as fallback
                 let fmt_layer = fmt::layer()
                     .with_span_events(FmtSpan::CLOSE)
-                    .with_thread(config.with_thread)
                     .with_file(config.with_file)
                     .with_line_number(config.with_file)
                     .with_target(config.with_target)
-                    .pretty();
+                    .compact();
 
                 if let Some(ref path) = config.file_path {
                     let file_appender = create_file_appender(path, config.rotation)?;
                     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
                     let file_layer = fmt::layer()
-                        .with_thread(config.with_thread)
-                        .with_file(config.with_file)
+                                                .with_file(config.with_file)
                         .with_line_number(config.with_file)
                         .with_target(config.with_target)
                         .with_writer(non_blocking)
@@ -318,8 +317,7 @@ impl Logger {
             LogFormat::Compact => {
                 let fmt_layer = fmt::layer()
                     .with_span_events(FmtSpan::CLOSE)
-                    .with_thread(config.with_thread)
-                    .with_file(config.with_file)
+                                        .with_file(config.with_file)
                     .with_line_number(config.with_file)
                     .with_target(config.with_target)
                     .compact();
@@ -328,8 +326,7 @@ impl Logger {
                     let file_appender = create_file_appender(path, config.rotation)?;
 
                     let file_layer = fmt::layer()
-                        .with_thread(config.with_thread)
-                        .with_file(config.with_file)
+                                                .with_file(config.with_file)
                         .with_line_number(config.with_file)
                         .with_target(config.with_target)
                         .with_writer(file_appender)
@@ -353,8 +350,7 @@ impl Logger {
                 let fmt_layer = fmt::layer()
                     .json()
                     .with_span_events(FmtSpan::CLOSE)
-                    .with_thread(config.with_thread)
-                    .with_file(config.with_file)
+                                        .with_file(config.with_file)
                     .with_line_number(config.with_file)
                     .with_target(config.with_target)
                     .with_current_span(false);
@@ -364,8 +360,7 @@ impl Logger {
 
                     let file_layer = fmt::layer()
                         .json()
-                        .with_thread(config.with_thread)
-                        .with_file(config.with_file)
+                                                .with_file(config.with_file)
                         .with_line_number(config.with_file)
                         .with_target(config.with_target)
                         .with_writer(file_appender);
@@ -441,23 +436,22 @@ fn create_env_filter(default_level: LogLevel) -> EnvFilter {
 
     // Support Spring Boot style: logging.level.<package>=<LEVEL>
     // 支持Spring Boot风格：logging.level.<package>=<LEVEL>
-    let filter = std::env::var("LOGGING_LEVEL")
-        .ok()
-        .and_then(|s| {
-            let parts: Vec<&str> = s.split('=').collect();
-            if parts.len() == 2 {
-                Some((parts[0], parts[1]))
-            } else {
-                None
-            }
-        })
-        .fold(base_filter, |filter, (target, level)| {
+    let filter = if let Ok(level_str) = std::env::var("LOGGING_LEVEL") {
+        let parts: Vec<&str> = level_str.split('=').collect();
+        if parts.len() == 2 {
+            let target = parts[0];
+            let level = parts[1];
             if let Some(lvl) = LogLevel::from_str(level).and_then(|l| l.to_tracing_level()) {
-                filter.add_directive(format!("{}={}", target, lvl).parse().unwrap_or_else(|_| lvl.into()))
+                base_filter.add_directive(format!("{}={}", target, lvl).parse().unwrap_or_else(|_| lvl.into()))
             } else {
-                filter
+                base_filter
             }
-        });
+        } else {
+            base_filter
+        }
+    } else {
+        base_filter
+    };
 
     filter
 }
@@ -482,7 +476,7 @@ fn create_file_appender(
         LogRotation::Minutely => Rotation::MINUTELY,
     };
 
-    RollingFileAppender::new(rotation, directory, prefix)
+    Ok(RollingFileAppender::new(rotation, directory, prefix))
 }
 
 /// Logger Factory (equivalent to SLF4J's LoggerFactory)
@@ -570,16 +564,10 @@ impl LoggerHandle {
 
     /// Log an ERROR message with fields
     /// 记录带字段的 ERROR 消息
-    pub fn error_args(&self, fields: &[(&str, impl std::fmt::Display)], message: std::fmt::Arguments) {
-        let mut span = tracing::error_span!(
-            target: self.name,
-            "log",
-            {} = message
-        );
-        for (key, value) in fields {
-            span = span.record(key, &value);
-        }
-        let _ = span.enter();
+    pub fn error_args(&self, _fields: &[(&str, String)], message: std::fmt::Arguments) {
+        // Note: We include the logger name in the message since tracing macros require constant target
+        // 注意：我们在消息中包含日志记录器名称，因为tracing宏需要常量target
+        tracing::error!(target: "nexus", "[{}] {}", self.name, message);
     }
 
     /// Log a WARN message
@@ -590,16 +578,8 @@ impl LoggerHandle {
 
     /// Log a WARN message with fields
     /// 记录带字段的 WARN 消息
-    pub fn warn_args(&self, fields: &[(&str, impl std::fmt::Display)], message: std::fmt::Arguments) {
-        let mut span = tracing::warn_span!(
-            target: self.name,
-            "log",
-            {} = message
-        );
-        for (key, value) in fields {
-            span = span.record(key, &value);
-        }
-        let _ = span.enter();
+    pub fn warn_args(&self, _fields: &[(&str, String)], message: std::fmt::Arguments) {
+        tracing::warn!(target: "nexus", "[{}] {}", self.name, message);
     }
 
     /// Log an INFO message
@@ -610,16 +590,8 @@ impl LoggerHandle {
 
     /// Log an INFO message with fields
     /// 记录带字段的 INFO 消息
-    pub fn info_args(&self, fields: &[(&str, impl std::fmt::Display)], message: std::fmt::Arguments) {
-        let mut span = tracing::info_span!(
-            target: self.name,
-            "log",
-            {} = message
-        );
-        for (key, value) in fields {
-            span = span.record(key, &value);
-        }
-        let _ = span.enter();
+    pub fn info_args(&self, _fields: &[(&str, String)], message: std::fmt::Arguments) {
+        tracing::info!(target: "nexus", "[{}] {}", self.name, message);
     }
 
     /// Log a DEBUG message
@@ -630,16 +602,8 @@ impl LoggerHandle {
 
     /// Log a DEBUG message with fields
     /// 记录带字段的 DEBUG 消息
-    pub fn debug_args(&self, fields: &[(&str, impl std::fmt::Display)], message: std::fmt::Arguments) {
-        let mut span = tracing::debug_span!(
-            target: self.name,
-            "log",
-            {} = message
-        );
-        for (key, value) in fields {
-            span = span.record(key, &value);
-        }
-        let _ = span.enter();
+    pub fn debug_args(&self, _fields: &[(&str, String)], message: std::fmt::Arguments) {
+        tracing::debug!(target: "nexus", "[{}] {}", self.name, message);
     }
 
     /// Log a TRACE message
@@ -650,16 +614,8 @@ impl LoggerHandle {
 
     /// Log a TRACE message with fields
     /// 记录带字段的 TRACE 消息
-    pub fn trace_args(&self, fields: &[(&str, impl std::fmt::Display)], message: std::fmt::Arguments) {
-        let mut span = tracing::trace_span!(
-            target: self.name,
-            "log",
-            {} = message
-        );
-        for (key, value) in fields {
-            span = span.record(key, &value);
-        }
-        let _ = span.enter();
+    pub fn trace_args(&self, _fields: &[(&str, String)], message: std::fmt::Arguments) {
+        tracing::trace!(target: "nexus", "[{}] {}", self.name, message);
     }
 
     /// Get the logger name

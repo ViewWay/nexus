@@ -47,7 +47,7 @@ See [implementation plan](docs/implementation-plan.md) for the roadmap.
 ```rust
 use nexus::prelude::*;
 
-#[tokio::main]
+#[nexus::main]
 async fn main() -> Result<()> {
     // Create router / 创建路由
     let app = Router::new()

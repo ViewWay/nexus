@@ -1,0 +1,15 @@
+[package]
+name = "runtime-chat-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[[bin]]
+name = "runtime-chat-server"
+path = "src/main.rs"
+
+[dependencies]
+nexus-runtime = { path = "../../crates/nexus-runtime" }
+tracing.workspace = true
+tracing-subscriber.workspace = true

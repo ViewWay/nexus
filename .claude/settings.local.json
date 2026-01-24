@@ -13,7 +13,9 @@
       "Bash(cargo build:*)",
       "Bash(pkill:*)",
       "Bash(killall:*)",
-      "Bash(cargo test:*)"
+      "Bash(cargo test:*)",
+      "Bash(cargo:*)",
+      "Bash(grep:*)"
     ]
   }
 }

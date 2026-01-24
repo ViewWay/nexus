@@ -1,0 +1,67 @@
+[package]
+name = "nexus-cloud"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+description = """
+Spring Cloud equivalent features for Nexus framework.
+Nexus框架的Spring Cloud等价功能。
+Equivalent to: Spring Cloud (Discovery, Config, Gateway, Circuit Breaker)
+"""
+
+[lints]
+workspace = true
+
+[dependencies]
+# Async runtime / 异步运行时
+nexus-runtime = { path = "../nexus-runtime" }
+
+# HTTP client / HTTP客户端
+hyper.workspace = true
+hyper-util.workspace = true
+http.workspace = true
+
+# Serialization / 序列化
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling / 错误处理
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Async traits / 异步trait
+async-trait.workspace = true
+futures.workspace = true
+
+# Time / 时间
+chrono.workspace = true
+time.workspace = true
+
+# Tracing / 追踪
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Consul / Consul (optional)
+consul = { version = "0.4", optional = true }
+
+# Etcd / Etcd (optional)
+etcd-rs = { version = "1.0", optional = true }
+
+# Service discovery registration / 服务发现注册
+# Use existing resilience crate
+nexus-resilience = { path = "../nexus-resilience" }
+
+[features]
+default = ["consul"]
+consul = ["dep:consul"]
+etcd = ["dep:etcd-rs"]
+all = ["consul", "etcd"]
+
+[dev-dependencies]
+# Testing / 测试
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

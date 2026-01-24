@@ -34,8 +34,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::{
-    parse_macro_input, AttrArgs, Attribute, Data, DataStruct, DeriveInput,
-    Expr, FnArg, ItemFn, ItemStruct, ItemTrait, Meta, NestedMeta, PatType,
+    parse_macro_input, Attribute, DeriveInput,
+    Expr, FnArg, ItemFn, ItemStatic, ItemStruct, ItemTrait, Meta, PatType,
     PathSegment, ReturnType, Signature, Type, TypePath, Visibility,
 };
 
@@ -163,13 +163,7 @@ pub fn service(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // Generate a new() method if not exists
     let name = &input.ident;
-    let fields = if let Data::Struct(DataStruct { fields, .. }) = &input.data {
-        fields
-    } else {
-        return TokenStream::from(quote! {
-            compile_error!("#[service] can only be used on structs with named fields");
-        });
-    };
+    let fields = &input.fields;
 
     let field_names: Vec<_> = fields.iter().filter_map(|f| f.ident.as_ref()).collect();
     let field_types: Vec<_> = fields.iter().map(|f| &f.ty).collect();
@@ -305,7 +299,7 @@ struct ConfigArgs {
 
 impl Parse for ConfigArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        input.parse::<syn::Token![=]()?;
+        let _eq_token = syn::token::Eq::parse(input)?;
 
         let lookahead = input.lookahead1();
         if lookahead.peek(syn::LitStr) {
@@ -348,7 +342,7 @@ fn parse_route_path(attr: TokenStream) -> syn::Result<String> {
 }
 
 macro_rules! impl_route_macro {
-    ($name:ident, $method:expr) => {
+    ($name:ident, $method:ident) => {
         /// Route attribute macro
         /// 路由属性宏
         #[proc_macro_attribute]
@@ -373,7 +367,7 @@ macro_rules! impl_route_macro {
                 #[automatically_derived]
                 impl #func_name {
                     pub fn register_route(router: nexus_router::Router) -> nexus_router::Router {
-                        router.route(#path, nexus_http::Method::#method, #func_name)
+                        router.route(#path, nexus_http::Method::$method, #func_name)
                     }
                 }
             };
@@ -641,13 +635,9 @@ pub fn slf4j(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     // Check if struct already has a log field
-    let has_log_field = if let Data::Struct(DataStruct { fields, .. }) = &input.data {
-        fields.iter().any(|f| {
-            f.ident.as_ref().map(|i| i.to_string() == "log").unwrap_or(false)
-        })
-    } else {
-        false
-    };
+    let has_log_field = input.fields.iter().any(|f| {
+        f.ident.as_ref().map(|i| i.to_string() == "log").unwrap_or(false)
+    });
 
     if has_log_field {
         // Already has log field, just return the original
@@ -891,20 +881,17 @@ pub fn value(attr: TokenStream, item: TokenStream) -> TokenStream {
         if let Some(colon_pos) = prop.find(':') {
             // Has default value
             // 有默认值
-            &prop[..colon_pos]
+            prop[..colon_pos].to_string()
         } else {
-            prop
+            prop.to_string()
         }
     } else {
-        attr_str.trim()
+        attr_str.trim().to_string()
     };
 
-    let default_value = if let Ok(lit) = parse_macro_input!(item as ItemStatic) {
-        if let Expr::Lit(expr_lit) = &*lit.expr {
-            Some(expr_lit.clone())
-        } else {
-            None
-        }
+    // Extract default value from the static expression
+    let default_value = if let Expr::Lit(expr_lit) = &*input.expr {
+        Some(expr_lit.clone())
     } else {
         None
     };

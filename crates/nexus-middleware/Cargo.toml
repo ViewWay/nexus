@@ -28,6 +28,7 @@ nexus-router = { path = "../nexus-router" }
 
 # Runtime / 运行时
 nexus-runtime = { path = "../nexus-runtime" }
+tokio = { workspace = true, features = ["time"] }
 
 # Compression / 压缩 (Spring Content-Encoding, GzipFilter)
 async-compression = { version = "0.4", features = ["tokio", "brotli", "gzip", "zstd", "deflate"], optional = true }

@@ -20,6 +20,11 @@ workspace = true
 [dependencies]
 # Alloy - Ethereum primitives / Alloy以太坊原语
 alloy = { workspace = true, optional = true }
+alloy-consensus = { workspace = true, optional = true }
+alloy-primitives = { workspace = true, optional = true }
+alloy-transport = { workspace = true, optional = true }
+alloy-network = { workspace = true, optional = true }
+alloy-rpc-types = { workspace = true, optional = true }
 
 # Async runtime / 异步运行时
 nexus-runtime = { path = "../nexus-runtime" }

@@ -8,9 +8,16 @@
 //!
 //! `nexus-core` 提供Nexus框架中使用的基础类型和trait。
 //!
+//! # Equivalent to Spring Boot / 等价于 Spring Boot
+//!
+//! - Spring Core (IoC Container)
+//! - ApplicationContext
+//! - BeanFactory, @Component, @Autowired
+//!
 //! # Features / 功能
 //!
 //! - Application state management / 应用状态管理
+//! - IoC/DI Container / IoC/DI容器
 //! - Error types / 错误类型
 //! - Extension system / 扩展系统
 //! - Request/Response context / 请求/响应上下文
@@ -21,7 +28,11 @@
 pub mod error;
 pub mod context;
 pub mod extension;
+pub mod container;
+pub mod bean;
 
 // Re-exports / 重新导出
 pub use error::{Error, ErrorKind, Result};
 pub use extension::Extensions;
+pub use container::{Container, ApplicationContext};
+pub use bean::{Bean, BeanFactory, BeanDefinition, Scope};

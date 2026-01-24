@@ -19,6 +19,14 @@ name = "hello_world"
 path = "src/hello_world.rs"
 
 [[bin]]
+name = "router_demo"
+path = "src/router_demo.rs"
+
+[[bin]]
+name = "middleware_demo"
+path = "src/middleware_demo.rs"
+
+[[bin]]
 name = "json_api"
 path = "src/json_api.rs"
 
@@ -34,6 +42,14 @@ path = "src/websocket_chat.rs"
 name = "web3_example"
 path = "src/web3_example.rs"
 
+[[bin]]
+name = "ioc_container_example"
+path = "ioc_container_example.rs"
+
+[[bin]]
+name = "config_example"
+path = "config_example.rs"
+
 [dependencies]
 # Core framework / 核心框架
 nexus-runtime = { path = "../crates/nexus-runtime" }
@@ -45,7 +61,8 @@ nexus-response = { path = "../crates/nexus-response", features = ["full"] }
 nexus-middleware = { path = "../crates/nexus-middleware", features = ["full"] }
 nexus-resilience = { path = "../crates/nexus-resilience", features = ["full"] }
 nexus-observability = { path = "../crates/nexus-observability", features = ["full"] }
-nexus-web3 = { path = "../crates/nexus-web3", features = ["full"] }
+nexus-config = { path = "../crates/nexus-config" }
+# nexus-web3 = { path = "../crates/nexus-web3", features = ["full"] }  # Disabled: alloy compatibility issues
 nexus-macros = { path = "../crates/nexus-macros", features = ["full"] }
 
 # Async runtime / 异步运行时
@@ -62,3 +79,4 @@ serde_json.workspace = true
 # Utilities / 工具
 uuid.workspace = true
 chrono.workspace = true
+parking_lot = "0.12"

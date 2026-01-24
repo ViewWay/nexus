@@ -22,6 +22,7 @@ workspace = true
 http.workspace = true
 http-body.workspace = true
 http-body-util.workspace = true
+httparse.workspace = true
 hyper = { workspace = true, optional = true }
 hyper-util = { workspace = true, optional = true }
 h2 = { workspace = true, optional = true }
@@ -59,8 +60,11 @@ tracing.workspace = true
 futures.workspace = true
 pin-project-lite.workspace = true
 
+# Utilities / 工具
+once_cell.workspace = true
+
 [features]
-default = ["http1"]
+default = ["http1", "json"]
 http1 = ["hyper?/http1"]
 http2 = ["hyper", "hyper-util", "dep:h2"]
 http3 = ["dep:h3", "dep:h3-quinn", "dep:quinn", "dep:futures-rustls", "dep:tokio-rustls"]
