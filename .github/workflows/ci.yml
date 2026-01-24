@@ -5,6 +5,9 @@
 # 此工作流构建、测试和验证整个代码库。
 
 name: CI
+permissions:
+  contents: read
+  pull-requests: read
 
 on:
   push:
@@ -18,29 +21,42 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  # Dependency review job / 依赖审查任务
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0
+
   # Lint job / Lint任务
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt, clippy
-          cache: true
 
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-      - name: Run clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Run clippy (enhanced)
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
       - name: Check documentation
-        run: cargo doc --no-deps --all-features --document-private-items
+        run: cargo doc --no-deps --all-features --document-private-items -- -D warnings
 
   # Build and test job / 构建和测试任务
   test:
@@ -53,13 +69,12 @@ jobs:
     continue-on-error: ${{ matrix.rust == 'nightly' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          cache: true
 
       - name: Build workspace
         run: cargo build --workspace --all-targets
@@ -76,13 +91,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          cache: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Run cargo audit
         uses: rustsec/audit-check@v1
@@ -95,13 +107,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          cache: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install tarpaulin
         run: cargo install cargo-tarpaulin

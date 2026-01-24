@@ -1,0 +1,368 @@
+# Codecov Configuration / Codecov 配置文件
+#
+# This configuration customizes Codecov coverage reporting for the Nexus project.
+# 此配置为 Nexus 项目定制 Codecov 覆盖率报告.
+
+# ==============================================================================
+# Coverage Configuration / 覆盖率配置
+# ==============================================================================
+
+# Coverage thresholds
+# 覆盖率阈值
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+        informational: true
+    patch:
+      default:
+        target: 75%
+        threshold: 1%
+        informational: true
+
+# Precision for coverage numbers
+# 覆盖率数值精度
+precision: 2
+
+# Round coverage down to this decimal place
+# 将覆盖率向下舍入到此小数位
+round: down
+
+# Range of coverage values
+# 覆盖率值范围
+range: "70...100"
+
+# ==============================================================================
+# Comment Configuration / 评论配置
+# ==============================================================================
+
+# PR comments
+# PR 评论
+comment:
+  layout: "reach,diff,flags,files,footer"
+  behavior: default
+  require_base: false
+  require_changes: false
+  require_head: true
+  branches:
+    - "main"
+    - "develop"
+
+# ==============================================================================
+# Ignore Configuration / 忽略配置
+# ==============================================================================
+
+# Files to ignore from coverage
+# 从覆盖率中忽略的文件
+ignore:
+  - "**/tests/**"
+  - "**/benches/**"
+  - "**/examples/**"
+  - "**/*_test.rs"
+  - "**/test_*.rs"
+  - "**/benches/*.rs"
+  - "**/examples/*.rs"
+  - "**/target/**"
+  - "**/*.generated.rs"
+  - "**/build.rs"
+  - "**/prost/*.rs"  # Generated protobuf files
+  - "**/tonic/*.rs"  # Generated gRPC files
+
+# ==============================================================================
+# Flags Configuration / 标志配置
+# ==============================================================================
+
+# Define flags for different parts of the codebase
+# 为代码库的不同部分定义标志
+flags:
+  runtime:
+    paths:
+      - crates/nexus-runtime/
+    carryforward: true
+  core:
+    paths:
+      - crates/nexus-core/
+    carryforward: true
+  http:
+    paths:
+      - crates/nexus-http/
+      - crates/nexus-router/
+      - crates/nexus-extractors/
+      - crates/nexus-response/
+      - crates/nexus-middleware/
+    carryforward: true
+  resilience:
+    paths:
+      - crates/nexus-resilience/
+    carryforward: true
+  observability:
+    paths:
+      - crates/nexus-observability/
+    carryforward: true
+  web3:
+    paths:
+      - crates/nexus-web3/
+    carryforward: true
+
+# ==============================================================================
+# GitHub Checks / GitHub 检查
+# ==============================================================================
+
+# Configure GitHub status checks
+# 配置 GitHub 状态检查
+github_checks:
+  annotations: true
+  branches:
+    - "main"
+    - "develop"
+
+# ==============================================================================
+# Codecov AI / Codecov AI
+# ==============================================================================
+
+# Enable Codecov AI analysis
+# 启用 Codecov AI 分析
+codecov_ai:
+  enabled: true
+
+# ==============================================================================
+# Locale and Language / 区域和语言
+# ==============================================================================
+
+# Language for coverage reports
+# 覆盖率报告的语言
+locale: en_US
+
+# ==============================================================================
+# Notifications / 通知
+# ==============================================================================
+
+# Notify on coverage changes
+# 覆盖率变化时通知
+notif:
+  # Send notifications for significant coverage drops
+  # 发送显著覆盖率下降的通知
+  threshold: 5%
+
+# ==============================================================================
+# Functional Language Support / 功能语言支持
+# ==============================================================================
+
+# Specify the language for better parsing
+# 指定语言以获得更好的解析
+lang:
+  rust:
+    # Default target for Rust coverage
+    # Rust 覆盖率的默认目标
+    target: 80%
+
+    # Specific Rust configuration
+    # 特定的 Rust 配置
+    ignore:
+      - "**/tests/**"
+      - "**/benches/**"
+      - "**/examples/**"
+
+# ==============================================================================
+# Paths Configuration / 路径配置
+# ==============================================================================
+
+# Include specific paths
+# 包含特定路径
+include:
+  - "crates/**/*.rs"
+
+# Exclude specific paths
+# 排除特定路径
+exclude:
+  - "crates/**/tests/**"
+  - "crates/**/benches/**"
+  - "crates/**/examples/**"
+  - "**/target/**"
+
+# ==============================================================================
+# Component Configuration / 组件配置
+# ==============================================================================
+
+# Define components for better coverage organization
+# 定义组件以更好地组织覆盖率
+component_management:
+  individual_components:
+    - component_name: runtime
+      paths:
+        - crates/nexus-runtime/
+    - component_name: core
+      paths:
+        - crates/nexus-core/
+    - component_name: http
+      paths:
+        - crates/nexus-http/
+        - crates/nexus-router/
+        - crates/nexus-extractors/
+        - crates/nexus-response/
+        - crates/nexus-middleware/
+    - component_name: resilience
+      paths:
+        - crates/nexus-resilience/
+    - component_name: observability
+      paths:
+        - crates/nexus-observability/
+    - component_name: config
+      paths:
+        - crates/nexus-config/
+    - component_name: cache
+      paths:
+        - crates/nexus-cache/
+    - component_name: security
+      paths:
+        - crates/nexus-security/
+    - component_name: web3
+      paths:
+        - crates/nexus-web3/
+    - component_name: macros
+      paths:
+        - crates/nexus-macros/
+
+# ==============================================================================
+# Upload Configuration / 上传配置
+# ==============================================================================
+
+# Upload settings
+# 上传设置
+cli:
+  # Fail the upload if there are errors
+  # 如果有错误则使上传失败
+  fail_on_error: false
+
+  # Maximum time to wait for upload
+  # 等待上传的最长时间
+  max_timeout: 120
+
+  # Disable search for additional config files
+  # 禁用搜索其他配置文件
+  disable_search: true
+
+# ==============================================================================
+# PR Settings / PR 设置
+# ==============================================================================
+
+# Pull request settings
+# 拉取请求设置
+pull_requests:
+  # Allow comments on PRs
+  # 允许在 PR 上评论
+  allow_comments: true
+
+# ==============================================================================
+# Ignore Coverage Overrides / 忽略覆盖率覆盖
+# ==============================================================================
+
+# Allow overriding ignored files
+# 允许覆盖被忽略的文件
+ignore_coverage:
+  # Files to completely ignore
+  # 完全忽略的文件
+  - "tests/**"
+  - "benches/**"
+  - "examples/**"
+
+  # Files to ignore only for specific metrics
+  # 仅针对特定指标忽略的文件
+  # Example:
+  # 示例：
+  # - "src/deprecated.rs" # Ignore for all metrics
+  # - "src/temp.rs" # Ignore only for lines
+
+# ==============================================================================
+# YAML Version / YAML 版本
+# ==============================================================================
+
+# Version of the codecov.yml schema
+# codecov.yml 架构的版本
+version: "2.0"
+
+# ==============================================================================
+# Best Practices / 最佳实践
+# ==============================================================================
+#
+# 1. Thresholds / 阈值
+#    - Set realistic targets based on project maturity
+#      根据项目成熟度设定现实的目标
+#    - Start with lower thresholds and increase over time
+#      从较低的阈值开始并逐渐增加
+#    - Use informational mode initially
+#      最初使用信息模式
+#
+# 2. Flags / 标志
+#    - Use flags to track coverage for different components
+#      使用标志跟踪不同组件的覆盖率
+#    - Enable carryforward for historical comparison
+#      启用 carryforward 进行历史比较
+#    - Review component coverage separately
+#      单独审查组件覆盖率
+#
+# 3. PR Comments / PR 评论
+#    - Enable annotations for better PR review experience
+#      启用注释以获得更好的 PR 审查体验
+#    - Use diff view to see uncovered lines
+#      使用 diff 查看未覆盖的行
+#    - Require coverage for main branch
+#      要求主分支有覆盖率
+#
+# 4. Performance / 性能
+#    - Use ignore patterns to reduce noise
+#      使用忽略模式减少噪音
+#    - Exclude generated files
+#      排除生成的文件
+#    - Configure reasonable timeouts
+#      配置合理的超时时间
+#
+# 5. Integration / 集成
+#    - Ensure CODECOV_TOKEN is set for private repos
+#      确保为私有仓库设置了 CODECOV_TOKEN
+#    - Test coverage upload locally first
+#      首先在本地测试覆盖率上传
+#    - Review coverage reports regularly
+#      定期审查覆盖率报告
+#
+# ==============================================================================
+# Troubleshooting / 故障排除
+# ==============================================================================
+#
+# Issue: Coverage not uploading
+# 问题：覆盖率未上传
+# Solutions:
+# - Check CODECOV_TOKEN environment variable
+#   检查 CODECOV_TOKEN 环境变量
+# - Verify codecov.yml syntax
+#   验证 codecov.yml 语法
+# - Check workflow logs
+#   检查工作流日志
+# - Ensure coverage file is generated
+#   确保生成了覆盖率文件
+#
+# Issue: 0% coverage reported
+# 问题：报告 0% 覆盖率
+# Solutions:
+# - Verify coverage file format (lcov, cobertura, xml)
+#   验证覆盖率文件格式
+# - Check if tests are actually running
+#   检查测试是否实际运行
+# - Review ignore patterns
+#   审查忽略模式
+# - Ensure test executables are built
+#   确保构建了测试可执行文件
+#
+# Issue: PR comments not appearing
+# 问题：PR 评论未出现
+# Solutions:
+# - Check GitHub Actions permissions
+#   检查 GitHub Actions 权限
+# - Verify branch settings
+#   验证分支设置
+# - Ensure codecov bot has write access
+#   确保 codecov bot 具有写入权限
+#
+# ==============================================================================

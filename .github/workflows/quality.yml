@@ -1,0 +1,185 @@
+# Nexus Code Quality Checks
+# Nexus 代码质量检查
+#
+# This workflow runs comprehensive code quality checks using all mainstream Rust tools.
+# 此工作流使用所有主流 Rust 工具运行全面的代码质量检查。
+
+name: Code Quality
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.toml'
+      - '.github/workflows/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.toml'
+      - '.github/workflows/**'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ==============================================================================
+  # Documentation Tests / 文档测试
+  # ==============================================================================
+  doc-tests:
+    name: Documentation Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Run documentation tests
+        run: cargo test --doc --all-features --workspace
+
+  # ==============================================================================
+  # Enhanced Clippy Checks / 增强的 Clippy 检查
+  # ==============================================================================
+  clippy-enhanced:
+    name: Clippy (Enhanced)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Run clippy with all targets and features
+        run: cargo clippy --all-targets --all-features --workspace -- -D warnings
+
+  # ==============================================================================
+  # Dependency Checks with cargo-deny / 使用 cargo-deny 进行依赖检查
+  # ==============================================================================
+  deny:
+    name: Dependency Checks (cargo-deny)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny
+
+      - name: Check advisories (security vulnerabilities)
+        run: cargo deny check advisories
+
+      - name: Check licenses
+        run: cargo deny check licenses
+
+      - name: Check banned/crate duplicates
+        run: cargo deny check bans
+
+  # ==============================================================================
+  # Unused Dependencies Check / 未使用依赖检查
+  # ==============================================================================
+  machete:
+    name: Unused Dependencies (cargo-machete)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-machete
+        run: cargo install cargo-machete
+
+      - name: Check for unused dependencies
+        run: cargo machete
+
+  # ==============================================================================
+  # Documentation Generation / 文档生成检查
+  # ==============================================================================
+  doc:
+    name: Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build documentation
+        run: cargo doc --all-features --no-deps --workspace
+
+      - name: Check documentation intra-doc links
+        run: cargo doc --all-features --workspace -- -D warnings
+
+  # ==============================================================================
+  # Feature Combination Tests / 特性组合测试
+  # ==============================================================================
+  feature-combinations:
+    name: Feature Powerset Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Install cargo-hack
+        run: cargo install cargo-hack
+
+      - name: Check feature powerset (depth 2)
+        run: cargo hack check --feature-powerset --depth 2 --workspace
+
+  # ==============================================================================
+  # Rustfmt Check / 代码格式检查
+  # ==============================================================================
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  # ==============================================================================
+  # Metadata Checks / 元数据检查
+  # ==============================================================================
+  metadata:
+    name: Metadata Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check all crates can be built
+        run: cargo check --workspace --all-targets
+
+      - name: Verify all crate metadata
+        run: |
+          # Check that all Cargo.toml files are valid
+          find crates -name "Cargo.toml" -exec sh -c 'echo "Checking {}"; cargo metadata --format-version 1 --no-deps --manifest-path {} 1>/dev/null' \;

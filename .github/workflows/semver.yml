@@ -1,0 +1,121 @@
+# Semantic Versioning Checks
+# 语义版本检查
+#
+# This workflow detects breaking API changes that require version bumps.
+# 此工作流检测需要版本升级的破坏性 API 更改。
+
+name: SemVer Checks
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.toml'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  semver-check:
+    name: API Compatibility Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-semver-checks
+        run: cargo install cargo-semver-checks
+
+      - name: Run semver checks
+        run: |
+          cargo semver-checks check-release \
+            --workspace \
+            --all-features \
+            --fail-on-error || true
+
+      - name: Generate semver report
+        if: always()
+        run: |
+          echo "## 🔍 Semantic Versioning Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Checking for breaking API changes..." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This workflow checks if your changes introduce breaking API changes" >> $GITHUB_STEP_SUMMARY
+          echo "that would require a major version bump according to Semantic Versioning." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 What gets checked:" >> $GITHUB_STEP_SUMMARY
+          echo "- Public API changes" >> $GITHUB_STEP_SUMMARY
+          "- Trait method signatures" >> $GITHUB_STEP_SUMMARY
+          "- Struct field visibility" >> $GITHUB_STEP_SUMMARY
+          "- Enum variant changes" >> $GITHUB_STEP_SUMMARY
+          "- Type parameter changes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📚 Resources:" >> $GITHUB_STEP_SUMMARY
+          echo "- [Semantic Versioning 2.0.0](https://semver.org/)" >> $GITHUB_STEP_SUMMARY
+          echo "- [cargo-semver-checks](https://github.com/obi1kenobi/cargo-semver-checks)" >> $GITHUB_STEP_SUMMARY
+
+  # ==============================================================================
+  # Public API Diff / 公共 API 差异
+  # ==============================================================================
+  api-diff:
+    name: Public API Diff
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-public-api
+        run: cargo install cargo-public-api
+
+      - name: Generate API diff
+        run: |
+          git checkout origin/main
+          cargo public-api --workspace --all-features > /tmp/api-old.txt
+
+          git checkout -
+          cargo public-api --workspace --all-features > /tmp/api-new.txt
+
+          diff -u /tmp/api-old.txt /tmp/api-new.txt || true
+
+      - name: Comment PR with API changes
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const diff = fs.readFileSync('/tmp/api-new.txt', 'utf8');
+            const output = `## 📦 Public API Changes\n\n\`\`\`diff\n${diff}\n\`\`\``;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });

@@ -7,6 +7,7 @@ name: Code Coverage
 
 permissions:
   contents: read
+  pull-requests: write
 
 on:
   push:
@@ -17,9 +18,12 @@ on:
       - '**/Cargo.toml'          # 或依赖更新
       - '.github/workflows/**'   # 或 workflow 文件变更
   pull_request:
+    branches:
+      - main
     paths:
-      - '**/*.rs'
-      - '**/Cargo.toml'
+      - '**/*.rs'                 # 只在 Rust 文件变更时触发
+      - '**/Cargo.toml'          # 或依赖更新
+      - '.github/workflows/**'   # 或 workflow 文件变更
 
 jobs:
   cover:
@@ -63,6 +67,23 @@ jobs:
       - name: Upload to codecov
         uses: codecov/codecov-action@v4
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} # private repo 需要
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           file: cobertura.xml
+          flags: unittests
+          name: codecov-${{ matrix.version }}
+          fail_ci_if_error: false
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Coverage Summary
+        run: |
+          echo "## 📊 Coverage Report Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Coverage report has been uploaded to Codecov!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 View Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Codecov Dashboard**: https://codecov.io/gh/${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "- **PR Comments**: Check the PR comments for detailed coverage diff" >> $GITHUB_STEP_SUMMARY
+          fi

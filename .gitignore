@@ -10,10 +10,13 @@ Cargo.lock
 /examples/_test*
 /examples/target
 /examples/*/target
+
+# Coverage reports
+codecov.txt
 cobertura.xml
+tarpaulin-report.*
 debug.log
 **/temp
-tarpaulin-report.*
 *.profraw
 examples/*/.env.local
 examples/**/package-lock.json

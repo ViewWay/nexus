@@ -1,7 +1,7 @@
 name: Release
 
 permissions:
-  contents: read
+  contents: write
 
 on:
   push:
@@ -12,19 +12,19 @@ jobs:
   version-info:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-
-      - name: Checkout
-        uses: actions/checkout@v6
 
       - name: Get releasing version
         working-directory: .
         run: echo NEXT_VERSION=$(sed -nE 's/^\s*version = "(.*?)"/\1/p' Cargo.toml) >> $GITHUB_ENV
 
       - name: Check published version
-        run: echo PREV_VERSION=$(cargo search nexus-runtime --limit 1 | sed -nE 's/^[^"]*"//; s/".*//1p' -) >> $GITHUB_ENV
+        run: echo PREV_VERSION=$(cargo search nexus-runtime --limit 1 | sed -nE 's/^[^"]*"//; s/".*//p') >> $GITHUB_ENV
 
   publish:
     runs-on: ubuntu-latest
@@ -66,22 +66,32 @@ jobs:
             path: crates/nexus-tx
           - crate: nexus-cloud
             path: crates/nexus-cloud
+          - crate: nexus-schedule
+            path: crates/nexus-schedule
+          - crate: nexus-multipart
+            path: crates/nexus-multipart
+          - crate: nexus-validation
+            path: crates/nexus-validation
+          - crate: nexus-exceptions
+            path: crates/nexus-exceptions
+          - crate: nexus-actuator
+            path: crates/nexus-actuator
           - crate: nexus-web3
             path: crates/nexus-web3
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-
-      - name: Checkout
-        uses: actions/checkout@v6
 
       - name: Get releasing version
         working-directory: ${{ matrix.package.path }}
         run: echo NEXT_VERSION=$(sed -nE 's/^\s*version = "(.*?)"/\1/p' Cargo.toml) >> $GITHUB_ENV
 
       - name: Check published version
-        run: echo PREV_VERSION=$(cargo search ${{ matrix.package.crate }} --limit 1 | sed -nE 's/^[^"]*"//; s/".*//1p' -) >> $GITHUB_ENV
+        run: echo PREV_VERSION=$(cargo search ${{ matrix.package.crate }} --limit 1 | sed -nE 's/^[^"]*"//; s/".*//p') >> $GITHUB_ENV
 
       - name: Cargo login
         if: env.NEXT_VERSION != env.PREV_VERSION

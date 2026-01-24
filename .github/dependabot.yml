@@ -1,11 +1,188 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+# Dependabot Configuration / Dependabot 配置文件
+#
+# This configuration automates dependency updates for the Nexus project.
+# 此配置自动更新 Nexus 项目的依赖项。
 
 version: 2
 updates:
-  - package-ecosystem: "cargo" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # ==============================================================================
+  # Rust Cargo Dependencies / Rust Cargo 依赖
+  # ==============================================================================
+  - package-ecosystem: "cargo"
+    directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 10
+    assignees:
+      - "ViewWay"
+    labels:
+      - "dependencies"
+      - "rust"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+      include: "scope"
+    allow:
+      # Allow updates for all dependency types
+      # 允许所有依赖类型的更新
+      - dependency-type: "production"
+      - dependency-type: "development"
+    groups:
+      # Group production dependencies together
+      # 将生产依赖分组
+      production-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "*-sys"
+          - "*-macros"
+      # Group dev dependencies together
+      # 将开发依赖分组
+      dev-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group system dependencies (FFI wrappers)
+      # 将系统依赖（FFI 包装器）分组
+      system-dependencies:
+        patterns:
+          - "*-sys"
+
+  # ==============================================================================
+  # GitHub Actions Dependencies / GitHub Actions 依赖
+  # ==============================================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    assignees:
+      - "ViewWay"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+      prefix-development: "ci"
+    allow:
+      # Allow updates for specific actions
+      # 允许特定 actions 的更新
+      - dependency-name: "actions/checkout*"
+      - dependency-name: "actions/cache*"
+      - dependency-name: "actions-rust-lang/*"
+      - dependency-name: "dtolnay/*"
+      - dependency-name: "codecov/*"
+      - dependency-name: "rustsec/*"
+      - dependency-name: "taiki-e/*"
+    groups:
+      # Group GitHub Actions together
+      # 将 GitHub Actions 分组
+      actions:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "*-@"
+
+# ==============================================================================
+# Configuration Options / 配置选项说明
+# ==============================================================================
+#
+# schedule:
+#   - interval: "daily", "weekly", "monthly"
+#   - day: "monday", "tuesday", etc. (for weekly)
+#   - time: "HH:MM" format
+#   - timezone: IANA timezone database
+#
+# open-pull-requests-limit:
+#   - Maximum number of open PRs to create
+#   - Prevents flooding with updates
+#
+# commit-message:
+#   - prefix: Prefix for production dependency updates
+#   - prefix-development: Prefix for dev dependency updates
+#   - include: "scope" includes the dependency name
+#
+# groups:
+#   - Groups multiple updates into a single PR
+#   - patterns: Array of patterns to match dependencies
+#   - exclude-patterns: Patterns to exclude
+#   - dependency-type: "direct", "indirect", "all"
+#   - update-types: "major", "minor", "patch"
+#
+# labels:
+#   - Automatically applied to created PRs
+#
+# reviewers / assignees:
+#   - GitHub usernames to request reviews from
+#
+# ==============================================================================
+# Best Practices / 最佳实践
+# ==============================================================================
+#
+# 1. Group Updates / 分组更新
+#    - Related dependencies updated together reduces merge conflicts
+#    - Production vs dev dependencies separate
+#    - Major updates separate from minor/patch
+#
+# 2. Schedule Timing / 调度时机
+#    - Weekly is often better than daily (less noise)
+#    - Choose times outside core working hours
+#    - Consider timezone of team members
+#
+# 3. Review Process / 审查流程
+#   - Set up auto-merge for patch updates (if confident)
+#   - Require review for minor/major updates
+#   - Use CODEOWNERS for automatic review requests
+#
+# 4. Labels / 标签
+#   - Use consistent label scheme
+#   - Enable automated PR merging rules based on labels
+#
+# 5. Monitoring / 监控
+#   - Watch Dependabot alerts for vulnerabilities
+#   - Review security advisories regularly
+#   - Keep an eye on outdated dependencies
+#
+# ==============================================================================
+# Local Testing / 本地测试
+# ==============================================================================
+#
+# To test dependency updates before merging:
+# 在合并前测试依赖更新：
+#
+# ```bash
+# # Update all dependencies
+# cargo update
+#
+# # Update specific crate
+# cargo update -p crate-name
+#
+# # Check for breaking changes
+# cargo outdated
+#
+# # Run tests after update
+# cargo test --all
+#
+# # Run clippy after update
+# cargo clippy --all-targets --all-features
+# ```
+#
+# ==============================================================================
+# Additional Resources / 相关资源
+# ==============================================================================
+#
+# - [Dependabot Documentation](https://docs.github.com/en/code-security/dependabot)
+# - [Dependabot Configuration Options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file)
+# - [Automating Dependabot with GitHub Actions](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions)
+# - [Keeping your dependencies up to date](https://docs.github.com/en/code-security/dependabot/keeping-your-dependencies-up-to-date)
+#
+# ==============================================================================

@@ -1,0 +1,206 @@
+# Binary Release
+# 二进制发布
+#
+# This workflow builds and releases binary artifacts for multiple platforms.
+# 此工作流为多个平台构建和发布二进制文件。
+
+name: Binary Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # Linux / Linux
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact_name: nexus
+            asset_name: nexus-x86_64-unknown-linux-gnu
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact_name: nexus
+            asset_name: nexus-aarch64-unknown-linux-gnu
+            use_cross: true
+
+          # macOS / macOS
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            artifact_name: nexus
+            asset_name: nexus-x86_64-apple-darwin
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact_name: nexus
+            asset_name: nexus-aarch64-apple-darwin
+
+          # Windows / Windows
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact_name: nexus.exe
+            asset_name: nexus-x86_64-pc-windows-msvc
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compilation tools
+        if: matrix.use_cross
+        run: cargo install cross
+
+      - name: Build release binary
+        run: |
+          if [ "${{ matrix.use_cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }} --bin nexus
+          else
+            cargo build --release --target ${{ matrix.target }} --bin nexus
+          fi
+        shell: bash
+
+      - name: Strip binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
+  # ==============================================================================
+  # Release / 发布
+  # ==============================================================================
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          for dir in */; do
+            cd "$dir"
+            for file in *; do
+              if [ -f "$file" ]; then
+                sha256sum "$file" > "$file.sha256"
+              fi
+            done
+            cd ..
+          done
+          cd ..
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 🚀 Nexus ${{ github.ref_name }}
+
+            ### 📦 Downloads
+
+            Choose the appropriate binary for your platform:
+
+            | Platform | Binary | Download |
+            |----------|--------|----------|
+            | Linux x86_64 | nexus-x86_64-unknown-linux-gnu | [Download](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nexus-x86_64-unknown-linux-gnu) |
+            | Linux ARM64 | nexus-aarch64-unknown-linux-gnu | [Download](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nexus-aarch64-unknown-linux-gnu) |
+            | macOS x86_64 | nexus-x86_64-apple-darwin | [Download](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nexus-x86_64-apple-darwin) |
+            | macOS ARM64 | nexus-aarch64-apple-darwin | [Download](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nexus-aarch64-apple-darwin) |
+            | Windows x86_64 | nexus-x86_64-pc-windows-msvc.exe | [Download](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nexus-x86_64-pc-windows-msvc.exe) |
+
+            ### 🔐 Verification
+
+            Each binary is accompanied by a `.sha256` checksum file. Verify the integrity of your download:
+
+            ```bash
+            # Linux/macOS
+            sha256sum -c nexus-*.sha256
+
+            # Windows (PowerShell)
+            Get-FileHash nexus-*.exe -Algorithm SHA256
+            ```
+
+            ### 📚 Documentation
+
+            - [Documentation](https://nexus.viewway.io)
+            - [GitHub Repository](https://github.com/${{ github.repository }})
+            - [Release Notes](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+
+            ### 🙏 Thanks
+
+            Thank you for using Nexus! If you encounter any issues, please [report them](https://github.com/${{ github.repository }}/issues).
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==============================================================================
+  # Homebrew Formula (Optional) / Homebrew 配方（可选）
+  # ==============================================================================
+  homebrew:
+    name: Update Homebrew Formula
+    needs: release
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'ViewWay'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Generate Homebrew formula
+        run: |
+          cat > nexus.rb << 'EOF'
+          class Nexus < Formula
+            desc "Production-grade, high-availability web framework written in Rust"
+            homepage "https://nexus.viewway.io"
+            url "${{ github.server_url }}/${{ github.repository }}/archive/refs/tags/${{ github.ref_name }}.tar.gz"
+            sha256 "$(curl -L -s ${{ github.server_url }}/${{ github.repository }}/archive/refs/tags/${{ github.ref_name }}.tar.gz | sha256sum | cut -d' ' -f1)"
+            license any_of: ["MIT", "Apache-2.0"]
+
+            depends_on "rust"
+
+            def install
+              system "cargo", "install", *std_cargo_args
+            end
+
+            test do
+              system "#{bin}/nexus", "--version"
+            end
+          end
+          EOF
+          cat nexus.rb
+
+      - name: Upload Homebrew formula
+        uses: actions/upload-artifact@v4
+        with:
+          name: homebrew-formula
+          path: nexus.rb

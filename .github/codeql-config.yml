@@ -1,0 +1,109 @@
+# CodeQL Configuration / CodeQL 配置
+#
+# This configuration file customizes CodeQL analysis for the Nexus project.
+# 此配置文件为 Nexus 项目定制 CodeQL 分析。
+
+# ==============================================================================
+# Query Suites / 查询套件
+# ==============================================================================
+
+# Use security-extended query suite for comprehensive security analysis
+# 使用 security-extended 查询套件进行全面的安全分析
+query-filters:
+  - exclude:
+      id:
+        - cpp/short-circuit-operation
+        - cpp/use-of-memory-manipulation-function
+
+# ==============================================================================
+# Custom Queries / 自定义查询
+# ==============================================================================
+
+# Additional custom queries can be added here
+# 可以在此添加额外的自定义查询
+# packs:
+#   - my-pack:
+#       queries:
+#         - path: /queries/custom
+
+# ==============================================================================
+# Configuration Options / 配置选项
+# ==============================================================================
+
+# Paths to exclude from analysis
+# 从分析中排除的路径
+paths-ignore:
+  - '**/tests/**'
+  - '**/benches/**'
+  - '**/examples/**'
+  - '**/target/**'
+  - '**/*.md'
+  - '**/*.txt'
+
+# Paths to include (if empty, all paths are included)
+# 要包含的路径（如果为空，则包含所有路径）
+# paths:
+#   - src/
+
+# ==============================================================================
+# Language-Specific Options / 语言特定选项
+# ==============================================================================
+
+# Rust-specific options
+# Rust 特定选项
+packs:
+  javascript:
+    - graphql:*
+  python:
+    - security-and-quality
+
+# ==============================================================================
+# Query Filters / 查询过滤器
+# ==============================================================================
+
+# Exclude specific queries by ID
+# 按 ID 排除特定查询
+# query-filters:
+#   - exclude:
+#       id: dangerous-eval
+
+# Include only specific queries
+# 仅包含特定查询
+# query-filters:
+#   - include:
+#       id: rust-security
+
+# ==============================================================================
+# Problem Severities / 问题严重程度
+# ==============================================================================
+
+# Control which severity levels are reported
+# 控制报告哪些严重程度级别
+# warning-levels: all
+
+# ==============================================================================
+# Code Scanning Configuration / 代码扫描配置
+# ==============================================================================
+
+# Categories for the analysis
+# 分析的类别
+# categories:
+#   - security
+#   - maintainability
+
+# ==============================================================================
+# Advanced Options / 高级选项
+# ==============================================================================
+
+# Multi-codeQL language support
+# 多 CodeQL 语言支持
+# languages:
+#   - javascript
+#   - python
+
+# Additional setup steps
+# 额外的设置步骤
+# setup:
+#   - uses: actions/checkout@v6
+#     with:
+#       fetch-depth: 0

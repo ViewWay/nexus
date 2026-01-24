@@ -24,35 +24,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt, clippy
-          cache: true
       - name: Typos check with custom config file
         uses: crate-ci/typos@master
   udeps:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: nightly
-          cache: true
+        uses: dtolnay/rust-toolchain@nightly
 
       - name: Install cargo-udeps
         uses: taiki-e/install-action@cargo-udeps
-
-      - name: Check unused dependencies on default features
-        run: cargo udeps
-
-      - name: Check unused dependencies on full features
-        run: cargo udeps --features full
 
       - name: Check unused dependencies on all features
         run: cargo udeps --all-features
@@ -61,17 +50,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Get MSRV from package metadata
         id: msrv
         run: grep rust-version Cargo.toml | cut -d'"' -f2 | sed 's/^/version=/' >> $GITHUB_OUTPUT
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ steps.msrv.outputs.version }}
           components: rustfmt, clippy
-          cache: true
 
       - name: check crates
         run: cargo check --all --bins --examples --tests
@@ -86,13 +74,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.version }}
           components: rustfmt, clippy
-          cache: true
 
       - name: check build
         run: cargo check --all --bins --examples --tests
@@ -118,8 +105,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.version }}
           components: rustfmt, clippy

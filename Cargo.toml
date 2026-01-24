@@ -22,6 +22,7 @@ members = [
     "crates/nexus-web3",  # Enabled: using alloy 1.4 compatible with serde 1.0
     "crates/nexus-macros",
     "crates/nexus-benches",
+    "crates/nexus-data-commons",
     "examples",
 ]
 resolver = "3"

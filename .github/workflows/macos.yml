@@ -7,14 +7,14 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - '**.rs'                 # only execute on changes to go files
+      - '**.rs'                 # only execute on changes to Rust files
       - '**/Cargo.toml'         # or dependency updates
       - '.github/workflows/**'  # or workflow changes
   push:
     branches:
       - main
     paths:
-      - '**.rs'                 # only execute on changes to go files
+      - '**.rs'                 # only execute on changes to Rust files
       - '**/Cargo.toml'         # or dependency updates
       - '.github/workflows/**'  # or workflow changes
 

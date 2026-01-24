@@ -58,6 +58,34 @@ path = "logging_example.rs"
 name = "web3_example"
 path = "src/web3_example.rs"
 
+[[bin]]
+name = "resilience_example"
+path = "src/resilience_example.rs"
+
+[[bin]]
+name = "security_example"
+path = "src/security_example.rs"
+
+[[bin]]
+name = "validation_example"
+path = "src/validation_example.rs"
+
+[[bin]]
+name = "multipart_example"
+path = "src/multipart_example.rs"
+
+[[bin]]
+name = "schedule_example"
+path = "src/schedule_example.rs"
+
+[[bin]]
+name = "exceptions_example"
+path = "src/exceptions_example.rs"
+
+[[bin]]
+name = "actuator_example"
+path = "src/actuator_example.rs"
+
 [dependencies]
 # Core framework / 核心框架
 nexus-runtime = { path = "../crates/nexus-runtime" }
@@ -73,6 +101,12 @@ nexus-config = { path = "../crates/nexus-config" }
 nexus-cache = { path = "../crates/nexus-cache" }
 nexus-web3 = { path = "../crates/nexus-web3", features = ["rpc"] }
 nexus-macros = { path = "../crates/nexus-macros", features = ["full"] }
+nexus-security = { path = "../crates/nexus-security" }
+nexus-validation = { path = "../crates/nexus-validation" }
+nexus-multipart = { path = "../crates/nexus-multipart" }
+nexus-schedule = { path = "../crates/nexus-schedule" }
+nexus-exceptions = { path = "../crates/nexus-exceptions" }
+nexus-actuator = { path = "../crates/nexus-actuator" }
 
 # Async runtime / 异步运行时
 tokio = { workspace = true, features = ["full"] }
@@ -90,3 +124,8 @@ uuid.workspace = true
 chrono.workspace = true
 parking_lot = "0.12"
 env_logger = "0.11"
+ulid.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+validator.workspace = true
+email_address.workspace = true
