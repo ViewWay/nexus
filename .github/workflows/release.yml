@@ -24,17 +24,50 @@ jobs:
         run: echo NEXT_VERSION=$(sed -nE 's/^\s*version = "(.*?)"/\1/p' Cargo.toml) >> $GITHUB_ENV
 
       - name: Check published version
-        run: echo PREV_VERSION=$(cargo search salvo --limit 1 | sed -nE 's/^[^"]*"//; s/".*//1p' -) >> $GITHUB_ENV
+        run: echo PREV_VERSION=$(cargo search nexus-runtime --limit 1 | sed -nE 's/^[^"]*"//; s/".*//1p' -) >> $GITHUB_ENV
 
   publish:
     runs-on: ubuntu-latest
+    needs: [version-info]
     strategy:
       fail-fast: false
       max-parallel: 1
       matrix:
         package:
-          - crate: salvo-serde-util
-            path: crates/serde-util
+          # Core crates (publish order matters for dependencies)
+          # 核心 crate（发布顺序对依赖关系很重要）
+          - crate: nexus-runtime
+            path: crates/nexus-runtime
+          - crate: nexus-core
+            path: crates/nexus-core
+          - crate: nexus-http
+            path: crates/nexus-http
+          - crate: nexus-router
+            path: crates/nexus-router
+          - crate: nexus-extractors
+            path: crates/nexus-extractors
+          - crate: nexus-response
+            path: crates/nexus-response
+          - crate: nexus-middleware
+            path: crates/nexus-middleware
+          - crate: nexus-macros
+            path: crates/nexus-macros
+          - crate: nexus-resilience
+            path: crates/nexus-resilience
+          - crate: nexus-observability
+            path: crates/nexus-observability
+          - crate: nexus-config
+            path: crates/nexus-config
+          - crate: nexus-cache
+            path: crates/nexus-cache
+          - crate: nexus-security
+            path: crates/nexus-security
+          - crate: nexus-tx
+            path: crates/nexus-tx
+          - crate: nexus-cloud
+            path: crates/nexus-cloud
+          - crate: nexus-web3
+            path: crates/nexus-web3
     steps:
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -63,7 +96,7 @@ jobs:
           echo "Cargo Packaging..."
           cargo package
 
-      - name: Publish ${{ matrix.package.name }}
+      - name: Publish ${{ matrix.package.crate }}
         if: env.NEXT_VERSION != env.PREV_VERSION
         working-directory: ${{ matrix.package.path }}
         run: |
