@@ -177,31 +177,22 @@ impl nexus_http::HttpService for TrieRouter {
 
         let matched = self.match_request(&method, &path);
 
-        // Create a single async block that handles both cases
+        // Call the handler with the request and path parameters
+        // 使用请求和路径参数调用处理程序
         async move {
             match matched {
-                Some((handler, _params)) => {
-                    // TODO: Use proper logging when tracing is available
+                Some((handler, params)) => {
+                    // Log the matched route (when tracing is available)
+                    // 记录匹配的路由（当tracing可用时）
                     // tracing::debug!("Matched route: {} {} with params: {:?}", method, path, params);
 
-                    // TODO: Actually call the handler with the request and params
-                    // For now, return a simple response
-                    match &handler {
-                        super::route::Handler::Static(s) => {
-                            Ok(Response::builder()
-                                .status(StatusCode::OK)
-                                .header("content-type", "text/plain")
-                                .body(Body::from(*s))
-                                .unwrap())
-                        }
-                        _ => Ok(Response::builder()
-                            .status(StatusCode::OK)
-                            .body(Body::from(format!("Handler for {}", path)))
-                            .unwrap()),
-                    }
+                    // Call the handler with the request and path parameters
+                    // 使用请求和路径参数调用处理程序
+                    handler.call(req, params).await
                 }
                 None => Ok(Response::builder()
                     .status(StatusCode::NOT_FOUND)
+                    .header("content-type", "text/plain; charset=utf-8")
                     .body(Body::from("Not Found"))
                     .unwrap()),
             }

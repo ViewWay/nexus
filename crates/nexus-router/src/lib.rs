@@ -44,6 +44,7 @@ pub mod trie;
 pub use router::{Handler, Router, Next, Stateful, Middleware};
 pub use params::Path;
 pub use trie::TrieRouter;
+pub use route::{Handler as RouteHandler, AsyncHandlerFn, BoxedAsyncHandler, Route};
 
 // Re-export from nexus-http
 pub use nexus_http::Method;
