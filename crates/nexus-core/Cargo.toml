@@ -58,6 +58,9 @@ itertools.workspace = true
 # UUID / UUID (Spring Request ID)
 uuid.workspace = true
 
+# Reflection / 反射 (for dynamic bean operations)
+bevy_reflect = "0.13"
+
 [dev-dependencies]
 # Testing / 测试 (Spring Test)
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

@@ -31,9 +31,9 @@
 
 > **⚠️ Alpha Version / Alpha版本**
 >
-> Nexus is currently in **Phase 0: Foundation**. The project is under active development and APIs are subject to change.
+> Nexus is currently in **Phase 1: Runtime Core** (completed). The async runtime is fully functional with io-uring/epoll/kqueue support. Phase 2 (HTTP Core) is in development.
 >
-> Nexus 目前处于 **第0阶段：基础**。项目正在积极开发中，API 可能会发生变化。
+> Nexus 目前处于 **第1阶段：运行时核心**（已完成）。异步运行时已完全可用，支持 io-uring/epoll/kqueue。第2阶段（HTTP核心）正在开发中。
 
 See [implementation plan](docs/implementation-plan.md) for the roadmap.
 请参阅 [实施计划](docs/implementation-plan.md) 了解路线图。
@@ -153,9 +153,9 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 | Phase / 阶段 | Status / 状态 | Description / 描述 |
 |---------------|---------------|-------------------|
-| Phase 0 | 🔄 In Progress / 进行中 | Foundation / 基础 |
-| Phase 1 | 📋 Planned / 计划中 | Runtime Core / 运行时核心 |
-| Phase 2 | 📋 Planned / 计划中 | HTTP Server / HTTP服务器 |
+| Phase 0 | ✅ Complete / 已完成 | Foundation / 基础 |
+| Phase 1 | ✅ Complete / 已完成 | Runtime Core / 运行时核心 |
+| Phase 2 | 🔄 In Progress / 进行中 | HTTP Server / HTTP服务器 |
 | Phase 3 | 📋 Planned / 计划中 | Router & Middleware / 路由和中间件 |
 | Phase 4 | 📋 Planned / 计划中 | Resilience / 弹性 |
 | Phase 5 | 📋 Planned / 计划中 | Observability / 可观测性 |

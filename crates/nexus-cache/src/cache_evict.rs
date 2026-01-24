@@ -174,16 +174,11 @@ impl CacheEvictExec {
         V: Clone + Send + Sync + 'static,
         F: Future<Output = ()> + Send,
     {
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(async {
-            f.await;
-        }));
+        // Execute the function
+        f.await;
 
+        // Always evict all entries after execution
         cache.invalidate_all().await;
-
-        if let Err(_) = result {
-            // Panic occurred
-            std::panic::resume_unwind(result.unwrap_err());
-        }
     }
 }
 

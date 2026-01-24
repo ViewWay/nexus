@@ -1,6 +1,7 @@
 # Installation
 # 安装
 
+<<<<<<< Current (Your changes)
 Nexus Framework 目前处于 **Phase 1** 阶段，`nexus-runtime` 模块已经可用。本文档介绍如何安装和使用 Nexus Runtime。
 
 Nexus Framework is currently in **Phase 1**, and the `nexus-runtime` module is available. This document explains how to install and use Nexus Runtime.
@@ -177,6 +178,201 @@ Now that you have Nexus Runtime installed, you can:
 
 - Check out the [API Documentation](https://docs.rs/nexus-runtime) for complete API reference
   查看 [API 文档](https://docs.rs/nexus-runtime) 获取完整的 API 参考
+=======
+## Requirements / 系统要求
+
+### Rust Toolchain / Rust 工具链
+
+Nexus requires Rust 1.75 or later.
+Nexus 需要 Rust 1.75 或更高版本。
+
+```bash
+# Install Rust / 安装 Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Verify installation / 验证安装
+rustc --version
+cargo --version
+```
+
+### Platform Support / 平台支持
+
+| Platform | Status | I/O Driver |
+|----------|--------|------------|
+| Linux (kernel 5.1+) | ✅ Full support | io-uring |
+| Linux (older kernels) | ✅ Supported | epoll |
+| macOS | ✅ Supported | kqueue |
+| Windows | 🔄 In progress | IOCP |
+
+### Linux: io-uring Requirements / Linux: io-uring 要求
+
+For best performance on Linux, ensure you have kernel 5.1+ with io-uring support:
+为在 Linux 上获得最佳性能，请确保您有内核 5.1+ 并支持 io-uring：
+
+```bash
+# Check kernel version / 检查内核版本
+uname -r
+
+# For Ubuntu/Debian, install liburing-dev (optional)
+# 对于 Ubuntu/Debian，安装 liburing-dev（可选）
+sudo apt-get install liburing-dev
+```
+
+## Adding Nexus to Your Project / 将 Nexus 添加到项目
+
+### Using Cargo / 使用 Cargo
+
+Add Nexus to your `Cargo.toml`:
+将 Nexus 添加到您的 `Cargo.toml`：
+
+```toml
+[dependencies]
+nexus = "0.1.0-alpha"
+```
+
+Or use cargo-add:
+或使用 cargo-add：
+
+```bash
+cargo add nexus
+```
+
+### Feature Flags / 功能标志
+
+Nexus provides several optional features:
+Nexus 提供多个可选功能：
+
+```toml
+[dependencies]
+nexus = { version = "0.1.0-alpha", features = ["full"] }
+```
+
+| Feature | Description | Default |
+|---------|-------------|---------|
+| `runtime` | Async runtime | ✅ |
+| `http` | HTTP server/client | ✅ |
+| `router` | Request routing | ✅ |
+| `json` | JSON serialization | ✅ |
+| `middleware` | Built-in middleware | ✅ |
+| `web3` | Web3/blockchain support | ❌ |
+| `full` | All features | ❌ |
+
+### Using Individual Crates / 使用单独的 Crate
+
+You can also use individual crates for more control:
+您也可以使用单独的 crate 以获得更多控制：
+
+```toml
+[dependencies]
+nexus-runtime = "0.1.0-alpha"
+nexus-http = "0.1.0-alpha"
+nexus-router = "0.1.0-alpha"
+nexus-middleware = "0.1.0-alpha"
+```
+
+## Building from Source / 从源码构建
+
+```bash
+# Clone the repository / 克隆仓库
+git clone https://github.com/nexus-framework/nexus.git
+cd nexus
+
+# Build all crates / 构建所有 crate
+cargo build --workspace
+
+# Build with optimizations / 优化构建
+cargo build --workspace --release
+
+# Run tests / 运行测试
+cargo test --workspace
+
+# Run examples / 运行示例
+cargo run --example hello_world
+```
+
+## Verifying Installation / 验证安装
+
+Create a simple test project:
+创建一个简单的测试项目：
+
+```bash
+cargo new hello-nexus
+cd hello-nexus
+```
+
+Edit `Cargo.toml`:
+编辑 `Cargo.toml`：
+
+```toml
+[package]
+name = "hello-nexus"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nexus-runtime = "0.1.0-alpha"
+```
+
+Edit `src/main.rs`:
+编辑 `src/main.rs`：
+
+```rust
+use nexus_runtime::Runtime;
+
+fn main() -> std::io::Result<()> {
+    let runtime = Runtime::new()?;
+    
+    runtime.block_on(async {
+        println!("Nexus is working!");
+    });
+    
+    Ok(())
+}
+```
+
+Run the project:
+运行项目：
+
+```bash
+cargo run
+```
+
+If you see "Nexus is working!", the installation is successful!
+如果看到 "Nexus is working!"，安装成功！
+
+## IDE Support / IDE 支持
+
+### VS Code / RustRover
+
+Nexus works with any Rust IDE. Recommended extensions:
+Nexus 可与任何 Rust IDE 配合使用。推荐扩展：
+
+- **rust-analyzer**: Language server for Rust
+- **Even Better TOML**: TOML file support
+- **crates**: Cargo.toml dependency management
+
+## Troubleshooting / 故障排除
+
+### Common Issues / 常见问题
+
+**1. io-uring not available**
+```
+Error: io-uring requires Linux kernel 5.1+
+```
+Solution: Nexus will automatically fall back to epoll. No action needed.
+解决方案：Nexus 会自动回退到 epoll。无需操作。
+
+**2. Missing liburing**
+```
+Error: failed to find liburing
+```
+Solution: Install liburing-dev or let Nexus build it from source.
+解决方案：安装 liburing-dev 或让 Nexus 从源码构建。
+
+**3. Compilation errors on Windows**
+Windows support is still in development. Use WSL2 for now.
+Windows 支持仍在开发中。目前请使用 WSL2。
+>>>>>>> Incoming (Background Agent changes)
 
 ---
 

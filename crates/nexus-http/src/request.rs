@@ -199,6 +199,21 @@ impl Request {
         &self.inner
     }
 
+    /// Get request extensions (for storing request-scoped data)
+    /// 获取请求扩展（用于存储请求范围的数据）
+    ///
+    /// This is equivalent to Spring's RequestAttributes or HttpServletRequest attributes.
+    /// 这等价于Spring的RequestAttributes或HttpServletRequest属性。
+    pub fn extensions(&self) -> &http::Extensions {
+        self.inner.extensions()
+    }
+
+    /// Get mutable request extensions
+    /// 获取可变的请求扩展
+    pub fn extensions_mut(&mut self) -> &mut http::Extensions {
+        self.inner.extensions_mut()
+    }
+
     /// Split the request into its parts
     /// 将请求拆分为其组件
     pub fn into_parts(self) -> (Parts, Body) {

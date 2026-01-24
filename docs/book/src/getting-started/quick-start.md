@@ -1,321 +1,244 @@
 # Quick Start
 # 快速开始
 
-This guide will help you get started with Nexus Runtime in just a few minutes.
-本指南将帮助你在几分钟内开始使用 Nexus Runtime。
+This guide will help you create your first Nexus application in under 5 minutes.
+本指南将帮助您在 5 分钟内创建第一个 Nexus 应用。
 
-## Your First Program / 你的第一个程序
+## Create a New Project / 创建新项目
 
-Let's start with a simple "Hello, World!" example:
-让我们从一个简单的 "Hello, World!" 示例开始：
+```bash
+cargo new my-nexus-app
+cd my-nexus-app
+```
+
+## Add Dependencies / 添加依赖
+
+Edit your `Cargo.toml`:
+编辑您的 `Cargo.toml`：
+
+```toml
+[package]
+name = "my-nexus-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nexus-runtime = "0.1.0-alpha"
+nexus-http = "0.1.0-alpha"
+nexus-router = "0.1.0-alpha"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+```
+
+## Hello World Server / Hello World 服务器
+
+Replace `src/main.rs` with:
+用以下内容替换 `src/main.rs`：
 
 ```rust
-use nexus_runtime::Runtime;
+use nexus_http::{Body, Response, Server, StatusCode};
+use nexus_runtime::task::block_on;
 
-fn main() -> std::io::Result<()> {
-    // Create a runtime with default configuration
-    // 使用默认配置创建运行时
-    let mut runtime = Runtime::new()?;
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Initialize logging / 初始化日志
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    tracing::info!("Starting server on http://127.0.0.1:8080");
+
+    // Run the server / 运行服务器
+    block_on(async {
+        Server::bind("127.0.0.1:8080")
+            .run(handle_request)
+            .await
+    })
+}
+
+async fn handle_request(req: nexus_http::Request) -> Result<Response, nexus_http::Error> {
+    let path = req.path();
     
-    // Run an async block
-    // 运行一个异步块
-    runtime.block_on(async {
-        println!("Hello, Nexus Runtime!");
-        println!("你好，Nexus Runtime！");
-    });
-    
-    Ok(())
+    match path {
+        "/" => Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("content-type", "text/plain")
+            .body(Body::from("Hello, Nexus!"))
+            .unwrap()),
+            
+        "/health" => Ok(Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::from("OK"))
+            .unwrap()),
+            
+        _ => Ok(Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body(Body::from("Not Found"))
+            .unwrap()),
+    }
 }
 ```
 
-Save this as `main.rs` and run:
-将其保存为 `main.rs` 并运行：
+## Run the Server / 运行服务器
 
 ```bash
 cargo run
 ```
 
-You should see:
-你应该看到：
+## Test the Server / 测试服务器
 
+```bash
+# Test the root endpoint / 测试根端点
+curl http://localhost:8080/
+# Output: Hello, Nexus!
+
+# Test the health endpoint / 测试健康端点
+curl http://localhost:8080/health
+# Output: OK
+
+# Test 404 / 测试 404
+curl http://localhost:8080/unknown
+# Output: Not Found
 ```
-Hello, Nexus Runtime!
-你好，Nexus Runtime！
-```
 
-## Basic Async Operations / 基本异步操作
+## Using the Router / 使用路由器
 
-### Spawning Tasks / 生成任务
-
-You can spawn tasks to run concurrently:
-你可以生成任务以并发运行：
+For more complex routing, use `nexus-router`:
+对于更复杂的路由，使用 `nexus-router`：
 
 ```rust
-use nexus_runtime::{Runtime, spawn};
+use nexus_http::{Body, Response, StatusCode};
+use nexus_router::{Router, Path};
+use nexus_runtime::task::block_on;
 
-fn main() -> std::io::Result<()> {
-    let mut runtime = Runtime::new()?;
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    tracing_subscriber::fmt::init();
+
+    // Create router with routes / 创建带路由的路由器
+    let router = Router::new()
+        .get("/", index)
+        .get("/users/:id", get_user)
+        .post("/users", create_user);
+
+    tracing::info!("Starting server on http://127.0.0.1:8080");
+
+    block_on(async {
+        // Start server with router / 使用路由器启动服务器
+        nexus_http::Server::bind("127.0.0.1:8080")
+            .run(move |req| {
+                let router = router.clone();
+                async move { router.handle(req).await }
+            })
+            .await
+    })
+}
+
+async fn index(_req: nexus_http::Request) -> Response {
+    Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::from("Welcome to Nexus!"))
+        .unwrap()
+}
+
+async fn get_user(req: nexus_http::Request) -> Response {
+    // Extract path parameter / 提取路径参数
+    let id = req.path_var("id").unwrap_or("unknown");
     
-    runtime.block_on(async {
-        // Spawn a task / 生成一个任务
-        let handle = spawn(async {
-            println!("Task 1: Hello from spawned task!");
-            println!("任务 1: 来自生成任务的问候！");
-            42
-        });
-        
-        // Spawn another task / 生成另一个任务
-        let handle2 = spawn(async {
-            println!("Task 2: Another task!");
-            println!("任务 2: 另一个任务！");
-            "done"
-        });
-        
-        // Wait for tasks to complete / 等待任务完成
-        let result1 = handle.await.unwrap();
-        let result2 = handle2.await.unwrap();
-        
-        println!("Task 1 returned: {}", result1);
-        println!("任务 1 返回: {}", result1);
-        println!("Task 2 returned: {}", result2);
-        println!("任务 2 返回: {}", result2);
-    });
-    
-    Ok(())
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/json")
+        .body(Body::from(format!(r#"{{"id": "{}"}}"#, id)))
+        .unwrap()
+}
+
+async fn create_user(_req: nexus_http::Request) -> Response {
+    Response::builder()
+        .status(StatusCode::CREATED)
+        .body(Body::from(r#"{"status": "created"}"#))
+        .unwrap()
 }
 ```
 
-### Using Channels / 使用通道
-
-Nexus Runtime provides async channels for communication between tasks:
-Nexus Runtime 提供异步通道用于任务间通信：
+## JSON Response Example / JSON 响应示例
 
 ```rust
-use nexus_runtime::{Runtime, spawn, bounded};
+use nexus_http::{Body, Json, Response, StatusCode, IntoResponse};
+use serde::Serialize;
 
-fn main() -> std::io::Result<()> {
-    let mut runtime = Runtime::new()?;
+#[derive(Serialize)]
+struct User {
+    id: u64,
+    name: String,
+    email: String,
+}
+
+async fn get_user_json(_req: nexus_http::Request) -> Response {
+    let user = User {
+        id: 1,
+        name: "Alice".to_string(),
+        email: "alice@example.com".to_string(),
+    };
     
-    runtime.block_on(async {
-        // Create a bounded channel / 创建一个有界通道
-        let (tx, rx) = bounded::<i32>(10);
-        
-        // Spawn a sender task / 生成发送者任务
-        let tx_handle = spawn(async move {
-            for i in 0..5 {
-                tx.send(i).await.unwrap();
-                println!("Sent: {}", i);
-                println!("发送: {}", i);
-            }
-        });
-        
-        // Spawn a receiver task / 生成接收者任务
-        let rx_handle = spawn(async move {
-            while let Ok(value) = rx.recv().await {
-                println!("Received: {}", value);
-                println!("接收: {}", value);
-            }
-        });
-        
-        // Wait for both tasks / 等待两个任务
-        tx_handle.await.unwrap();
-        rx_handle.await.unwrap();
-    });
+    // Serialize to JSON / 序列化为 JSON
+    let json = serde_json::to_string(&user).unwrap();
     
-    Ok(())
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/json")
+        .body(Body::from(json))
+        .unwrap()
 }
 ```
 
-### Timers and Delays / 定时器和延迟
-
-You can use `sleep` to add delays:
-你可以使用 `sleep` 来添加延迟：
+## Using Async Tasks / 使用异步任务
 
 ```rust
-use nexus_runtime::{Runtime, sleep, Duration};
+use nexus_runtime::{spawn, sleep, Duration};
 
-fn main() -> std::io::Result<()> {
-    let mut runtime = Runtime::new()?;
-    
-    runtime.block_on(async {
-        println!("Starting...");
-        println!("开始...");
-        
-        // Sleep for 1 second / 休眠 1 秒
+async fn background_task() {
+    // Spawn a background task / 生成后台任务
+    let handle = spawn(async {
         sleep(Duration::from_secs(1)).await;
-        
-        println!("1 second later...");
-        println!("1 秒后...");
-        
-        // Sleep for 500 milliseconds / 休眠 500 毫秒
-        sleep(Duration::from_millis(500)).await;
-        
-        println!("Done!");
-        println!("完成！");
+        println!("Background task completed!");
+        42
     });
     
-    Ok(())
+    // Continue with other work / 继续其他工作
+    println!("Doing other work...");
+    
+    // Wait for result when needed / 需要时等待结果
+    let result = handle.await.unwrap();
+    println!("Task returned: {}", result);
 }
 ```
 
-## I/O Operations / I/O 操作
-
-### TCP Client / TCP 客户端
-
-Here's a simple TCP client example:
-这是一个简单的 TCP 客户端示例：
+## Using Channels / 使用通道
 
 ```rust
-use nexus_runtime::{Runtime, io::TcpStream};
+use nexus_runtime::channel::bounded;
 
-fn main() -> std::io::Result<()> {
-    let mut runtime = Runtime::new()?;
+async fn channel_example() {
+    let (tx, rx) = bounded::<String>(10);
     
-    runtime.block_on(async {
-        // Connect to a server / 连接到服务器
-        match TcpStream::connect("127.0.0.1:8080").await {
-            Ok(mut stream) => {
-                // Write data / 写入数据
-                let data = b"Hello, Server!";
-                stream.write_all(data).await?;
-                
-                // Read response / 读取响应
-                let mut buf = [0u8; 1024];
-                let n = stream.read(&mut buf).await?;
-                println!("Received: {}", String::from_utf8_lossy(&buf[..n]));
-                println!("接收: {}", String::from_utf8_lossy(&buf[..n]));
-            }
-            Err(e) => {
-                eprintln!("Connection failed: {}", e);
-                eprintln!("连接失败: {}", e);
-            }
-        }
-    })?;
-    
-    Ok(())
-}
-```
-
-### TCP Server / TCP 服务器
-
-And a simple TCP server:
-以及一个简单的 TCP 服务器：
-
-```rust
-use nexus_runtime::{Runtime, io::TcpListener, spawn};
-
-fn main() -> std::io::Result<()> {
-    let mut runtime = Runtime::new()?;
-    
-    runtime.block_on(async {
-        // Bind to an address / 绑定到地址
-        let listener = TcpListener::bind("127.0.0.1:8080").await?;
-        println!("Server listening on 127.0.0.1:8080");
-        println!("服务器监听 127.0.0.1:8080");
-        
-        // Accept connections / 接受连接
-        while let Ok((mut stream, addr)) = listener.accept().await {
-            println!("Accepted connection from {}", addr);
-            println!("接受来自 {} 的连接", addr);
-            
-            // Spawn a task to handle each connection / 生成任务处理每个连接
-            spawn(async move {
-                let mut buf = [0u8; 1024];
-                if let Ok(n) = stream.read(&mut buf).await {
-                    let request = String::from_utf8_lossy(&buf[..n]);
-                    println!("Received: {}", request);
-                    println!("接收: {}", request);
-                    
-                    // Echo back / 回显
-                    let response = format!("Echo: {}", request);
-                    let _ = stream.write_all(response.as_bytes()).await;
-                }
-            });
-        }
-    })?;
-    
-    Ok(())
-}
-```
-
-## Custom Runtime Configuration / 自定义运行时配置
-
-You can customize the runtime configuration:
-你可以自定义运行时配置：
-
-```rust
-use nexus_runtime::{Runtime, RuntimeBuilder, driver::DriverType};
-
-fn main() -> std::io::Result<()> {
-    // Create a custom runtime / 创建自定义运行时
-    let mut runtime = Runtime::builder()
-        .worker_threads(4)              // 4 worker threads / 4个工作线程
-        .queue_size(512)               // Queue size / 队列大小
-        .driver_type(DriverType::Auto) // Auto-detect driver / 自动检测驱动
-        .io_entries(256)               // I/O queue depth / I/O队列深度
-        .build()?;
-    
-    runtime.block_on(async {
-        println!("Custom runtime is running!");
-        println!("自定义运行时正在运行！");
-    });
-    
-    Ok(())
-}
-```
-
-## Selecting Multiple Futures / 选择多个 Future
-
-You can wait for multiple futures using `select`:
-你可以使用 `select` 等待多个 future：
-
-```rust
-use nexus_runtime::{Runtime, spawn, select, select_two, sleep, Duration};
-
-fn main() -> std::io::Result<()> {
-    let mut runtime = Runtime::new()?;
-    
-    runtime.block_on(async {
-        let task1 = spawn(async {
-            sleep(Duration::from_millis(100)).await;
-            "Task 1 completed"
-        });
-        
-        let task2 = spawn(async {
-            sleep(Duration::from_millis(200)).await;
-            "Task 2 completed"
-        });
-        
-        // Wait for the first task to complete / 等待第一个任务完成
-        match select_two(task1, task2).await {
-            select_two::First(result, _) => {
-                println!("First task completed: {}", result.unwrap());
-                println!("第一个任务完成: {}", result.unwrap());
-            }
-            select_two::Second(_, result) => {
-                println!("Second task completed: {}", result.unwrap());
-                println!("第二个任务完成: {}", result.unwrap());
-            }
+    // Producer task / 生产者任务
+    spawn(async move {
+        for i in 0..5 {
+            tx.send(format!("Message {}", i)).await.unwrap();
         }
     });
     
-    Ok(())
+    // Consumer / 消费者
+    while let Ok(msg) = rx.recv().await {
+        println!("Received: {}", msg);
+    }
 }
 ```
 
 ## Next Steps / 下一步
 
-Now that you've learned the basics, you can:
-现在你已经学习了基础知识，你可以：
-
-- Read the [Runtime Documentation](../core-concepts/runtime.md) for detailed information
-  阅读 [Runtime 文档](../core-concepts/runtime.md) 获取详细信息
-
-- Explore the [API Documentation](https://docs.rs/nexus-runtime) for complete API reference
-  探索 [API 文档](https://docs.rs/nexus-runtime) 获取完整的 API 参考
-
-- Check out the [Examples](https://github.com/nexus-rs/nexus/tree/main/examples) for more complex use cases
-  查看 [示例](https://github.com/nexus-rs/nexus/tree/main/examples) 了解更多复杂用例
+- [Runtime Details](../core-concepts/runtime.md) - Learn about the async runtime
+- [HTTP Server](../core-concepts/http.md) - Deep dive into HTTP handling
+- [Router](../core-concepts/router.md) - Advanced routing patterns
+- [Middleware](../core-concepts/middleware.md) - Request/response processing
 
 ---
 

@@ -42,6 +42,7 @@ mod error;
 mod isolation;
 mod manager;
 mod propagation;
+mod request_ext;
 mod status;
 mod template;
 mod transaction;
@@ -51,6 +52,9 @@ pub use error::{TransactionError, TransactionResult};
 pub use isolation::IsolationLevel;
 pub use manager::{TransactionManager, TransactionManagerBuilder};
 pub use propagation::Propagation;
+pub use request_ext::{
+    get_transaction_from_request, has_active_transaction_in_request, TransactionContextExt,
+};
 pub use status::TransactionStatus;
 pub use template::TransactionTemplate;
 pub use transaction::Transaction;

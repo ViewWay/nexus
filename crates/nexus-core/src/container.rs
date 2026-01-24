@@ -16,6 +16,7 @@ use super::{
     bean::{Bean, BeanDefinition, Scope},
     error::{Error, Result},
     extension::Extensions,
+    reflect::ReflectContainer,
 };
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
@@ -123,6 +124,14 @@ struct BeanStore {
     /// Named bean lookups
     /// 命名bean查找
     by_name: HashMap<String, TypeId>,
+
+    /// Early exposed beans (Weak references for circular dependency resolution)
+    /// 提前暴露的Bean（Weak引用，用于循环依赖解析）
+    early_exposed: HashMap<TypeId, std::sync::Weak<dyn Any + Send + Sync>>,
+
+    /// Currently creating beans (for cycle detection)
+    /// 正在创建的Bean（用于循环检测）
+    creating: std::cell::RefCell<std::collections::HashSet<TypeId>>,
 }
 
 impl BeanStore {
@@ -131,6 +140,8 @@ impl BeanStore {
             singletons: HashMap::new(),
             registrations: HashMap::new(),
             by_name: HashMap::new(),
+            early_exposed: HashMap::new(),
+            creating: std::cell::RefCell::new(std::collections::HashSet::new()),
         }
     }
 }
@@ -164,6 +175,9 @@ impl BeanStore {
 pub struct Container {
     beans: Arc<RwLock<BeanStore>>,
     extensions: Extensions,
+    /// Reflection container for dynamic bean operations
+    /// 用于动态Bean操作的反射容器
+    reflect: Arc<ReflectContainer>,
 }
 
 impl Container {
@@ -173,6 +187,7 @@ impl Container {
         Self {
             beans: Arc::new(RwLock::new(BeanStore::new())),
             extensions: Extensions::new(),
+            reflect: Arc::new(ReflectContainer::new()),
         }
     }
 
@@ -281,11 +296,13 @@ impl Container {
     /// - Constructor injection (via registered factory functions)
     /// - Lazy initialization
     /// - Singleton scope (default)
+    /// - Circular dependency detection and resolution
     ///
     /// 此方法支持：
     /// - 构造函数注入（通过注册的工厂函数）
     /// - 延迟初始化
     /// - 单例作用域（默认）
+    /// - 循环依赖检测和解析
     pub fn get_bean<T: Bean + Send + Sync + 'static>(&self) -> Result<Arc<T>> {
         let type_id = TypeId::of::<T>();
 
@@ -299,6 +316,25 @@ impl Container {
                 if let Ok(typed) = Arc::clone(bean).downcast::<T>() {
                     return Ok(typed);
                 }
+            }
+
+            // Check for circular dependency: if we're currently creating this bean,
+            // try to return the early-exposed Weak reference
+            // 检查循环依赖：如果正在创建此bean，尝试返回提前暴露的Weak引用
+            if beans.creating.borrow().contains(&type_id) {
+                if let Some(weak) = beans.early_exposed.get(&type_id) {
+                    if let Some(arc) = weak.upgrade() {
+                        if let Ok(typed) = arc.downcast::<T>() {
+                            return Ok(typed);
+                        }
+                    }
+                }
+                // Circular dependency detected but no early-exposed reference
+                // 检测到循环依赖但没有提前暴露的引用
+                return Err(Error::internal(format!(
+                    "Circular dependency detected while creating bean: {}",
+                    std::any::type_name::<T>()
+                )));
             }
         }
 
@@ -314,19 +350,43 @@ impl Container {
         };
 
         if let Some(factory) = factory_opt {
-            // Create the bean using the factory (resolving dependencies)
-            // 使用工厂创建bean（解析依赖）
-            let bean = factory(self)?;
-            let bean_arc = Arc::new(bean);
+            // Mark as creating (for cycle detection)
+            // 标记为正在创建（用于循环检测）
+            {
+                let beans = self.beans.read()
+                    .map_err(|e| Error::internal(format!("Lock error: {}", e)))?;
+                beans.creating.borrow_mut().insert(type_id);
+            }
+
+            // Create a placeholder Arc with Weak reference for early exposure
+            // 创建占位符Arc和Weak引用用于提前暴露
+            let placeholder: Arc<T> = {
+                // Try to create the bean
+                // 尝试创建bean
+                let bean = factory(self)?;
+                Arc::new(bean)
+            };
+
+            // Store Weak reference early (for circular dependencies)
+            // 提前存储Weak引用（用于循环依赖）
+            {
+                let mut beans = self.beans.write()
+                    .map_err(|e| Error::internal(format!("Lock error: {}", e)))?;
+                beans.early_exposed.insert(type_id, Arc::downgrade(&placeholder) as std::sync::Weak<dyn Any + Send + Sync>);
+            }
 
             // Store as singleton
             // 存储为单例
-            let mut beans = self.beans.write()
-                .map_err(|e| Error::internal(format!("Lock error: {}", e)))?;
+            {
+                let mut beans = self.beans.write()
+                    .map_err(|e| Error::internal(format!("Lock error: {}", e)))?;
+                beans.singletons.insert(type_id, placeholder.clone());
+                // Remove from creating set
+                // 从创建集合中移除
+                beans.creating.borrow_mut().remove(&type_id);
+            }
 
-            beans.singletons.insert(type_id, bean_arc.clone());
-
-            Ok(bean_arc)
+            Ok(placeholder)
         } else {
             Err(Error::not_found(format!("Bean not found: {}", std::any::type_name::<T>())))
         }
@@ -414,6 +474,12 @@ impl Container {
     /// 获取扩展的可变引用
     pub fn extensions_mut(&mut self) -> &mut Extensions {
         &mut self.extensions
+    }
+
+    /// Get the reflection container
+    /// 获取反射容器
+    pub fn reflect(&self) -> &Arc<ReflectContainer> {
+        &self.reflect
     }
 
     /// Initialize all registered beans (eager initialization)

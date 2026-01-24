@@ -16,8 +16,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Project Status
 
-**Phase**: Design & Planning (Phase 0)
+**Phase**: Runtime Core Complete (Phase 1) - HTTP Core In Progress (Phase 2)
 **Estimated Timeline**: 18-24 months to v1.0
+
+**Completed Features (Phase 1):**
+- io-uring/epoll/kqueue I/O drivers
+- Thread-per-core + work-stealing schedulers
+- Hierarchical timer wheel
+- MPSC channels (bounded/unbounded)
+- Task spawning with JoinHandle
+- Select macro foundation
 
 ## Documentation
 

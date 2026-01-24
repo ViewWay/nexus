@@ -92,7 +92,7 @@ impl Cached {
         fetch: F,
     ) -> Option<V>
     where
-        K: std::hash::Hash + Eq + Send + Sync + 'static,
+        K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: Future<Output = Option<V>> + Send,
     {
@@ -118,7 +118,7 @@ impl Cached {
         fetch: F,
     ) -> Option<V>
     where
-        K: std::hash::Hash + Eq + Send + Sync + 'static,
+        K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: FnOnce() -> Option<V> + Send + 'static,
     {
@@ -144,7 +144,7 @@ impl Cached {
         fetch: F,
     ) -> Option<V>
     where
-        K: std::hash::Hash + Eq + Send + Sync + 'static,
+        K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: Future<Output = Option<V>> + Send,
     {
@@ -170,7 +170,7 @@ impl Cached {
         fetch: F,
     ) -> Result<Option<V>, E>
     where
-        K: std::hash::Hash + Eq + Send + Sync + 'static,
+        K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         E: Send + 'static,
         F: Future<Output = Result<Option<V>, E>> + Send,

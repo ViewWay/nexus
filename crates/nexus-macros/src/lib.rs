@@ -39,6 +39,8 @@ use syn::{
     PathSegment, ReturnType, Signature, Type, TypePath, Visibility,
 };
 
+mod transactional;
+
 // ============================================================================
 // Spring Boot Style Main Macro (equivalent to @SpringBootApplication)
 // Spring Boot 风格主宏（等价于 @SpringBootApplication）
@@ -715,20 +717,10 @@ pub fn logger(_attr: TokenStream, item: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn transactional(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
-
-    let expanded = quote! {
-        #[nexus_macros::async_trait::async_trait]
-        #input
-
-        // TODO: Implement transaction wrapper
-        // The actual transaction management will be implemented in Phase 4
-        // TODO: 实现事务包装器
-        // 实际事务管理将在第4阶段实现
-    };
-
-    TokenStream::from(expanded)
+pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Use the transactional module implementation
+    // 使用transactional模块实现
+    transactional::transactional(attr, item)
 }
 
 // ============================================================================

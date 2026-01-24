@@ -142,13 +142,13 @@
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
-| @Cacheable | ❌ | ❌ | **缓存注解缺失** |
-| @CacheEvict | ❌ | ❌ | 缓存驱逐缺失 |
-| @CachePut | ❌ | ❌ | 缓存更新缺失 |
-| @EnableCaching | ❌ | ❌ | 缓存启用缺失 |
-| CacheManager | ❌ | ❌ | **缓存管理器缺失** |
+| @Cacheable | ✅ | ✅ | `Cached::get_or_fetch()` |
+| @CacheEvict | ✅ | ✅ | `CacheEvictExec::execute_and_evict()` |
+| @CachePut | ✅ | ✅ | `CachePutExec::execute_and_update()` |
+| @EnableCaching | ✅ | ✅ | Cache auto-configuration |
+| CacheManager | ✅ | ✅ | `SimpleCacheManager` |
 | Redis integration | ❌ | ❌ | **Redis集成缺失** |
-| Caffeine integration | ❌ | ❌ | 本地缓存缺失 |
+| Caffeine integration | ✅ | ✅ | `MemoryCache` (基于moka) |
 
 ## 10. Scheduling / 调度
 

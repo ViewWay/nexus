@@ -101,7 +101,7 @@ impl CachePutExec {
         f: F,
     ) -> V
     where
-        K: std::hash::Hash + Eq + Send + Sync + 'static,
+        K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: Future<Output = V> + Send,
     {
@@ -109,7 +109,7 @@ impl CachePutExec {
         let result = f.await;
 
         // Put result in cache
-        cache.put(key, result.clone()).await;
+        cache.put(key.clone(), result.clone()).await;
 
         result
     }
@@ -123,7 +123,7 @@ impl CachePutExec {
         f: F,
     ) -> V
     where
-        K: std::hash::Hash + Eq + Send + Sync + 'static,
+        K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: Future<Output = V> + Send,
     {
@@ -131,7 +131,7 @@ impl CachePutExec {
         let result = f.await;
 
         // Put result in cache with TTL
-        cache.put_with_ttl(key, result.clone(), ttl_secs).await;
+        cache.put_with_ttl(key.clone(), result.clone(), ttl_secs).await;
 
         result
     }
@@ -144,7 +144,7 @@ impl CachePutExec {
         f: F,
     ) -> Result<V, E>
     where
-        K: std::hash::Hash + Eq + Send + Sync + 'static,
+        K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         E: Send + 'static,
         F: Future<Output = Result<V, E>> + Send,
@@ -153,7 +153,7 @@ impl CachePutExec {
         let result = f.await?;
 
         // Put result in cache
-        cache.put(key, result.clone()).await;
+        cache.put(key.clone(), result.clone()).await;
 
         Ok(result)
     }

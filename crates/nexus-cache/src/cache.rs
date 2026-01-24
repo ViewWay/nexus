@@ -284,9 +284,8 @@ where
     /// Create a new memory cache
     /// 创建新的内存缓存
     pub fn new(config: CacheConfig) -> Self {
-        let mut builder = moka::future::CacheBuilder::new(config.max_capacity)
-            .time_to_idle(Duration::from_secs(config.ttl_secs.unwrap_or(crate::DEFAULT_TTL_SECS)))
-            .thread_pool_enabled(true);
+        let builder = moka::future::CacheBuilder::new(config.max_capacity as u64)
+            .time_to_idle(Duration::from_secs(config.ttl_secs.unwrap_or(crate::DEFAULT_TTL_SECS) as u64));
 
         Self {
             inner: builder.build(),
@@ -382,7 +381,7 @@ where
     }
 
     async fn invalidate_all(&self) {
-        self.inner.invalidate_all().await;
+        self.inner.invalidate_all();
 
         let mut stats = self.stats.write().await;
         stats.size = 0;
@@ -402,7 +401,7 @@ where
     }
 
     async fn clear(&self) {
-        self.inner.invalidate_all().await;
+        self.inner.invalidate_all();
     }
 }
 

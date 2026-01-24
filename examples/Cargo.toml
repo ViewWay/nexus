@@ -50,6 +50,10 @@ path = "ioc_container_example.rs"
 name = "config_example"
 path = "config_example.rs"
 
+[[bin]]
+name = "cache_example"
+path = "cache_example.rs"
+
 [dependencies]
 # Core framework / 核心框架
 nexus-runtime = { path = "../crates/nexus-runtime" }
@@ -62,6 +66,7 @@ nexus-middleware = { path = "../crates/nexus-middleware", features = ["full"] }
 nexus-resilience = { path = "../crates/nexus-resilience", features = ["full"] }
 nexus-observability = { path = "../crates/nexus-observability", features = ["full"] }
 nexus-config = { path = "../crates/nexus-config" }
+nexus-cache = { path = "../crates/nexus-cache" }
 # nexus-web3 = { path = "../crates/nexus-web3", features = ["full"] }  # Disabled: alloy compatibility issues
 nexus-macros = { path = "../crates/nexus-macros", features = ["full"] }
 

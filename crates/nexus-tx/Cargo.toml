@@ -40,6 +40,9 @@ serde.workspace = true
 # Async runtime / 异步运行时 (for tokio::sync types)
 tokio = { workspace = true, features = ["sync"] }
 
+# HTTP / HTTP (for Request extensions)
+nexus-http = { path = "../nexus-http" }
+
 # Utilities / 工具
 once_cell.workspace = true
 

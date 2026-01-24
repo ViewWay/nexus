@@ -19,9 +19,9 @@
 
 > **⚠️ Alpha Version / Alpha版本**
 >
-> This project is currently in **Phase 0: Foundation**. Most features are marked as TODO and will be implemented according to the [implementation plan](../../implementation-plan.md).
+> This project is currently in **Phase 1: Runtime Core** (completed). The async runtime is fully functional. HTTP Core (Phase 2) is in development.
 >
-> 本项目目前处于 **第0阶段：基础**。大多数功能标记为 TODO，将根据 [实施计划](../../implementation-plan.md) 逐步实现。
+> 本项目目前处于 **第1阶段：运行时核心**（已完成）。异步运行时已完全可用。HTTP 核心（第2阶段）正在开发中。
 
 ## Table of Contents / 目录
 

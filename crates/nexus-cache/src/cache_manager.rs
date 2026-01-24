@@ -83,15 +83,15 @@ where
     V: Clone + Send + Sync + 'static,
 {
     async fn get_stats(&self) -> crate::cache::CacheStats {
-        self.stats().await
+        crate::cache::Cache::stats(self).await
     }
 
     async fn clear(&self) {
-        self.clear().await;
+        crate::cache::Cache::clear(self).await;
     }
 
     async fn size(&self) -> usize {
-        self.size().await
+        crate::cache::Cache::size(self).await
     }
 
     fn name(&self) -> &str {
@@ -111,7 +111,6 @@ where
 ///
 /// Manages a set of in-memory caches.
 /// 管理一组内存缓存。
-#[derive(Debug)]
 pub struct SimpleCacheManager {
     /// Registered caches
     /// 已注册的缓存
@@ -190,7 +189,7 @@ impl Default for SimpleCacheManager {
 }
 
 impl CacheManager for SimpleCacheManager {
-    fn get_cache(&self, name: &str) -> Option<Arc<dyn CacheWorker>> {
+    fn get_cache(&self, _name: &str) -> Option<Arc<dyn CacheWorker>> {
         // Note: This is a synchronous method, so we can't use async here
         // In a real implementation, you'd use a different approach
         None // Simplified for now
@@ -200,7 +199,7 @@ impl CacheManager for SimpleCacheManager {
         Vec::new() // Simplified for now
     }
 
-    fn create_cache(&self, name: &str, config: CacheConfig) -> Option<Arc<dyn CacheWorker>> {
+    fn create_cache(&self, _name: &str, _config: CacheConfig) -> Option<Arc<dyn CacheWorker>> {
         None // Simplified for now
     }
 }
@@ -210,7 +209,6 @@ impl CacheManager for SimpleCacheManager {
 ///
 /// Equivalent to Spring's CacheManagerCustomizer.
 /// 等价于Spring的CacheManagerCustomizer。
-#[derive(Debug)]
 pub struct CacheManagerBuilder {
     caches: HashMap<String, CacheConfig>,
     default_config: CacheConfig,
@@ -262,13 +260,15 @@ static GLOBAL_MANAGER: tokio::sync::OnceCell<SimpleCacheManager> = tokio::sync::
 
 /// Initialize the global cache manager
 /// 初始化全局缓存管理器
-pub async fn init_global_manager(manager: SimpleCacheManager) {
-    let _ = GLOBAL_MANAGER.set(manager).await;
+pub fn init_global_manager(manager: SimpleCacheManager) -> Result<(), String> {
+    GLOBAL_MANAGER
+        .set(manager)
+        .map_err(|_| "Global manager already initialized".to_string())
 }
 
 /// Get the global cache manager
 /// 获取全局缓存管理器
-pub async fn global_manager() -> Option<&'static SimpleCacheManager> {
+pub fn global_manager() -> Option<&'static SimpleCacheManager> {
     GLOBAL_MANAGER.get()
 }
 
