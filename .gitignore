@@ -23,3 +23,7 @@ examples/**/pnpm-lock.yaml
 .DS_Store
 .claude
 .cursor
+.env
+.env/
+.env.*
+!.env.example
