@@ -17,8 +17,14 @@ pub mod wallet;
 pub mod tx;
 pub mod rpc;
 
-pub use chain::{Chain, ChainId};
-pub use contract::Contract;
-pub use wallet::{Wallet, LocalWallet};
+pub use chain::{ChainId, Eip155Chain, ChainConfig, Block, BlockNumber};
+pub use wallet::{Wallet, LocalWallet, Address};
 pub use tx::{Transaction, TransactionBuilder, TxHash};
+pub use rpc::RpcError;
+pub use contract::{ContractError, FunctionSelector, CallParams};
+
+#[cfg(feature = "rpc")]
 pub use rpc::RpcClient;
+
+#[cfg(feature = "rpc")]
+pub use contract::{Contract, ContractCall, ERC20, ERC721};
