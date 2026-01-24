@@ -238,7 +238,7 @@ tracing-opentelemetry = "0.29"
 opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
 opentelemetry-prometheus = "0.27"
 prometheus = "0.13"
-metrics-exporter-prometheus = "0.16"
+metrics-exporter-prometheus = "0.18"
 tracing-core = "0.1"
 log = "0.4"
 slog = "2.8"
