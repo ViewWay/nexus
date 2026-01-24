@@ -242,7 +242,7 @@ metrics-exporter-prometheus = "0.16"
 tracing-core = "0.1"
 log = "0.4"
 slog = "2.8"
-bevy_reflect = "0.13"
+bevy_reflect = "0.18"
 
 # ==============================================================================
 # Release Configuration / 发布配置
