@@ -105,7 +105,8 @@ mod tests {
         value: String,
     }
 
-    impl Bean for TestBean {}
+    // Note: Bean is implemented via blanket impl<T: Any> Bean for T in bean.rs
+    // No need for manual implementation here
 
     struct TestBeanFactory;
 
