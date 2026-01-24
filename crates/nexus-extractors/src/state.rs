@@ -82,7 +82,7 @@ impl<T> State<T> {
     /// Get reference to the inner value
     /// 获取内部值的引用
     pub fn get(&self) -> &T {
-        &self.0
+        self.0.as_ref()
     }
 
     /// Clone the Arc
@@ -139,7 +139,10 @@ mod tests {
     fn test_state_clone() {
         let value = Arc::new("test".to_string());
         let state: State<String> = State(value.clone());
-        let cloned = state.clone();
-        assert_eq!(*cloned.get(), "test");
+        // Explicitly call Clone trait to avoid Arc::clone
+        let cloned: State<String> = Clone::clone(&state);
+        // Use into_inner to get the Arc
+        let inner: Arc<String> = cloned.into_inner();
+        assert_eq!(*inner, "test");
     }
 }

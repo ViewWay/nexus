@@ -119,7 +119,7 @@ impl FromStr for Method {
 
 /// Method parsing error
 /// 方法解析错误
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MethodError {
     /// Invalid HTTP method
     InvalidMethod(String),

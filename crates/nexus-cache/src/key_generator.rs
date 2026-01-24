@@ -303,10 +303,10 @@ mod tests {
 
     #[test]
     fn test_default_key_generator() {
-        let gen = DefaultKeyGenerator::new();
+        let generator = DefaultKeyGenerator::new();
 
         let params: &[&dyn KeyParam] = &[&123, &"test"];
-        let key = gen.generate("UserService", "getUser", params);
+        let key = generator.generate("UserService", "getUser", params);
 
         assert!(key.contains("UserService"));
         assert!(key.contains("123"));
@@ -315,11 +315,11 @@ mod tests {
 
     #[test]
     fn test_hash_key_generator() {
-        let gen = HashKeyGenerator::new();
+        let generator = HashKeyGenerator::new();
 
         let params: &[&dyn KeyParam] = &[&123, &"test"];
-        let key1 = gen.generate("UserService", "getUser", params);
-        let key2 = gen.generate("UserService", "getUser", params);
+        let key1 = generator.generate("UserService", "getUser", params);
+        let key2 = generator.generate("UserService", "getUser", params);
 
         assert_eq!(key1, key2);
         assert!(key1.len() < 20); // Hash is shorter

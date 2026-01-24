@@ -1,0 +1,39 @@
+[package]
+name = "nexus-validation"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+description = """
+Validation support for Nexus framework.
+Nexus框架的验证支持。
+Equivalent to: Spring Validation, @Validated, @Valid
+"""
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[lints]
+workspace = true
+
+[dependencies]
+# Workspace dependencies
+nexus-http = { path = "../nexus-http" }
+nexus-core = { path = "../nexus-core" }
+
+# External dependencies
+validator = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }

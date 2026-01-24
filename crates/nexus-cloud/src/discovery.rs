@@ -23,12 +23,13 @@
 //! }
 //! ```
 
-use crate::{ServiceInstance, ServiceRegistry};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+
+use crate::load_balancer::LoadBalancer;
 
 /// Service discovery
 /// 服务发现
@@ -273,7 +274,7 @@ impl ServiceRegistry for InMemoryServiceRegistry {
     }
 
     async fn heartbeat(&self, instance_id: &str) -> Result<(), String> {
-        let services = self.services.write().await;
+        let mut services = self.services.write().await;
 
         for instances in services.values_mut() {
             if let Some(instance) = instances.iter_mut().find(|i| i.instance_id == instance_id) {
@@ -302,7 +303,7 @@ pub struct SimpleDiscoveryClient {
 
     /// Load balancer
     /// 负载均衡器
-    load_balancer: Arc<dyn crate::LoadBalancer>,
+    load_balancer: Arc<crate::load_balancer::RoundRobinLoadBalancer>,
 }
 
 impl SimpleDiscoveryClient {
@@ -311,13 +312,13 @@ impl SimpleDiscoveryClient {
     pub fn new(registry: Arc<dyn ServiceRegistry>) -> Self {
         Self {
             registry,
-            load_balancer: Arc::new(crate::RoundRobinLoadBalancer::new()),
+            load_balancer: Arc::new(crate::load_balancer::RoundRobinLoadBalancer::new()),
         }
     }
 
     /// Set load balancer
     /// 设置负载均衡器
-    pub fn load_balancer(mut self, lb: Arc<dyn crate::LoadBalancer>) -> Self {
+    pub fn load_balancer(mut self, lb: Arc<crate::load_balancer::RoundRobinLoadBalancer>) -> Self {
         self.load_balancer = lb;
         self
     }

@@ -7,37 +7,43 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - '**.rs'                 # only execute on changes to go files
-      - '**/Cargo.toml'         # or dependency updates
-      - '.github/workflows/**'  # or workflow changes
+      - '**/*.rs'                 # Only execute on changes to Rust files
+      - '**/Cargo.toml'         # Or dependency updates
+      - '.github/workflows/**'  # Or workflow changes
   push:
     branches:
       - main
     paths:
-      - '**.rs'                 # only execute on changes to go files
-      - '**/Cargo.toml'         # or dependency updates
-      - '.github/workflows/**'  # or workflow changes
+      - '**/*.rs'                 # Only execute on changes to Rust files
+      - '**/Cargo.toml'         # Or dependency updates
+      - '.github/workflows/**'  # Or workflow changes
 
 jobs:
   typos:
     name: Typos
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@master
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
           components: rustfmt, clippy
+          cache: true
       - name: Typos check with custom config file
         uses: crate-ci/typos@master
   udeps:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@nightly
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly
+          cache: true
 
       - name: Install cargo-udeps
         uses: taiki-e/install-action@cargo-udeps
@@ -54,15 +60,18 @@ jobs:
     name: Check MSRV - x86_64-unknown-linux-gnu
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Get MSRV from package metadata
         id: msrv
         run: grep rust-version Cargo.toml | cut -d'"' -f2 | sed 's/^/version=/' >> $GITHUB_OUTPUT
 
-      - uses: dtolnay/rust-toolchain@master
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ steps.msrv.outputs.version }}
           components: rustfmt, clippy
+          cache: true
 
       - name: check crates
         run: cargo check --all --bins --examples --tests
@@ -76,11 +85,14 @@ jobs:
     name: Cargo check ${{ matrix.version }} - x86_64-unknown-linux-gnu
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@master
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ matrix.version }}
           components: rustfmt, clippy
+          cache: true
 
       - name: check build
         run: cargo check --all --bins --examples --tests
@@ -106,8 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test]
     steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@master
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.version }}
           components: rustfmt, clippy

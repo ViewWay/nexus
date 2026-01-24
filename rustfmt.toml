@@ -86,8 +86,8 @@ blank_lines_upper_bound = 1
 blank_lines_lower_bound = 0
 
 # Brace style / 花括号风格
-control_brace_style = "AlwaysSameLine"
-brace_style = "AlwaysSameLine"
+control_brace_style = "AlwaysNextLine"
+brace_style = "AlwaysNextLine"
 
 # Empty item single line / 空项单行
 empty_item_single_line = true

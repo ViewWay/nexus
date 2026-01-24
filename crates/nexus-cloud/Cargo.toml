@@ -1,18 +1,24 @@
 [package]
 name = "nexus-cloud"
-version.workspace = true
-authors.workspace = true
-repository.workspace = true
-homepage.workspace = true
-license.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
 description = """
 Spring Cloud equivalent features for Nexus framework.
 Nexus框架的Spring Cloud等价功能。
 Equivalent to: Spring Cloud (Discovery, Config, Gateway, Circuit Breaker)
 """
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lints]
 workspace = true
@@ -20,31 +26,37 @@ workspace = true
 [dependencies]
 # Async runtime / 异步运行时
 nexus-runtime = { path = "../nexus-runtime" }
+tokio = { workspace = true, features = ["sync", "time"] }
 
 # HTTP client / HTTP客户端
-hyper.workspace = true
-hyper-util.workspace = true
-http.workspace = true
+hyper = { workspace = true }
+hyper-util = { workspace = true }
+http = { workspace = true }
+reqwest = { version = "0.12", features = ["json"] }
+
+# Utilities / 工具
+rand = { workspace = true }
+ulid = { workspace = true }
 
 # Serialization / 序列化
-serde.workspace = true
-serde_json.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 # Error handling / 错误处理
-thiserror.workspace = true
-anyhow.workspace = true
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 
 # Async traits / 异步trait
-async-trait.workspace = true
-futures.workspace = true
+async-trait = { workspace = true }
+futures = { workspace = true }
 
 # Time / 时间
-chrono.workspace = true
-time.workspace = true
+chrono = { workspace = true }
+time = { workspace = true }
 
 # Tracing / 追踪
-tracing.workspace = true
-tracing-subscriber.workspace = true
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 # Consul / Consul (optional)
 consul = { version = "0.4", optional = true }

@@ -14,7 +14,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::{Request, Response, Result, Middleware, Next};
+use nexus_http::{Request, Response, Result};
+use nexus_router::{Middleware, Next};
 
 /// Compression type
 /// 压缩类型

@@ -132,16 +132,16 @@ impl Default for CircuitBreakerConfig {
 /// # Spring Equivalent / Spring等价物
 ///
 /// ```java
-//! @Bean
-//! public Customizer<CircuitBreakerFactory> customizer(Config config) {
-//!     return factory -> factory.configureDefault(
-//!         builder -> builder
-//!             .slidingWindowSize(10)
-//!             .failureRateThreshold(50)
-//!             .waitDurationInOpenState(Duration.ofSeconds(30))
-//!     );
-//! }
-//! ```
+/// @Bean
+/// public Customizer<CircuitBreakerFactory> customizer(Config config) {
+///     return factory -> factory.configureDefault(
+///         builder -> builder
+///             .slidingWindowSize(10)
+///             .failureRateThreshold(50)
+///             .waitDurationInOpenState(Duration.ofSeconds(30))
+///     );
+/// }
+/// ```
 #[derive(Debug)]
 pub struct CircuitBreaker {
     /// Circuit breaker name

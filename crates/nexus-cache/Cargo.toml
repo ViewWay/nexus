@@ -1,18 +1,24 @@
 [package]
 name = "nexus-cache"
-version.workspace = true
-authors.workspace = true
-repository.workspace = true
-homepage.workspace = true
-license.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
 description = """
 Caching abstraction for Nexus framework.
 Nexus框架的缓存抽象。
 Equivalent to: Spring Cache Abstraction (@Cacheable, @CacheEvict, @CachePut)
 """
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lints]
 workspace = true
@@ -22,30 +28,30 @@ workspace = true
 nexus-runtime = { path = "../nexus-runtime" }
 
 # Caching implementations / 缓存实现
-moka = { workspace = true, features = ["future"] }
+moka = { workspace = true }
 quick_cache = { workspace = true }
 
 # Serialization / 序列化
-serde.workspace = true
-serde_json.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 # Error handling / 错误处理
-thiserror.workspace = true
-anyhow.workspace = true
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 
 # Async traits / 异步trait
-async-trait.workspace = true
-futures.workspace = true
+async-trait = { workspace = true }
+futures = { workspace = true }
 
 # Time / 时间
-chrono.workspace = true
-time.workspace = true
+chrono = { workspace = true }
+time = { workspace = true }
 
 # Hashing / 哈希
-siphasher = "1.0"
+siphasher = { workspace = true }
 
 # Metrics / 指标
-metrics.workspace = true
+metrics = { workspace = true }
 
 # Async runtime / 异步运行时 (for tokio::sync types)
 tokio = { workspace = true, features = ["sync"] }

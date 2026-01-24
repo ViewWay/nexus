@@ -1,28 +1,34 @@
 [package]
 name = "nexus-http"
-version.workspace = true
-authors.workspace = true
-repository.workspace = true
-homepage.workspace = true
-license.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
 description = """
 HTTP server and client for Nexus framework.
 Nexus框架的HTTP服务器和客户端。
 Equivalent to: Spring Web, Spring WebFlux, Spring MVC
 """
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lints]
 workspace = true
 
 [dependencies]
 # HTTP types / HTTP类型 (Spring Web HTTP)
-http.workspace = true
-http-body.workspace = true
-http-body-util.workspace = true
-httparse.workspace = true
+http = { workspace = true }
+http-body = { workspace = true }
+http-body-util = { workspace = true }
+httparse = { workspace = true }
 hyper = { workspace = true, optional = true }
 hyper-util = { workspace = true, optional = true }
 h2 = { workspace = true, optional = true }
@@ -34,34 +40,34 @@ quinn = { workspace = true, optional = true }
 futures-rustls = { workspace = true, optional = true }
 
 # TLS / TLS (Spring HTTPS support)
-rustls.workspace = true
+rustls = { workspace = true }
 tokio-rustls = { workspace = true, optional = true }
 
 # Bytes / 字节
-bytes.workspace = true
+bytes = { workspace = true }
 
 # Runtime / 运行时
 nexus-runtime = { path = "../nexus-runtime" }
 nexus-core = { path = "../nexus-core" }
 
 # Serialization / 序列化 (Spring Jackson JSON)
-serde.workspace = true
+serde = { workspace = true }
 serde_json = { workspace = true, optional = true }
-serde_urlencoded.workspace = true
+serde_urlencoded = { workspace = true }
 
 # Error handling / 错误处理 (Spring @ResponseStatus, @ExceptionHandler)
-thiserror.workspace = true
-anyhow.workspace = true
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 
 # Logging / 日志 (Spring Logging, Logback)
-tracing.workspace = true
+tracing = { workspace = true }
 
 # Async utilities / 异步工具
-futures.workspace = true
-pin-project-lite.workspace = true
+futures = { workspace = true }
+pin-project-lite = { workspace = true }
 
 # Utilities / 工具
-once_cell.workspace = true
+once_cell = { workspace = true }
 
 [features]
 default = ["http1", "json"]
@@ -72,7 +78,7 @@ server = ["hyper", "hyper-util/server"]
 client = ["hyper", "hyper-util/client"]
 tls = ["dep:tokio-rustls"]
 full = ["http1", "http2", "http3", "server", "client", "tls", "json"]
-json = ["serde_json"]
+json = ["dep:serde_json"]
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test, MockMvc)

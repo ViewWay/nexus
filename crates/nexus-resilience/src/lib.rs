@@ -17,6 +17,20 @@ pub mod retry;
 pub mod timeout;
 pub mod discovery;
 
-pub use circuit::{CircuitBreaker, CircuitState, CircuitBreakerConfig};
-pub use rate_limit::{RateLimiter, RateLimiterType};
-pub use retry::{RetryPolicy, retry};
+pub use circuit::{
+    CircuitBreaker, CircuitState, CircuitBreakerConfig,
+    CircuitBreakerError, CircuitBreakerRegistry, CircuitMetrics
+};
+pub use rate_limit::{
+    RateLimiter, RateLimiterType, RateLimiterConfig,
+    RateLimitError, RateLimiterMetrics, RateLimiterRegistry
+};
+pub use retry::{
+    RetryPolicy, BackoffType, retry, retry_with_predicate,
+    RetryError, RetryState, ShouldRetry, RetryAll, RetryErrors
+};
+pub use discovery::{
+    ServiceInstance, InstanceStatus, ServiceRegistry,
+    SimpleServiceRegistry, ServiceDiscovery, LoadBalanceStrategy,
+    DiscoveryError
+};

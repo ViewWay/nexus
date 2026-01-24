@@ -1,25 +1,31 @@
 [package]
 name = "nexus-middleware"
-version.workspace = true
-authors.workspace = true
-repository.workspace = true
-homepage.workspace = true
-license.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
 description = """
 Middleware for Nexus framework.
 Nexus框架的中间件。
 Equivalent to: Spring Interceptor, Filter, @ControllerAdvice
 """
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lints]
 workspace = true
 
 [dependencies]
 # HTTP types / HTTP类型 (Spring Web HTTP)
-http.workspace = true
+http = { workspace = true }
 
 # Core types / 核心类型
 nexus-core = { path = "../nexus-core" }
@@ -40,38 +46,42 @@ tower-http = { version = "0.6", features = ["cors"], optional = true }
 csrf = { version = "0.5", optional = true }
 
 # Rate limiting / 限流 (Spring Rate Limiting)
-governor.workspace = true
-tower.workspace = true
-tower_governor.workspace = true
+governor = { workspace = true }
+tower = { workspace = true }
+tower_governor = { workspace = true }
 
 # Error handling / 错误处理 (Spring @ExceptionHandler, @ResponseStatus)
-thiserror.workspace = true
-anyhow.workspace = true
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 
 # Logging / 日志 (Spring Logging, Logback)
-tracing.workspace = true
+tracing = { workspace = true }
 
 # Async utilities / 异步工具
-futures.workspace = true
-pin-project-lite.workspace = true
+futures = { workspace = true }
+pin-project-lite = { workspace = true }
 
 # Time / 时间 (Spring @RequestTimeout)
-time.workspace = true
+time = { workspace = true }
 
 # Security headers / 安全头 (Spring Security Headers)
 headers = "0.4"
 
+# MIME type detection / MIME类型检测
+mime_guess = "2.0"
+
 [features]
-default = ["cors", "compression", "limit", "timeout", "trace"]
+default = ["cors", "compression", "limit", "timeout", "trace", "static"]
 compression = ["dep:async-compression"]
 cors = ["dep:tower-http"]
 csrf = ["dep:csrf"]
 limit = []
 timeout = []
 trace = []
+static = []
 security = []
 session = []
-full = ["compression", "cors", "csrf", "limit", "timeout", "trace", "security", "session"]
+full = ["compression", "cors", "csrf", "limit", "timeout", "trace", "static", "security", "session"]
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)

@@ -229,7 +229,7 @@ mod tests {
     fn test_parse_post_with_body() {
         let data = b"POST /api HTTP/1.1\r\nHost: example.com\r\nContent-Length: 5\r\n\r\nhello";
         let ctx = ConnectionContext::new();
-        let (req, used) = parse_request(data, &ctx).unwrap();
+        let (req, _used) = parse_request(data, &ctx).unwrap();
         assert_eq!(req.method(), Method::POST);
         assert_eq!(req.path(), "/api");
     }

@@ -41,16 +41,19 @@
 #![warn(unreachable_pub)]
 
 use std::sync::OnceLock;
-use tracing::{Level, Subscriber};
+use tracing::Level;
 use tracing_subscriber::{
     fmt::{
-        format::FmtSpan, self, writer::MakeWriterExt
+        format::FmtSpan, self
     },
     layer::SubscriberExt,
     util::SubscriberInitExt,
     EnvFilter, Registry,
 };
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
+
+#[cfg(feature = "nexus-format")]
+use crate::nexus_format::{NexusFormatter, Banner};
 
 /// Spring Boot log levels
 /// Spring Boot 日志级别
@@ -283,44 +286,82 @@ impl Logger {
 
         match config.format {
             LogFormat::Pretty => {
-                // Note: .pretty() is not available in all versions, using .compact() as fallback
-                let fmt_layer = fmt::layer()
-                    .with_span_events(FmtSpan::CLOSE)
+                #[cfg(feature = "nexus-format")]
+                {
+                    // Use NexusFormatter (formerly SpringBootFormatter)
+                    // 使用 NexusFormatter (原 SpringBootFormatter)
+                    let mut fmt_layer = fmt::layer()
+                        .with_file(config.with_file)
+                        .with_line_number(config.with_file)
+                        .with_target(config.with_target)
+                        .event_format(NexusFormatter::new());
+                    fmt_layer.set_span_events(FmtSpan::CLOSE);
+
+                    if let Some(ref path) = config.file_path {
+                        let file_appender = create_file_appender(path, config.rotation)?;
+                        let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+                        let file_layer = fmt::layer()
+                            .with_file(config.with_file)
+                            .with_line_number(config.with_file)
+                            .with_target(config.with_target)
+                            .with_writer(non_blocking)
+                            .compact();
+
+                        Registry::default()
+                            .with(env_filter)
+                            .with(fmt_layer)
+                            .with(file_layer)
+                            .try_init()?;
+                    } else {
+                        Registry::default()
+                            .with(env_filter)
+                            .with(fmt_layer)
+                            .try_init()?;
+                    }
+                }
+                #[cfg(not(feature = "nexus-format"))]
+                {
+                    // Fallback to compact format
+                    // 回退到紧凑格式
+                    let mut fmt_layer = fmt::layer()
+                        .with_file(config.with_file)
+                        .with_line_number(config.with_file)
+                        .with_target(config.with_target)
+                        .compact();
+                    fmt_layer.set_span_events(FmtSpan::CLOSE);
+
+                    if let Some(ref path) = config.file_path {
+                        let file_appender = create_file_appender(path, config.rotation)?;
+                        let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+                        let file_layer = fmt::layer()
+                            .with_file(config.with_file)
+                            .with_line_number(config.with_file)
+                            .with_target(config.with_target)
+                            .with_writer(non_blocking)
+                            .compact();
+
+                        Registry::default()
+                            .with(env_filter)
+                            .with(fmt_layer)
+                            .with(file_layer)
+                            .try_init()?;
+                    } else {
+                        Registry::default()
+                            .with(env_filter)
+                            .with(fmt_layer)
+                            .try_init()?;
+                    }
+                }
+            }
+            LogFormat::Compact => {
+                let mut fmt_layer = fmt::layer()
                     .with_file(config.with_file)
                     .with_line_number(config.with_file)
                     .with_target(config.with_target)
                     .compact();
-
-                if let Some(ref path) = config.file_path {
-                    let file_appender = create_file_appender(path, config.rotation)?;
-                    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-
-                    let file_layer = fmt::layer()
-                                                .with_file(config.with_file)
-                        .with_line_number(config.with_file)
-                        .with_target(config.with_target)
-                        .with_writer(non_blocking)
-                        .compact();
-
-                    Registry::default()
-                        .with(env_filter)
-                        .with(fmt_layer)
-                        .with(file_layer)
-                        .try_init()?;
-                } else {
-                    Registry::default()
-                        .with(env_filter)
-                        .with(fmt_layer)
-                        .try_init()?;
-                }
-            }
-            LogFormat::Compact => {
-                let fmt_layer = fmt::layer()
-                    .with_span_events(FmtSpan::CLOSE)
-                                        .with_file(config.with_file)
-                    .with_line_number(config.with_file)
-                    .with_target(config.with_target)
-                    .compact();
+                fmt_layer.set_span_events(FmtSpan::CLOSE);
 
                 if let Some(ref path) = config.file_path {
                     let file_appender = create_file_appender(path, config.rotation)?;
@@ -345,15 +386,13 @@ impl Logger {
                 }
             }
             LogFormat::Json => {
-                use tracing_subscriber::fmt::format::JsonFields;
-
-                let fmt_layer = fmt::layer()
+                let mut fmt_layer = fmt::layer()
                     .json()
-                    .with_span_events(FmtSpan::CLOSE)
-                                        .with_file(config.with_file)
+                    .with_file(config.with_file)
                     .with_line_number(config.with_file)
                     .with_target(config.with_target)
                     .with_current_span(false);
+                fmt_layer.set_span_events(FmtSpan::CLOSE);
 
                 if let Some(ref path) = config.file_path {
                     let file_appender = create_file_appender(path, config.rotation)?;
@@ -382,8 +421,8 @@ impl Logger {
         Ok(())
     }
 
-    /// Initialize with Spring Boot style properties
-    /// 使用 Spring Boot 风格属性初始化
+    /// Initialize with Spring Boot style properties and banner
+    /// 使用 Spring Boot 风格属性和横幅初始化
     ///
     /// # Example / 示例
     ///
@@ -399,6 +438,12 @@ impl Logger {
     /// Logger::init_spring_style().unwrap();
     /// ```
     pub fn init_spring_style() -> Result<(), Box<dyn std::error::Error>> {
+        #[cfg(feature = "nexus-format")]
+        {
+            // Print banner (uses default values)
+            Banner::print("nexus", env!("CARGO_PKG_VERSION"), 8080);
+        }
+
         let mut config = LoggerConfig::default();
 
         // Spring Boot: logging.level.root
@@ -430,7 +475,7 @@ fn create_env_filter(default_level: LogLevel) -> EnvFilter {
             .from_env_lossy()
     } else {
         EnvFilter::builder()
-            .with_default_directive(tracing::Level::INFO.into())
+            .with_default_directive(Level::INFO.into())
             .from_env_lossy()
     };
 

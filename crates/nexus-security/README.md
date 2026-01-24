@@ -1,0 +1,151 @@
+# nexus-security
+
+[![Crates.io](https://img.shields.io/crates/v/nexus-security)](https://crates.io/crates/nexus-security)
+[![Documentation](https://docs.rs/nexus-security/badge.svg)](https://docs.rs/nexus-security)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../LICENSE)
+
+> Security framework for Nexus applications
+> 
+> Nexus应用程序的安全框架
+
+---
+
+## 📋 Overview / 概述
+
+`nexus-security` provides comprehensive security features for Nexus applications, including authentication, authorization, and method-level security, similar to Spring Security.
+
+`nexus-security` 为Nexus应用程序提供全面的安全功能，包括身份验证、授权和方法级安全，类似于Spring Security。
+
+**Key Features** / **核心特性**:
+- ✅ **Authentication** / **身份验证** - User authentication
+- ✅ **Authorization** / **授权** - Role-based access control
+- ✅ **Method Security** / **方法安全** - `@PreAuthorize`, `@Secured`
+- ✅ **Password Encoding** / **密码编码** - BCrypt, Argon2
+- ✅ **Security Context** / **安全上下文** - Thread-local security
+
+---
+
+## ✨ Features / 特性
+
+| Feature | Spring Equivalent | Description | Status |
+|---------|------------------|-------------|--------|
+| **@PreAuthorize** | `@PreAuthorize` | Method-level authorization | ✅ |
+| **@Secured** | `@Secured` | Role-based security | ✅ |
+| **User** | `UserDetails` | User representation | ✅ |
+| **Role** | `GrantedAuthority` | Role/permission | ✅ |
+| **PasswordEncoder** | `PasswordEncoder` | Password hashing | ✅ |
+| **SecurityContext** | `SecurityContext` | Security context | ✅ |
+
+---
+
+## 🚀 Quick Start / 快速开始
+
+### Installation / 安装
+
+```toml
+[dependencies]
+nexus-security = "0.1.0-alpha"
+nexus-macros = "0.1.0-alpha"
+```
+
+### Basic Usage / 基本用法
+
+```rust
+use nexus_security::{PreAuthorize, Secured, User, Role};
+use nexus_macros::{pre_authorize, secured};
+
+struct UserService;
+
+impl UserService {
+    // Method-level authorization / 方法级授权
+    #[pre_authorize("hasRole('ADMIN')")]
+    async fn delete_user(&self, id: u64) -> Result<(), Error> {
+        delete_user(id).await
+    }
+    
+    // Role-based security / 基于角色的安全
+    #[secured("ROLE_USER")]
+    async fn get_profile(&self) -> Result<Profile, Error> {
+        get_current_user_profile().await
+    }
+}
+```
+
+---
+
+## 📖 Security Features / 安全功能
+
+### Authentication / 身份验证
+
+```rust
+use nexus_security::{Authentication, AuthenticationManager, User};
+
+// Authenticate user / 验证用户
+let auth_manager = AuthenticationManager::new();
+let auth = auth_manager.authenticate(username, password).await?;
+
+// Get authenticated user / 获取已认证用户
+let user = auth.principal();
+```
+
+### Authorization / 授权
+
+```rust
+use nexus_security::{PreAuthorize, SecurityExpression};
+
+// Expression-based authorization / 基于表达式的授权
+#[pre_authorize("hasRole('ADMIN') or hasPermission('USER_DELETE')")]
+async fn delete_user(id: u64) -> Result<(), Error> {
+    delete_user(id).await
+}
+
+// Role-based authorization / 基于角色的授权
+#[secured("ROLE_ADMIN", "ROLE_MODERATOR")]
+async fn moderate_content() -> Result<(), Error> {
+    // Only ADMIN or MODERATOR can access / 仅ADMIN或MODERATOR可访问
+    Ok(())
+}
+```
+
+### Password Encoding / 密码编码
+
+```rust
+use nexus_security::PasswordEncoder;
+
+let encoder = PasswordEncoder::bcrypt(10);  // BCrypt with cost 10
+
+// Encode password / 编码密码
+let encoded = encoder.encode("password123")?;
+
+// Verify password / 验证密码
+let is_valid = encoder.matches("password123", &encoded)?;
+```
+
+---
+
+## 🚦 Roadmap / 路线图
+
+### Phase 3: Core Security ✅ (Completed / 已完成)
+- [x] Authentication
+- [x] Authorization
+- [x] Method security
+- [x] Password encoding
+
+### Phase 4: Advanced Features 🔄 (In Progress / 进行中)
+- [ ] JWT support
+- [ ] OAuth2
+- [ ] Session management
+- [ ] CSRF protection
+
+---
+
+## 📚 Documentation / 文档
+
+- **API Documentation**: [docs.rs/nexus-security](https://docs.rs/nexus-security)
+- **Book**: [Security Guide](../../docs/book/src/reference/security.md)
+
+---
+
+**Built with ❤️ for application security**
+
+**为应用程序安全构建 ❤️**

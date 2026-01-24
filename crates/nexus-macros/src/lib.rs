@@ -720,7 +720,7 @@ pub fn logger(_attr: TokenStream, item: TokenStream) -> TokenStream {
 pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Use the transactional module implementation
     // 使用transactional模块实现
-    transactional::transactional(attr, item)
+    transactional::transactional_impl(attr, item)
 }
 
 // ============================================================================
@@ -747,7 +747,7 @@ pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn cacheable(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let cache_name = if attr.is_empty() {
+    let _cache_name = if attr.is_empty() {
         quote! { "default" }
     } else {
         let cache_name = parse_macro_input!(attr as syn::LitStr);

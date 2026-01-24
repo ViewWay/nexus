@@ -15,7 +15,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::{Request, Response, Result, Middleware, Next};
+use nexus_http::{Request, Response, Result};
+use nexus_router::{Middleware, Next};
 
 /// Timeout middleware
 /// 超时中间件

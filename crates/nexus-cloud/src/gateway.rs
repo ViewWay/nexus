@@ -12,6 +12,7 @@ use async_trait::async_trait;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
 
 /// Gateway
 /// 网关
@@ -22,19 +23,19 @@ use std::pin::Pin;
 /// # Spring Equivalent / Spring等价物
 ///
 /// ```java
-//! @SpringBootApplication
-//! @EnableGateway
-//! public class GatewayApplication {
-//!     @Bean
-//!     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
-//!         return builder.routes()
-//!             .route("path_route", r -> r
-//!                 .path("/get")
-//!                 .uri("http://httpbin.org"))
-//!             .build();
-//!     }
-//! }
-//! ```
+/// @SpringBootApplication
+/// @EnableGateway
+/// public class GatewayApplication {
+///     @Bean
+///     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+///         return builder.routes()
+///             .route("path_route", r -> r
+///                 .path("/get")
+///                 .uri("http://httpbin.org"))
+///             .build();
+///     }
+/// }
+/// ```
 #[async_trait]
 pub trait Gateway: Send + Sync {
     /// Handle an incoming request
@@ -228,17 +229,17 @@ impl GatewayRoute {
 /// # Spring Equivalent / Spring等价物
 ///
 /// ```java
-//! @Component
-//! public class LoggingFilter implements GatewayFilter {
-//!     @Override
-//!     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-//!         // Pre-processing
-//!         return chain.filter(exchange).then(Mono.fromRunnable(() -> {
-//!             // Post-processing
-//!         }));
-//!     }
-//! }
-//! ```
+/// @Component
+/// public class LoggingFilter implements GatewayFilter {
+///     @Override
+///     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+///         // Pre-processing
+///         return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+///             // Post-processing
+///         }));
+///     }
+/// }
+/// ```
 pub trait GatewayFilter: Send + Sync {
     /// Process the request (pre-filter)
     /// 处理请求（前置过滤器）
@@ -334,12 +335,13 @@ impl Gateway for SimpleGateway {
                 .body(format!("Routed to: {}", route.uri).into_bytes())
         } else {
             GatewayResponse::new(http::StatusCode::NOT_FOUND)
-                .body("Route not found".into_bytes())
+                .body("Route not found".as_bytes().to_owned())
         }
     }
 
     async fn routes(&self) -> Vec<GatewayRoute> {
-        self.routes.read().await.clone()
+        let routes = self.routes.read().await;
+        routes.clone()
     }
 
     async fn add_route(&self, route: GatewayRoute) -> Result<(), String> {

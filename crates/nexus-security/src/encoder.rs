@@ -39,13 +39,13 @@ pub trait PasswordEncoder: Send + Sync {
 ///
 /// Equivalent to Spring's BCryptPasswordEncoder.
 /// 等价于Spring的BCryptPasswordEncoder。
-pub struct BCryptPasswordEncoder {
+pub struct BcryptPasswordEncoder {
     /// Cost factor (4-31, default 10)
     /// 成本因子（4-31，默认10）
     cost: u32,
 }
 
-impl BCryptPasswordEncoder {
+impl BcryptPasswordEncoder {
     /// Create a new BCrypt encoder with default cost
     /// 创建具有默认成本的BCrypt编码器
     pub fn new() -> Self {
@@ -60,13 +60,13 @@ impl BCryptPasswordEncoder {
     }
 }
 
-impl Default for BCryptPasswordEncoder {
+impl Default for BcryptPasswordEncoder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl PasswordEncoder for BCryptPasswordEncoder {
+impl PasswordEncoder for BcryptPasswordEncoder {
     fn encode(&self, raw: &str) -> String {
         bcrypt::hash(raw, self.cost).unwrap_or_else(|_| {
             // Fallback to simple hash on error
@@ -123,7 +123,7 @@ pub struct StandardPasswordEncoder {
 impl Clone for StandardPasswordEncoder {
     fn clone(&self) -> Self {
         Self {
-            encoder: Box::new(BCryptPasswordEncoder::new()),
+            encoder: Box::new(BcryptPasswordEncoder::new()),
         }
     }
 }
@@ -140,7 +140,7 @@ impl StandardPasswordEncoder {
     /// 创建新的标准编码器
     pub fn new() -> Self {
         Self {
-            encoder: Box::new(BCryptPasswordEncoder::new()),
+            encoder: Box::new(BcryptPasswordEncoder::new()),
         }
     }
 
@@ -148,7 +148,7 @@ impl StandardPasswordEncoder {
     /// 使用BCrypt创建
     pub fn bcrypt() -> Self {
         Self {
-            encoder: Box::new(BCryptPasswordEncoder::new()),
+            encoder: Box::new(BcryptPasswordEncoder::new()),
         }
     }
 
@@ -299,7 +299,7 @@ mod tests {
 
     #[test]
     fn test_bcrypt_encoder() {
-        let encoder = BCryptPasswordEncoder::new();
+        let encoder = BcryptPasswordEncoder::new();
         let hash = encoder.encode("password");
 
         assert!(encoder.matches("password", &hash));

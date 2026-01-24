@@ -1,3 +1,8 @@
+# 改进版：生成 tarpaulin 覆盖率并上传到 Codecov
+# - 修正了注释（rs ���件）
+# - 加了 cargo 缓存（加快 CI）
+# - 支持在 push 到 main 和 pull_request 时运行
+
 name: Code Coverage
 
 permissions:
@@ -8,9 +13,13 @@ on:
     branches:
       - main
     paths:
-      - '**.rs'                 # only execute on changes to go files
-      - '**/Cargo.toml'         # or dependency updates
-      - '.github/workflows/**'  # or workflow changes
+      - '**/*.rs'                 # 只在 Rust 文件变更时触发
+      - '**/Cargo.toml'          # 或依赖更新
+      - '.github/workflows/**'   # 或 workflow 文件变更
+  pull_request:
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.toml'
 
 jobs:
   cover:
@@ -24,19 +33,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Cache cargo registry and target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.version }}
           components: rustfmt, clippy
 
+      - name: Install cargo-tarpaulin
+        run: |
+          # --locked 更可复现；视情况加入 --force
+          cargo install --locked cargo-tarpaulin
+
       - name: Generate coverage file
         run: |
-          cargo install cargo-tarpaulin
-          cargo tarpaulin --all-features --out xml
+          # 生成 cobertura.xml（tarpaulin 的 XML 输出）
+          cargo tarpaulin --all-features --out Xml
 
       - name: Upload to codecov
         uses: codecov/codecov-action@v4
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} # private repo 需要
         with:
           file: cobertura.xml

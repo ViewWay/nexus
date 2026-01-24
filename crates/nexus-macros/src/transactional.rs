@@ -6,12 +6,15 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{
-    parse_macro_input, ItemFn, Lit, Meta, MetaNameValue, NestedMeta,
-};
+use syn::{parse_macro_input, ItemFn, Expr};
 
-/// #[transactional] macro
-/// #[transactional]宏
+/// #[transactional] macro implementation
+/// #[transactional]宏实现
+///
+/// This is the actual implementation of the transactional macro.
+/// The public wrapper is in lib.rs with the #[proc_macro_attribute] tag.
+/// 这是transactional宏的实际实现。
+/// 公共包装器在lib.rs中，带有#[proc_macro_attribute]标签。
 ///
 /// Equivalent to Spring's @Transactional annotation.
 /// 等价于Spring的@Transactional注解。
@@ -29,26 +32,16 @@ use syn::{
 ///     // Transaction logic
 /// }
 /// ```
-#[proc_macro_attribute]
-pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let args = if attr.is_empty() {
-        Vec::new()
+pub fn transactional_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Parse attribute if not empty
+    // 解析属性（如果不为空）
+    let options = if attr.is_empty() {
+        TransactionalOptionsParsed::default()
     } else {
-        // Parse as comma-separated list of meta items
-        // 解析为逗号分隔的meta项列表
-        syn::parse::Parser::parse2(
-            syn::punctuated::Punctuated::<syn::NestedMeta, syn::Token![,]>::parse_terminated,
-            proc_macro2::TokenStream::from(attr),
-        )
-        .unwrap_or_default()
-        .into_iter()
-        .collect()
+        parse_transactional_options_attr(attr)
     };
-    let function = parse_macro_input!(item as ItemFn);
 
-    // Parse attributes
-    // 解析属性
-    let options = parse_transactional_options(&args);
+    let function = parse_macro_input!(item as ItemFn);
 
     let fn_name = &function.sig.ident;
     let fn_vis = &function.vis;
@@ -58,42 +51,61 @@ pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
     let fn_block = &function.block;
     let fn_attrs = &function.attrs;
 
+    // Build propagation configuration
+    // 构建传播配置
+    let propagation_config = if let Some(prop) = &options.propagation {
+        quote! { definition = #prop; }
+    } else {
+        quote! {}
+    };
+
+    // Build isolation configuration
+    // 构建隔离级别配置
+    let isolation_config = if let Some(iso) = &options.isolation {
+        quote! { definition = #iso; }
+    } else {
+        quote! {}
+    };
+
+    // Build timeout configuration
+    // 构建超时配置
+    let timeout_config = if let Some(timeout) = &options.timeout_secs {
+        quote! { definition = #timeout; }
+    } else {
+        quote! {}
+    };
+
+    // Build read_only configuration
+    // 构建只读配置
+    let readonly_config = if options.read_only {
+        quote! { definition = definition.read_only(true); }
+    } else {
+        quote! {}
+    };
+
     // Generate transaction wrapper code
     // 生成事务包装代码
     let expanded = quote! {
         #(#fn_attrs)*
         #fn_vis #fn_async fn #fn_name(#fn_inputs) #fn_output {
-            use nexus_tx::{TransactionManager, TransactionDefinition, Propagation, IsolationLevel, TransactionalOptions};
-            use std::sync::Arc;
-            use once_cell::sync::Lazy;
+            use nexus_tx::{TransactionManager, TransactionDefinition, Propagation, IsolationLevel};
 
             // Get transaction manager (simplified - in real implementation would be injected)
             // 获取事务管理器（简化版 - 实际实现中应该注入）
-            static TX_MANAGER: Lazy<Arc<dyn TransactionManager>> = Lazy::new(|| {
+            static TX_MANAGER: ::std::sync::Arc<dyn TransactionManager> = ::std::sync::Arc::new({
                 // In real implementation, get from container
                 // 实际实现中，从容器获取
                 todo!("Get transaction manager from container")
             });
 
-            // Create transaction definition from options
-            // 从选项创建事务定义
+            // Create transaction definition
+            // 创建事务定义
             let mut definition = TransactionDefinition::new(stringify!(#fn_name));
 
-            #(if let Some(prop) = #options.propagation {
-                definition = definition.propagation(prop);
-            })*
-
-            #(if let Some(iso) = #options.isolation {
-                definition = definition.isolation(iso);
-            })*
-
-            #(if let Some(timeout) = #options.timeout_secs {
-                definition = definition.timeout_secs(timeout);
-            })*
-
-            if #options.read_only {
-                definition = definition.read_only(true);
-            }
+            #propagation_config
+            #isolation_config
+            #timeout_config
+            #readonly_config
 
             // Begin transaction
             // 开始事务
@@ -116,26 +128,10 @@ pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
                         return Err(e.into());
                     }
                 }
-                Err(ref err) => {
-                    // Check if should rollback
-                    // 检查是否应回滚
-                    let options = TransactionalOptions {
-                        propagation: #options.propagation,
-                        isolation: #options.isolation,
-                        timeout_secs: #options.timeout_secs,
-                        read_only: #options.read_only,
-                        rollback_for: vec![#(#options.rollback_for),*],
-                        no_rollback_for: vec![#(#options.no_rollback_for),*],
-                        name: #options.name,
-                    };
-
-                    // Simplified error check - in real implementation would use proper error types
-                    // 简化的错误检查 - 实际实现中应使用正确的错误类型
-                    let should_rollback = true; // Default: rollback on error
-
-                    if should_rollback {
-                        let _ = TX_MANAGER.rollback(status).await;
-                    }
+                Err(_err) => {
+                    // Simplified: always rollback on error
+                    // 简化版：错误时总是回滚
+                    let _ = TX_MANAGER.rollback(status).await;
                 }
             }
 
@@ -148,81 +144,66 @@ pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 /// Parsed transactional options
 /// 解析的transactional选项
+#[derive(Default)]
 struct TransactionalOptionsParsed {
-    propagation: Option<syn::Expr>,
-    isolation: Option<syn::Expr>,
-    timeout_secs: Option<syn::Expr>,
+    propagation: Option<Expr>,
+    isolation: Option<Expr>,
+    timeout_secs: Option<Expr>,
     read_only: bool,
-    rollback_for: Vec<String>,
-    no_rollback_for: Vec<String>,
-    name: Option<String>,
 }
 
-/// Parse transactional options from attribute arguments
-/// 从属性参数解析transactional选项
-fn parse_transactional_options(args: &[syn::NestedMeta]) -> TransactionalOptionsParsed {
-    let mut options = TransactionalOptionsParsed {
-        propagation: None,
-        isolation: None,
-        timeout_secs: None,
-        read_only: false,
-        rollback_for: Vec::new(),
-        no_rollback_for: Vec::new(),
-        name: None,
-    };
+/// Parse transactional options from attribute token stream
+/// 从属性token流解析transactional选项
+fn parse_transactional_options_attr(attr: TokenStream) -> TransactionalOptionsParsed {
+    let mut options = TransactionalOptionsParsed::default();
 
-    for arg in args {
-        match arg {
-            NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit, .. })) => {
-                let ident = path.get_ident().map(|i| i.to_string()).unwrap_or_default();
+    // Parse the attribute as a comma-separated list of name=value pairs
+    // 将属性解析为逗号分隔的 name=value 对列表
+    let attr_str = attr.to_string();
 
-                match ident.as_str() {
-                    "propagation" => {
-                        if let Lit::Str(s) = lit {
-                            let prop_expr = match s.value().as_str() {
-                                "REQUIRED" => quote! { Some(Propagation::Required) },
-                                "REQUIRES_NEW" => quote! { Some(Propagation::RequiresNew) },
-                                "SUPPORTS" => quote! { Some(Propagation::Supports) },
-                                "NOT_SUPPORTED" => quote! { Some(Propagation::NotSupported) },
-                                "MANDATORY" => quote! { Some(Propagation::Mandatory) },
-                                "NEVER" => quote! { Some(Propagation::Never) },
-                                "NESTED" => quote! { Some(Propagation::Nested) },
-                                _ => quote! { None },
-                            };
-                            options.propagation = Some(syn::parse2(prop_expr).unwrap());
-                        }
-                    }
-                    "isolation" => {
-                        if let Lit::Str(s) = lit {
-                            let iso_expr = match s.value().as_str() {
-                                "READ_UNCOMMITTED" => quote! { Some(IsolationLevel::ReadUncommitted) },
-                                "READ_COMMITTED" => quote! { Some(IsolationLevel::ReadCommitted) },
-                                "REPEATABLE_READ" => quote! { Some(IsolationLevel::RepeatableRead) },
-                                "SERIALIZABLE" => quote! { Some(IsolationLevel::Serializable) },
-                                _ => quote! { None },
-                            };
-                            options.isolation = Some(syn::parse2(iso_expr).unwrap());
-                        }
-                    }
-                    "timeout" | "timeout_secs" => {
-                        if let Lit::Int(i) = lit {
-                            options.timeout_secs = Some(syn::parse2(quote! { Some(#i) }).unwrap());
-                        }
-                    }
-                    "read_only" => {
-                        if let Lit::Bool(b) = lit {
-                            options.read_only = b.value;
-                        }
-                    }
-                    "name" => {
-                        if let Lit::Str(s) = lit {
-                            options.name = Some(s.value());
-                        }
-                    }
-                    _ => {}
+    // Simple parsing - split by comma, then by '='
+    // 简单解析 - 先按逗号分割，再按等号分割
+    for pair in attr_str.split(',') {
+        let pair = pair.trim();
+        if let Some((key, value)) = pair.split_once('=') {
+            let key = key.trim();
+            let value = value.trim().trim_matches('"');
+
+            match key {
+                "propagation" => {
+                    let prop_expr = match value {
+                        "REQUIRED" => quote! { .propagation(Propagation::Required) },
+                        "REQUIRES_NEW" => quote! { .propagation(Propagation::RequiresNew) },
+                        "SUPPORTS" => quote! { .propagation(Propagation::Supports) },
+                        "NOT_SUPPORTED" => quote! { .propagation(Propagation::NotSupported) },
+                        "MANDATORY" => quote! { .propagation(Propagation::Mandatory) },
+                        "NEVER" => quote! { .propagation(Propagation::Never) },
+                        "NESTED" => quote! { .propagation(Propagation::Nested) },
+                        _ => quote! {},
+                    };
+                    options.propagation = Some(syn::parse2(prop_expr).unwrap());
                 }
+                "isolation" => {
+                    let iso_expr = match value {
+                        "READ_UNCOMMITTED" => quote! { .isolation(IsolationLevel::ReadUncommitted) },
+                        "READ_COMMITTED" => quote! { .isolation(IsolationLevel::ReadCommitted) },
+                        "REPEATABLE_READ" => quote! { .isolation(IsolationLevel::RepeatableRead) },
+                        "SERIALIZABLE" => quote! { .isolation(IsolationLevel::Serializable) },
+                        _ => quote! {},
+                    };
+                    options.isolation = Some(syn::parse2(iso_expr).unwrap());
+                }
+                "timeout" | "timeout_secs" => {
+                    if let Ok(timeout_val) = value.parse::<u64>() {
+                        let timeout_expr = quote! { .timeout_secs(#timeout_val) };
+                        options.timeout_secs = Some(syn::parse2(timeout_expr).unwrap());
+                    }
+                }
+                "read_only" => {
+                    options.read_only = value == "true" || value == "1";
+                }
+                _ => {}
             }
-            _ => {}
         }
     }
 

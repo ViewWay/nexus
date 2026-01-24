@@ -331,8 +331,9 @@ mod tests {
 
     #[test]
     fn test_server_builder() {
+        let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
         let server = ServerBuilder::new()
-            .bind("127.0.0.1:8080")
+            .bind(addr)
             .max_connections(1000)
             .request_timeout(60)
             .build();

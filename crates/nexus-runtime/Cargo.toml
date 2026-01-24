@@ -1,25 +1,31 @@
 [package]
 name = "nexus-runtime"
-version.workspace = true
-authors.workspace = true
-repository.workspace = true
-homepage.workspace = true
-license.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
 description = """
 High-performance async runtime for Nexus framework.
 Nexus框架的高性能异步运行时。
 Equivalent to: Spring WebFlux Reactor, Project Reactor
 """
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lints]
 workspace = true
 
 [dependencies]
 # Zero-copy bytes / 零拷贝字节
-bytes.workspace = true
+bytes = { workspace = true }
 
 # Concurrency utilities / 并发工具 (Spring Task Executor)
 rustc-hash = "2.1"
@@ -29,28 +35,28 @@ crossbeam = "0.8"
 
 # Core container (IoC equivalent) / 核心容器（IoC等价）
 # Equivalent to: Spring Core Container, ApplicationContext
-arc-swap.workspace = true
-dashmap.workspace = true
-parking_lot.workspace = true
-once_cell.workspace = true
+arc-swap = { workspace = true }
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+once_cell = { workspace = true }
 
 # Timer / 定时器 (Spring @Scheduled)
-time.workspace = true
+time = { workspace = true }
 
 # Async utilities / 异步工具
 # Equivalent to: Spring Reactive, Project Reactor
-futures.workspace = true
-futures-util.workspace = true
-pin-project.workspace = true
-pin-project-lite.workspace = true
+futures = { workspace = true }
+futures-util = { workspace = true }
+pin-project = { workspace = true }
+pin-project-lite = { workspace = true }
 
 # Error handling / 错误处理 (Spring Exception Handling)
-thiserror.workspace = true
-anyhow.workspace = true
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 
 # Logging / 日志 (Spring Logging, Logback)
-tracing.workspace = true
-tracing-core = "0.1"
+tracing = { workspace = true }
+tracing-core = { workspace = true }
 
 # Platform-specific dependencies / 平台特定依赖
 [target.'cfg(target_os = "linux")'.dependencies]

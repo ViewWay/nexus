@@ -1,0 +1,32 @@
+[package]
+name = "nexus-benches"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lib]
+name = "nexus_benches"
+path = "lib.rs"
+
+[dependencies]
+nexus-http = { path = "../nexus-http" }
+nexus-runtime = { path = "../nexus-runtime" }
+nexus-router = { path = "../nexus-router" }
+nexus-extractors = { path = "../nexus-extractors" }
+
+criterion.workspace = true
+
+[[bench]]
+name = "http_server"
+harness = false
+path = "http_server.rs"
+
+[[bench]]
+name = "router"
+harness = false
+path = "router.rs"
+
+[[bench]]
+name = "extractors"
+harness = false
+path = "extractors.rs"

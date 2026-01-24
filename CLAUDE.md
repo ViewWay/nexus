@@ -71,19 +71,159 @@ nexus/
 
 ### Naming Conventions
 
+Based on [Rust Naming Conventions](https://course.rs/practice/naming.html).
+
+#### Type-Level Naming (UpperCamelCase)
+
+Types use `UpperCamelCase` (PascalCase). For acronyms (2+ characters), only capitalize the first letter.
+
 ```rust
-// Crates: lowercase with hyphens
-nexus-runtime, nexus-http, nexus-web3
+// ✅ Correct
+struct BcryptPasswordEncoder { }  // BCrypt → Bcrypt
+enum HttpStatusCode { }           // HTTP → Http
+type JsonValue = Value;           // JSON → Json
 
-// Types: PascalCase
-Router, CircuitBreaker, TraceContext
-
-// Functions: snake_case, verb-based
-get(), post(), is_connected(), get_config()
-
-// Returning bool: use is_, has_, can_ prefix
-is_connected(), has_permission(), can_retry()
+// ❌ Wrong
+struct BCryptPasswordEncoder { }  // Don't use all caps for acronyms
+enum HTTPStatusCode { }           // Don't use all caps
+type JSONValue = Value;           // Don't use all caps
 ```
+
+#### Value-Level Naming (snake_case)
+
+Functions, variables, and methods use `snake_case`. Names should be verb-based for functions.
+
+```rust
+// ✅ Correct
+fn get_user(id: u64) -> User { }
+let user_count = 42;
+pub fn is_connected() -> bool { }
+
+// ❌ Wrong
+fn GetUser(id: u64) -> User { }     // Don't use PascalCase
+fn get_user_info() -> User { }      // Avoid redundant "info" suffix
+let UserCount = 42;                 // Don't use PascalCase for variables
+```
+
+#### Constant Naming (SCREAMING_SNAKE_CASE)
+
+Constants use `SCREAMING_SNAKE_CASE`.
+
+```rust
+// ✅ Correct
+pub const MAX_CONNECTIONS: usize = 1000;
+pub const DEFAULT_TIMEOUT_SECS: u64 = 30;
+pub const HTTP_VERSION_NOT_SUPPORTED: StatusCode = StatusCode(505);
+
+// ❌ Wrong
+pub const max_connections: usize = 1000;  // Don't use lowercase for constants
+```
+
+#### Boolean Returns
+
+Functions returning `bool` should use prefixes like `is_`, `has_`, `can_`.
+
+```rust
+// ✅ Correct
+fn is_connected() -> bool { }
+fn has_permission(user: &User) -> bool { }
+fn can_retry() -> bool { }
+
+// ❌ Wrong
+fn connected() -> bool { }       // Missing is_ prefix
+fn permission(user: &User) -> bool { }  // Missing has_ prefix
+```
+
+#### Getter Methods
+
+Avoid `get_` prefix for simple field access. Use `get_` only when:
+- Fetching by key/name (e.g., `get_bean("name")`)
+- Performing computation
+- Free functions that extract from a parameter
+
+```rust
+// ✅ Correct - Direct field access (no get_ prefix)
+struct User {
+    name: String,
+}
+impl User {
+    fn name(&self) -> &str { &self.name }  // Not get_name()
+}
+
+// ✅ Correct - Computation/fetching
+fn get_bean(name: &str) -> Option<&Bean> { }  // Fetching by key
+fn get_cookie(req: &Request, name: &str) -> Option<String> { }  // Extraction
+
+// ❌ Wrong
+impl User {
+    fn get_name(&self) -> &str { &self.name }  // Unnecessary get_ prefix
+}
+```
+
+#### Iterator Methods
+
+Use `iter`, `iter_mut`, `into_iter` for iterators.
+
+```rust
+// ✅ Correct
+fn iter(&self) -> impl Iterator<Item = &T> { }
+fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> { }
+fn into_iter(self) -> impl Iterator<Item = T> { }
+
+// ❌ Wrong
+fn entries(&self) -> impl Iterator<Item = &T> { }  // Use iter()
+```
+
+#### Conversion Methods
+
+Use prefixes based on the conversion cost:
+
+```rust
+// ✅ Correct
+fn as_str(&self) -> &str                // Cheap reference cast (borrow)
+fn as_u16(&self) -> u16                  // Cheap conversion (borrow)
+fn to_string(&self) -> String           // Cloning involved (owned)
+fn into_inner(self) -> T                 // Consumes self (owned)
+fn into_response(self) -> Response       // Consumes self (owned)
+
+// ❌ Wrong
+fn string(&self) -> &str { }             // Use as_str()
+fn get_string(&self) -> String { }       // Use to_string()
+```
+
+#### Trait Naming
+
+Traits should use verbs for actions, adjectives for capabilities.
+
+```rust
+// ✅ Correct - Verb traits
+trait Write { }          // Action
+trait Read { }           // Action
+trait Display { }        // Action
+trait FromRequest { }    // Action
+
+// ✅ Correct - Adjective traits
+trait Iterator { }       // Capability
+trait Send { }           // Capability
+trait Sync { }           // Capability
+
+// ❌ Wrong
+trait Printable { }      // Use Display instead
+trait Runnable { }       // Use explicit action name
+```
+
+#### Summary Table
+
+| Category | Convention | Example |
+|----------|-----------|---------|
+| Crates | kebab-case | `nexus-runtime` |
+| Types | UpperCamelCase | `BcryptPasswordEncoder` |
+| Functions | snake_case | `get_user()` |
+| Constants | SCREAMING_SNAKE_CASE | `MAX_CONNECTIONS` |
+| Booleans | is_/has_/can_ prefix | `is_connected()` |
+| Getters | No get_ prefix (direct access) | `user.name()` |
+| Iterators | iter/iter_mut/into_iter | `items.iter()` |
+| Conversions | as_/to_/into_ prefix | `as_str()`, `to_string()` |
 
 ### API Design Principles
 

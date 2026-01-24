@@ -9,7 +9,7 @@
 
 use crate::discovery::ServiceDiscovery;
 use async_trait::async_trait;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -22,16 +22,16 @@ use std::sync::Arc;
 /// # Spring Equivalent / Spring等价物
 ///
 /// ```java
-//! @BootstrapContext
-//! public class ConfigClient {
-//!     @Autowired
-//!     private ConfigServerConfigClient client;
-//!
-//!     public Environment getRemoteEnvironment(String application, String profile) {
-//!         return client.getRemoteEnvironment(application, profile);
-//!     }
-//! }
-//! ```
+/// @BootstrapContext
+/// public class ConfigClient {
+///     @Autowired
+///     private ConfigServerConfigClient client;
+///
+///     public Environment getRemoteEnvironment(String application, String profile) {
+///         return client.getRemoteEnvironment(application, profile);
+///     }
+/// }
+/// ```
 #[async_trait]
 pub trait ConfigClient: Send + Sync {
     /// Get configuration for an application
@@ -215,7 +215,7 @@ impl ConfigServerClient {
                 .json::<RemoteConfig>()
                 .await
                 .map_err(|e| ConfigError::ParseError(e.to_string()))
-        } else if response.status().is_not_found() {
+        } else if response.status().as_u16() == 404 {
             Err(ConfigError::NotFound(url.to_string()))
         } else {
             Err(ConfigError::ConnectionError(format!(

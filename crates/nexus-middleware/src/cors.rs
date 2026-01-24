@@ -14,8 +14,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::{Request, Response, Result, Middleware, Next};
-use nexus_http::StatusCode;
+use nexus_http::{Request, Response, Result, StatusCode, Method, Body};
+use nexus_router::{Middleware, Next};
 
 /// CORS configuration
 /// CORS配置
@@ -211,22 +211,22 @@ where
         Box::pin(async move {
             // Handle preflight OPTIONS request
             // 处理预检OPTIONS请求
-            if req.method() == nexus_http::Method::OPTIONS {
-                let origin = req.header("Origin").unwrap_or("*");
+            if req.method() == Method::OPTIONS {
+                let origin = req.header("Origin").unwrap_or("*").to_string();
 
                 // Check if origin is allowed
                 // 检查来源是否被允许
                 let allowed = if config.wildcard {
                     true
                 } else {
-                    config.allowed_origins.contains(&origin.to_string())
+                    config.allowed_origins.contains(&origin)
                 };
 
                 if !allowed {
                     return Ok(Response::builder()
                         .status(StatusCode::FORBIDDEN)
-                        .body(nexus_http::Body::from("Origin not allowed"))
-                        .unwrap());
+                        .header("Access-Control-Allow-Origin", "*")
+                        .body(Body::from("Origin not allowed"))?);
                 }
 
                 // Build preflight response
@@ -257,14 +257,14 @@ where
                     builder = builder.header("Access-Control-Max-Age", max_age.to_string());
                 }
 
-                return Ok(builder.body(nexus_http::Body::empty()).unwrap());
+                return Ok(builder.body(Body::empty())?);
             }
 
             // Handle normal request - add CORS headers to response
             // 处理普通请求 - 向响应添加CORS headers
             let response = next.call(req, state).await;
 
-            if let Ok(ref resp) = response {
+            if let Ok(ref _resp) = response {
                 tracing::debug!("CORS headers added to response");
             }
 

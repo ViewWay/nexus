@@ -15,11 +15,17 @@ pub mod trace;
 pub mod metrics;
 pub mod log;
 
+#[cfg(feature = "nexus-format")]
+pub mod nexus_format;
+
 pub use trace::{Tracer, Span, TraceContext, TraceId, SpanId};
 pub use metrics::{MetricsRegistry, Counter, Gauge, Histogram};
 pub use log::{
     Logger, LoggerConfig, LoggerFactory, LoggerHandle, LogLevel, LogFormat, LogRotation,
 };
+
+#[cfg(feature = "nexus-format")]
+pub use nexus_format::{Banner, StartupLogger};
 
 /// Re-export tracing for convenience
 /// 重新导出 tracing 以便使用

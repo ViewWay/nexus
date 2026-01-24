@@ -6,10 +6,14 @@
 //! - `Path<T>` - `@PathVariable`
 //! - `Query<T>` - `@RequestParam` / `@RequestParam`
 //! - `Json<T>` - `@RequestBody`
-//! - `Form<T>` - `@ModelAttribute`
+//! - `Form<T>` - Form data only
+//! - `ModelAttribute<T>` - `@ModelAttribute` (query + form)
+//! - `QueryParams<T>` - Query parameters only
 //! - `State<T>` - `@Autowired` / Application state
+//! - `RequestAttribute<T>` - `@RequestAttribute`
 //! - `Header<T>` - `@RequestHeader`
 //! - `Cookie<T>` - `@CookieValue`
+//! - `MatrixVariable<T>` - `@MatrixVariable`
 
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
@@ -18,17 +22,23 @@ pub mod path;
 pub mod query;
 pub mod json;
 pub mod form;
+pub mod model;
+pub mod attribute;
 pub mod state;
 pub mod header;
 pub mod cookie;
+pub mod matrix;
 
 pub use path::Path;
 pub use query::Query;
 pub use json::Json;
 pub use form::Form;
+pub use model::{ModelAttribute, QueryParams};
+pub use attribute::{RequestAttribute, NamedRequestAttribute};
 pub use state::State;
 pub use header::{Header, HeaderOption, NamedHeader};
 pub use cookie::{Cookie, CookieOption, NamedCookie};
+pub use matrix::{MatrixVariable, MatrixVariables, MatrixPath};
 
 use std::future::Future;
 use std::pin::Pin;
@@ -47,6 +57,9 @@ pub use nexus_http::Request;
 /// - `@RequestHeader`
 /// - `@CookieValue`
 /// - `@ModelAttribute`
+/// - `@ModelAttribute` (with QueryParams variant)
+/// - `@RequestAttribute`
+/// - `@MatrixVariable`
 ///
 /// 这等价于Spring的以下方法参数解析：
 /// - `@PathVariable`
@@ -55,6 +68,9 @@ pub use nexus_http::Request;
 /// - `@RequestHeader`
 /// - `@CookieValue`
 /// - `@ModelAttribute`
+/// - `@ModelAttribute` (带 QueryParams 变体)
+/// - `@RequestAttribute`
+/// - `@MatrixVariable`
 pub trait FromRequest: Sized {
     /// Extract from request
     /// 从请求提取

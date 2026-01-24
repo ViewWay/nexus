@@ -45,17 +45,29 @@ pub mod status;
 pub mod error;
 pub mod ext;
 pub mod proto;
+pub mod builder;
+pub mod sse;
+pub mod websocket;
+pub mod http2;
 
 // Re-exports for convenience
 // 重新导出以便使用
 pub use body::{Body, FullBody, EmptyBody, HttpBody};
 pub use request::Request;
-pub use response::Response;
+pub use response::{Response, BodyBuilder};
 pub use method::Method;
 pub use status::StatusCode;
 pub use error::{Error, Result};
 pub use server::Server;
 pub use service::HttpService;
+pub use builder::{UriBuilder, Uri};
+pub use sse::{Event, Sse, SseKeepAlive};
+pub use websocket::{Message, WebSocket, WebSocketUpgrade, WebSocketConfig, CloseFrame, WebSocketError};
+pub use http2::{
+    FrameType, ErrorCode, SettingsParameter, StreamId,
+    Http2Config, ConnectionState, StreamState, Priority,
+    Http2Error, StreamReset
+};
 
 /// Content-Type constants
 /// Content-Type 常量

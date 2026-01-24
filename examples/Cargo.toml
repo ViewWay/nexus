@@ -31,20 +31,8 @@ name = "json_api"
 path = "src/json_api.rs"
 
 [[bin]]
-name = "todo_api"
-path = "src/todo_api.rs"
-
-[[bin]]
-name = "websocket_chat"
-path = "src/websocket_chat.rs"
-
-[[bin]]
-name = "web3_example"
-path = "src/web3_example.rs"
-
-[[bin]]
 name = "ioc_container_example"
-path = "ioc_container_example.rs"
+path = "cache_example.rs"
 
 [[bin]]
 name = "config_example"
@@ -53,6 +41,18 @@ path = "config_example.rs"
 [[bin]]
 name = "cache_example"
 path = "cache_example.rs"
+
+[[bin]]
+name = "spring_boot_logging_demo"
+path = "spring_boot_logging_demo.rs"
+
+[[bin]]
+name = "spring_style_example"
+path = "spring_style_example.rs"
+
+[[bin]]
+name = "logging_example"
+path = "logging_example.rs"
 
 [dependencies]
 # Core framework / 核心框架

@@ -11,18 +11,18 @@
 | @RequestBody | `Json<T>` extractor | ✅ | 请求体提取 |
 | @RequestHeader | `Header<T>` extractor | ✅ | Header提取 |
 | @CookieValue | `Cookie<T>` extractor | ✅ | Cookie支持已实现 |
-| @RequestAttribute | ❌ | ❌ | 请求属性缺失 |
-| @MatrixVariable | ❌ | ❌ | 矩阵变量缺失 |
-| @ModelAttribute | ❌ | ❌ | 模型绑定缺失 |
+| @RequestAttribute | ✅ | ✅ | `RequestAttribute<T>` extractor |
+| @MatrixVariable | ✅ | ✅ | `MatrixVariables`, `MatrixPath` extractor |
+| @ModelAttribute | ✅ | ✅ | `ModelAttribute<T>` extractor |
 | @SessionAttribute | ❌ | ❌ | Session支持缺失 |
 | @ResponseStatus | `StatusCode` | ✅ | 状态码 |
 | ResponseEntity | `IntoResponse` trait | ✅ | 响应转换 |
 | @ResponseBody | `Json<T>` | ✅ | JSON响应 |
-| @ControllerAdvice | ❌ | ❌ | **全局异常处理缺失** |
-| @ExceptionHandler | ❌ | ❌ | **异常处理器缺失** |
-| @ResponseStatusException | ❌ | ❌ | 状态码异常缺失 |
-| Multipart file upload | ❌ | ❌ | **文件上传缺失** |
-| @Validated, @Valid | ❌ | ❌ | **参数校验缺失** |
+| @ControllerAdvice | ✅ | ✅ | `ControllerAdvice` trait |
+| @ExceptionHandler | ✅ | ✅ | `ExceptionHandler` trait |
+| @ResponseStatusException | ✅ | ✅ | `ResponseStatusException` |
+| Multipart file upload | ✅ | ✅ | `Multipart`, `MultipartFile` |
+| @Validated, @Valid | ✅ | ✅ | `Validated<T>` extractor |
 | @Async, @Transactional | ❌ | ❌ | 异步方法支持 |
 
 ## 2. Dependency Injection / IoC容器
@@ -55,7 +55,8 @@
 | @Entity, @Table | ❌ | ❌ | **实体注解缺失** |
 | @Id, @GeneratedValue | ❌ | ❌ | **主键生成缺失** |
 | @Column | ❌ | ❌ | **列映射缺失** |
-| @Transactional | ❌ | ❌ | **事务管理缺失** |
+| @Transactional | ✅ | ✅ | `#[transactional]` macro |
+| TransactionManager | ✅ | ✅ | `TransactionManager` trait |
 | @Query | ❌ | ❌ | **查询注解缺失** |
 | @Querydsl | ❌ | ❌ | 类型安全查询缺失 |
 | Repository<T, ID> | ❌ | ❌ | **仓库模式缺失** |
@@ -67,16 +68,16 @@
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
-| Spring Security | ❌ | ❌ | **安全框架缺失** |
-| @EnableWebSecurity | ❌ | ❌ | 安全配置缺失 |
-| @Secured | ❌ | ❌ | 方法安全缺失 |
-| @PreAuthorize | ❌ | ❌ | 访问控制缺失 |
-| @PostAuthorize | ❌ | ❌ | 访问控制缺失 |
-| @RolesAllowed | ❌ | ❌ | 角色检查缺失 |
-| @AuthenticationPrincipal | ❌ | ❌ | 认证主体缺失 |
-| UserDetailsService | ❌ | ❌ | 用户服务缺失 |
-| PasswordEncoder | ❌ | ❌ | 密码编码缺失 |
-| JWT/OAuth2 | ❌ | ❌ | **JWT/OAuth缺失** |
+| Spring Security | ✅ | ✅ | `nexus-security` crate |
+| @EnableWebSecurity | ✅ | ✅ | Security auto-config |
+| @Secured | ✅ | ✅ | `#[secured]` macro |
+| @PreAuthorize | ✅ | ✅ | `#[pre_authorize]` macro |
+| @PostAuthorize | ❌ | ❌ | 后置授权缺失 |
+| @RolesAllowed | ✅ | ✅ | `Role` enum |
+| @AuthenticationPrincipal | ✅ | ✅ | `User` extractor |
+| UserDetailsService | ✅ | ✅ | `UserService` trait |
+| PasswordEncoder | ✅ | ✅ | `BCryptPasswordEncoder` |
+| JWT/OAuth2 | ✅ | ✅ | JWT encoder/decoder |
 | CSRF Protection | ❌ | ❌ | CSRF防护缺失 |
 | XSS Protection | ❌ | ❌ | XSS防护缺失 |
 | CORS | `CorsMiddleware` | ✅ | CORS已实现 |
@@ -86,13 +87,13 @@
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
-| Actuator endpoints | ❌ | ❌ | **健康检查端点缺失** |
-| /health | ❌ | ❌ | 健康检查缺失 |
-| /metrics | ❌ | ❌ | **指标端点缺失** |
-| /info | ❌ | ❌ | 信息端点缺失 |
+| Actuator endpoints | ✅ | ✅ | `Actuator` struct |
+| /health | ✅ | ✅ | `HealthIndicator` trait |
+| /metrics | ✅ | ✅ | `MetricsRegistry` |
+| /info | ✅ | ✅ | `AppInfo` struct |
 | /env | ❌ | ❌ | 环境端点缺失 |
 | Micrometer | ❌ | ❌ | **指标门面缺失** |
-| Spring Boot Actuator | ❌ | ❌ | Actuator缺失 |
+| Spring Boot Actuator | ✅ | ✅ | `nexus-actuator` crate |
 | Distributed Tracing | 🟡 | Phase 5 | 部分计划 |
 | OpenTelemetry | ❌ | ❌ | OTel集成缺失 |
 | Logging | `tracing` | ✅ | 日志已实现 |
@@ -103,13 +104,13 @@
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
-| Circuit Breaker | 🟡 | Phase 4 | 计划中 |
-| Retry | 🟡 | Phase 4 | 计划中 |
-| Rate Limiter | 🟡 | Phase 4 | 计划中 |
-| Time Limiter | `TimeoutMiddleware` | ✅ | 已实现 |
+| Circuit Breaker | ✅ | ✅ | `CircuitBreaker` trait |
+| Retry | ✅ | ✅ | `RetryExecutor` |
+| Rate Limiter | ✅ | ✅ | `RateLimiter` |
+| Time Limiter | ✅ | ✅ | `TimeoutMiddleware` |
 | Bulkhead | ❌ | ❌ | **信号量隔离缺失** |
 | Thread Pool Isolation | ❌ | ❌ | 线程池隔离缺失 |
-| Fallback | ❌ | ❌ | 降级逻辑缺失 |
+| Fallback | ✅ | ✅ | `CircuitBreaker::with_fallback()` |
 
 ## 7. Configuration / 配置
 
@@ -123,13 +124,38 @@
 | @PropertySource | ✅ | ✅ | PropertySource支持 |
 | Environment abstraction | ✅ | ✅ | Environment已实现 |
 | Profile-based config | ✅ | ✅ | Profile管理已实现 |
-| Config Server integration | ❌ | ❌ | 配置中心缺失 |
-| Consul Config | ❌ | ❌ | Consul集成缺失 |
-| RefreshScope | 🟡 | 🟡 | 热刷新部分实现 |
+| Config Server integration | ✅ | ✅ | `ConfigClient` (nexus-cloud) |
+| Consul Config | 🟡 | 🟡 | Consul可选功能 |
+| RefreshScope | ✅ | ✅ | `RefreshScope` |
 
-## 8. Messaging / 消息
+## 8. Cloud / Spring Cloud
 
-| Spring Boot | Nexus | �状态 | 说明 |
+| Spring Boot | Nexus | 状态 | 说明 |
+|------------|-------|------|------|
+| @EnableDiscoveryClient | ✅ | ✅ | `ServiceDiscovery` trait |
+| DiscoveryClient | ✅ | ✅ | `SimpleDiscoveryClient` |
+| ServiceRegistry | ✅ | ✅ | `ServiceRegistry` trait |
+| ServiceInstance | ✅ | ✅ | `ServiceInstance` struct |
+| Eureka Client | ❌ | ❌ | Eureka集成缺失 |
+| Consul Client | 🟡 | 🟡 | Consul可选功能 |
+| etcd Client | 🟡 | 🟡 | etcd可选功能 |
+| @EnableConfigServer | ✅ | ✅ | `ConfigClient` trait |
+| ConfigServer Client | ✅ | ✅ | `ConfigServerClient` |
+| @RefreshScope | ✅ | ✅ | `RefreshScope` |
+| @EnableGateway | ✅ | ✅ | `Gateway` trait |
+| Gateway Routes | ✅ | ✅ | `GatewayRoute` struct |
+| Gateway Filters | ✅ | ✅ | `GatewayFilter` trait |
+| @EnableCircuitBreaker | ✅ | ✅ | `CircuitBreaker` trait |
+| Resilience4j | ✅ | ✅ | `nexus-resilience` 集成 |
+| LoadBalancer | ✅ | ✅ | `LoadBalancer` trait |
+| RoundRobin | ✅ | ✅ | `RoundRobinLoadBalancer` |
+| Random LB | ✅ | ✅ | `RandomLoadBalancer` |
+| LeastConnection LB | ✅ | ✅ | `LeastConnectionLoadBalancer` |
+| Reactive LB | ✅ | ✅ | `ReactiveLoadBalancer` |
+
+## 9. Messaging / 消息
+
+| Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
 | @JmsListener | ❌ | ❌ | **JMS缺失** |
 | @KafkaListener | ❌ | ❌ | **Kafka缺失** |
@@ -138,7 +164,7 @@
 | @SendTo | ❌ | ❌ | **消息发送缺失** |
 | MessageConverter | ❌ | ❌ | 消息转换器缺失 |
 
-## 9. Caching / 缓存
+## 10. Caching / 缓存
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
@@ -150,18 +176,22 @@
 | Redis integration | ❌ | ❌ | **Redis集成缺失** |
 | Caffeine integration | ✅ | ✅ | `MemoryCache` (基于moka) |
 
-## 10. Scheduling / 调度
+## 11. Scheduling / 调度
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
-| @Scheduled | ❌ | ❌ | **定时任务缺失** |
-| @EnableScheduling | ❌ | ❌ | 调度启用缺失 |
-| @Async | ❌ | ❌ | **异步方法缺失** |
-| @EnableAsync | ❌ | ❌ | 异步启用缺失 |
-| TaskExecutor | ❌ | ❌ | **任务执行器缺失** |
+| @Scheduled | ✅ | ✅ | `ScheduledTask`, `schedule_fixed_rate()` |
+| @EnableScheduling | ✅ | ✅ | `TaskScheduler` |
+| fixedRate | ✅ | ✅ | `ScheduledTask::fixed_rate()` |
+| fixedDelay | ✅ | ✅ | `ScheduledTask::fixed_delay()` |
+| cron | ✅ | ✅ | `ScheduledTask::cron()` |
+| initialDelay | ✅ | ✅ | `ScheduledTask::initial_delay()` |
+| @Async | 🟡 | 🟡 | 部分实现 |
+| @EnableAsync | 🟡 | 🟡 | 部分实现 |
+| TaskExecutor | 🟡 | 🟡 | 基础实现 |
 | Quartz integration | ❌ | ❌ | Quartz集成缺失 |
 
-## 11. Testing / 测试
+## 12. Testing / 测试
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
@@ -172,7 +202,7 @@
 | Testcontainers | ❌ | ❌ | 容器测试缺失 |
 | MockMvc | ❌ | ❌ | Mock MVC缺失 |
 
-## 12. AOP / 切面编程
+## 13. AOP / 切面编程
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
@@ -182,7 +212,7 @@
 | @Around | ❌ | ❌ | 环绕通知缺失 |
 | @Pointcut | ❌ | ❌ | 切点定义缺失 |
 
-## 13. WebSocket / 实时通信
+## 14. WebSocket / 实时通信
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
@@ -192,25 +222,25 @@
 | SseEmitter | ❌ | ❌ | **SSE缺失** |
 | Stomp | ❌ | ❌ | STOMP协议缺失 |
 
-## 14. File Upload / 文件上传
+## 15. File Upload / 文件上传
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
-| MultipartFile | ❌ | ❌ | **文件上传缺失** |
-| @RequestPart | ❌ | ❌ | 分部请求缺失 |
-| @RequestParam MultipartFile | ❌ | ❌ | 文件参数缺失 |
-| StorageService | ❌ | ❌ | 存储服务缺失 |
+| MultipartFile | ✅ | ✅ | `MultipartFile`, `Multipart` |
+| @RequestPart | ✅ | ✅ | `Part<T>` extractor |
+| @RequestParam MultipartFile | ✅ | ✅ | File parameter support |
+| StorageService | 🟡 | 🟡 | Basic save_to() method |
 
-## 15. Utilities / 工具
+## 16. Utilities / 工具
 
 | Spring Boot | Nexus | 状态 | 说明 |
 |------------|-------|------|------|
-| @RestControllerAdvice | ❌ | ❌ | **全局异常处理缺失** |
-| @Valid, @Validated | ❌ | ❌ | **参数校验缺失** |
+| @RestControllerAdvice | ✅ | ✅ | `ControllerAdvice` trait |
+| @Valid, @Validated | ✅ | ✅ | `Validated<T>` extractor |
 | @InitBinder | ❌ | ❌ | 数据绑定缺失 |
-| @ModelAttribute | ❌ | ❌ | 模型属性缺失 |
-| UriComponentsBuilder | ❌ | ❌ | URL构建器缺失 |
-| ResponseEntity.BodyBuilder | ❌ | ❌ | 响应构建器缺失 |
+| @ModelAttribute | ✅ | ✅ | `ModelAttribute<T>` extractor |
+| UriComponentsBuilder | ✅ | ✅ | `UriBuilder` for URL construction |
+| ResponseEntity.BodyBuilder | ✅ | ✅ | `BodyBuilder` for fluent response API |
 
 ---
 

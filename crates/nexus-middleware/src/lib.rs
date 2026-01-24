@@ -23,23 +23,22 @@ pub mod cors;
 pub mod compression;
 pub mod timeout;
 pub mod logger;
+pub mod static_files;
 
-// Re-export from nexus-http
-// 从nexus-http重新导出
-pub use nexus_http::{Request, Response};
-
-// Re-export from nexus-router for middleware compatibility
-// 从nexus-router重新导出以兼容中间件
+// Re-export core types from nexus-http and nexus-router
+// 从nexus-http和nexus-router重新导出核心类型
+pub use nexus_http::{Request, Response, Error};
 pub use nexus_router::{Middleware, Next};
 
-// Re-export error/result types
-// 重新导出错误/结果类型
-pub type Error = nexus_http::Error;
+// Re-export result type
+// 重新导出结果类型
 pub type Result<T> = nexus_http::Result<T>;
 
 // Re-export middleware types
 // 重新导出中间件类型
+pub use middleware::MiddlewareStack;
 pub use cors::{CorsMiddleware, CorsConfig};
 pub use compression::CompressionMiddleware;
 pub use timeout::TimeoutMiddleware;
 pub use logger::LoggerMiddleware;
+pub use static_files::StaticFiles;

@@ -8,6 +8,7 @@
 //! - Client-side load balancing
 
 use crate::ServiceInstance;
+use rand::prelude::{IndexedRandom, Rng};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
@@ -20,17 +21,17 @@ use std::sync::Arc;
 /// # Spring Equivalent / Spring等价物
 ///
 /// ```java
-//! @LoadBalanced
-//! RestTemplate restTemplate;
-//!
-//! @Bean
-//! public ServiceInstanceListSupplier serviceInstanceListSupplier() {
-//!     return new DefaultServiceInstanceListSupplierBuilder()
-//!         .withDiscoveryClient()
-//!         .withCaching()
-//!         .build();
-//! }
-//! ```
+/// @LoadBalanced
+/// RestTemplate restTemplate;
+///
+/// @Bean
+/// public ServiceInstanceListSupplier serviceInstanceListSupplier() {
+///     return new DefaultServiceInstanceListSupplierBuilder()
+///         .withDiscoveryClient()
+///         .withCaching()
+///         .build();
+/// }
+/// ```
 pub trait LoadBalancer: Send + Sync {
     /// Choose an instance from the list
     /// 从列表中选择实例
@@ -90,8 +91,7 @@ impl LoadBalancer for RandomLoadBalancer {
             return None;
         }
 
-        use rand::seq::SliceRandom;
-        instances.choose().cloned()
+        instances.choose(&mut rand::rng()).cloned()
     }
 }
 
@@ -135,7 +135,7 @@ impl WeightedLoadBalancer {
         }
 
         let mut rng = self._rng.lock().unwrap();
-        let mut random = rng.gen::<f32>() * total_weight;
+        let mut random = rng.random::<f32>() * total_weight;
 
         for (instance, weight) in weighted_instances {
             random -= weight;
@@ -300,7 +300,7 @@ mod tests {
 
         let first = lb.choose(&instances).await.unwrap();
         let second = lb.choose(&instances).await.unwrap();
-        let third = lb.choose(&instances).await().await;
+        let third = lb.choose(&instances).await.unwrap();
 
         // Should cycle through instances
         assert_eq!(first.instance_id, "1");

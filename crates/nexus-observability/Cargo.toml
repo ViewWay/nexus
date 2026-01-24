@@ -1,78 +1,86 @@
 [package]
 name = "nexus-observability"
-version.workspace = true
-authors.workspace = true
-repository.workspace = true
-homepage.workspace = true
-license.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
 description = """
 Observability (tracing, metrics, logging) for Nexus framework.
 Nexus框架的可观测性（追踪、指标、日志）。
 Equivalent to: Spring Cloud Sleuth, Micrometer, Spring Boot Actuator
 """
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lints]
 workspace = true
 
 [dependencies]
 # Tracing / 追踪 (Spring Cloud Sleuth, Distributed Tracing)
-tracing.workspace = true
-tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
-tracing-appender.workspace = true
-tracing-opentelemetry = "0.29"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, default-features = false, features = ["env-filter", "json"] }
+tracing-appender = { workspace = true }
+tracing-opentelemetry = { workspace = true }
 
 # OpenTelemetry / OpenTelemetry (Spring Cloud Observability)
 opentelemetry = { workspace = true, optional = true }
 opentelemetry_sdk = { workspace = true, optional = true }
 opentelemetry-jaeger = { workspace = true, optional = true }
-opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"], optional = true }
-opentelemetry-prometheus = { version = "0.27", optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
+opentelemetry-prometheus = { workspace = true, optional = true }
 
 # Metrics / 指标 (Spring Boot Actuator Metrics, Micrometer)
-prometheus = { version = "0.13", optional = true }
-metrics.workspace = true
-metrics-exporter-prometheus = { version = "0.16", optional = true }
+prometheus = { workspace = true, optional = true }
+metrics = { workspace = true }
+metrics-exporter-prometheus = { workspace = true, optional = true }
 
 # Error handling / 错误处理
-thiserror.workspace = true
-anyhow.workspace = true
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 
 # Time / 时间
-time.workspace = true
-chrono.workspace = true
+time = { workspace = true }
+chrono = { workspace = true }
 
 # Runtime / 运行时
 nexus-runtime = { path = "../nexus-runtime" }
 
 # HTTP types / HTTP类型
-http.workspace = true
+http = { workspace = true }
 hyper = { workspace = true, optional = true }
 
 # Serialization / 序列化 (Spring Boot Actuator JSON)
-serde.workspace = true
-serde_json.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 # Logging / 日志 (Spring Logging, Logback)
-log = "0.4"
-slog = "2.8"
+log = { workspace = true }
+slog = { workspace = true }
 
 # Utilities / 工具
-uuid.workspace = true
+uuid = { workspace = true }
+once_cell = { workspace = true }
 
 [features]
-default = ["trace", "log", "metrics"]
+default = ["trace", "log", "metrics", "nexus-format"]
 trace = ["dep:opentelemetry", "dep:opentelemetry_sdk"]
 jaeger = ["trace", "dep:opentelemetry-jaeger"]
 otlp = ["trace", "dep:opentelemetry-otlp"]
 zipkin = ["trace"]
 metrics = ["dep:prometheus", "dep:metrics-exporter-prometheus"]
 log = []
+nexus-format = []
 json = ["tracing-subscriber/json"]
 actuator = ["metrics", "log"]
-full = ["trace", "jaeger", "otlp", "metrics", "log", "json", "actuator"]
+full = ["trace", "jaeger", "otlp", "metrics", "log", "json", "actuator", "nexus-format"]
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)

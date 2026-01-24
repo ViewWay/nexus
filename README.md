@@ -1,116 +1,126 @@
-# Nexus Framework
-# Nexus 框架
+<div align="center">
+<p><img alt="Nexus" width="132" style="max-width:40%;min-width:60px;" src="https://via.placeholder.com/132x40/0066CC/FFFFFF?text=Nexus" /></p>
+<p>
+    <a href="https://github.com/nexus-rs/nexus/blob/main/README.md">English</a>&nbsp;&nbsp;
+    <a href="https://github.com/nexus-rs/nexus/blob/main/README.zh.md">简体中文</a>
+</p>
+<p>
+<a href="https://github.com/nexus-rs/nexus/actions">
+    <img alt="build status" src="https://github.com/nexus-rs/nexus/workflows/CI/badge.svg" />
+</a>
+<a href="https://codecov.io/gh/nexus-rs/nexus">
+    <img alt="codecov" src="https://codecov.io/gh/nexus-rs/nexus/branch/main/graph/badge.svg" />
+</a>
+<br>
+<a href="https://crates.io/crates/nexus"><img alt="crates.io" src="https://img.shields.io/crates/v/nexus" /></a>
+<a href="https://docs.rs/nexus"><img alt="Documentation" src="https://docs.rs/nexus/badge.svg" /></a>
+<a href="https://crates.io/crates/nexus"><img alt="Download" src="https://img.shields.io/crates/d/nexus.svg" /></a>
+<a href="https://github.com/rust-secure-code/safety-dance/"><img alt="unsafe forbidden" src="https://img.shields.io/badge/unsafe-forbidden-success.svg" /></a>
+<br>
+<a href="https://nexusframework.com">
+    <img alt="Website" src="https://img.shields.io/badge/https-nexusframework.com-%23f00" />
+</a>
+</p>
+</div>
 
-[![CI](https://github.com/nexus-framework/nexus/workflows/CI/badge.svg)](https://github.com/nexus-framework/nexus/actions)
-[![codecov](https://codecov.io/gh/nexus-framework/nexus/branch/main/graph/badge.svg)](https://codecov.io/gh/nexus-framework/nexus)
-[![Crates.io](https://img.shields.io/crates/v/nexus)](https://crates.io/crates/nexus)
-[![Documentation](https://docs.rs/nexus/badge.svg)](https://docs.rs/nexus)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+Nexus is a production-grade, high-availability web framework written in Rust with a custom async runtime. Unlike other frameworks that use Tokio, Nexus features a custom async runtime built from scratch using io-uring for maximum performance.
 
-> A production-grade, high-availability web framework written in Rust with a custom async runtime.
->
-> 用 Rust 编写的生产级、高可用 Web 框架，具有自定义异步运行时。
+## 🎯 Features
 
-## Overview / 概述
+- **Custom Runtime** - Thread-per-core architecture with io-uring support
+- **High Availability** - Circuit breakers, rate limiters, retry logic
+- **Web3 Native** - Built-in blockchain and smart contract support
+- **Observability** - OpenTelemetry-compatible tracing/metrics
+- **Type Safety** - Leverages Rust's type system
+- **Spring-like** - Familiar patterns for Spring Boot developers
 
-**Nexus** is a modern web framework designed for high-performance, high-availability applications. Unlike other frameworks that use Tokio, Nexus features a custom async runtime built from scratch using io-uring for maximum performance.
+## ⚡️ Quick Start
 
-**Nexus** 是一个为高性能、高可用应用设计的现代 Web 框架。与其他使用 Tokio 的框架不同，Nexus 具有从零开始构建的自定义异步运行时，使用 io-uring 以实现最高性能。
+You can view examples [here](https://github.com/nexus-rs/nexus/tree/main/examples), or view [official documentation](https://docs.nexusframework.com).
 
-## Key Features / 核心特性
-
-| Feature / 特性 | Description / 描述 |
-|----------------|-------------------|
-| **Custom Runtime** / **自定义运行时** | Thread-per-core architecture with io-uring / Thread-per-core 架构与 io-uring |
-| **High Availability** / **高可用性** | Circuit breakers, rate limiters, retry logic / 熔断器、限流器、重试逻辑 |
-| **Web3 Native** / **原生 Web3** | Built-in blockchain and smart contract support / 内置区块链和智能合约支持 |
-| **Observability** / **可观测性** | OpenTelemetry-compatible tracing/metrics / 兼容 OpenTelemetry 的追踪/指标 |
-| **Type Safety** / **类型安全** | Leverages Rust's type system / 利用 Rust 类型系统 |
-
-## Project Status / 项目状态
-
-> **⚠️ Alpha Version / Alpha版本**
->
-> Nexus is currently in **Phase 1: Runtime Core** (completed). The async runtime is fully functional with io-uring/epoll/kqueue support. Phase 2 (HTTP Core) is in development.
->
-> Nexus 目前处于 **第1阶段：运行时核心**（已完成）。异步运行时已完全可用，支持 io-uring/epoll/kqueue。第2阶段（HTTP核心）正在开发中。
-
-See [implementation plan](docs/implementation-plan.md) for the roadmap.
-请参阅 [实施计划](docs/implementation-plan.md) 了解路线图。
-
-## Quick Example / 快速示例
-
-> **Note / 注意**: This example will work starting Phase 1 (currently in Phase 0).
->
-> **注意**：此示例将在第1阶段开始时生效（目前处于第0阶段）。
+### Hello World
 
 ```rust
-use nexus::prelude::*;
+use nexus_http::{Body, Response, Server, StatusCode};
+use nexus_runtime::task::block_on;
 
-#[nexus::main]
-async fn main() -> Result<()> {
-    // Create router / 创建路由
-    let app = Router::new()
-        .route("/", get(hello))
-        .route("/users/:id", get(get_user));
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
 
-    // Start server / 启动服务器
-    Server::bind("0.0.0.0:3000")
-        .serve(app)
-        .await?;
+    block_on(async {
+        let _server = Server::bind("127.0.0.1:8080")
+            .run(handle_request)
+            .await?;
 
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    })
+}
+
+async fn handle_request(req: nexus_http::Request) -> Result<Response, nexus_http::Error> {
+    Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "text/plain")
+        .body(Body::from("Hello, Nexus!"))
+        .unwrap())
+}
+```
+
+### Nexus Logging
+
+```rust
+use nexus_observability::log::Logger;
+#[cfg(feature = "nexus-format")]
+use nexus_observability::{Banner, StartupLogger};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(feature = "nexus-format")]
+    {
+        Banner::print("MyApp", "0.1.0", 8080);
+        Logger::init_spring_style()?;
+
+        let startup = StartupLogger::new();
+        startup.log_starting("MyApplication");
+        startup.log_server_started(8080, startup.elapsed_ms());
+    }
+
+    tracing::info!(target: "my.app", "Application running");
     Ok(())
 }
-
-// Handler / 处理器
-async fn hello() -> &'static str {
-    "Hello, World! / 你好，世界！"
-}
-
-// With path parameter / 带路径参数
-async fn get_user(Path(id): Path<u64>) -> Json<User> {
-    Json(User { id, name: "Alice".into() })
-}
-
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    name: String,
-}
 ```
 
-## Installation / 安装
+## 🚀 Performance
 
-Add to your `Cargo.toml`:
-添加到您的 `Cargo.toml`：
+Nexus is designed for high performance from the ground up:
 
-```toml
-[dependencies]
-nexus = "0.1"
-```
+- **70% fewer syscalls** vs epoll with io-uring
+- **40% lower latency** with thread-per-core architecture
+- **Zero-copy I/O** for minimal allocations
+- **Linear scalability** with no lock contention
 
-## Documentation / 文档
+Benchmark results will be available in Phase 2.
 
-| Resource / 资源 | Link / 链接 |
-|-----------------|-------------|
-| **Book / 指南** | [docs.nexus-framework.org](https://docs.nexus-framework.org) |
-| **API Docs / API 文档** | [docs.rs/nexus](https://docs.rs/nexus) |
-| **Design Spec / 设计规范** | [design-spec.md](docs/design-spec.md) |
-| **Implementation Plan / 实施计划** | [implementation-plan.md](docs/implementation-plan.md) |
+## 📚 Documentation
 
-## Architecture / 架构
+| Resource | Link |
+|----------|------|
+| **Book** | [docs.nexusframework.com](https://docs.nexusframework.com) |
+| **API Docs** | [docs.rs/nexus](https://docs.rs/nexus) |
+| **Design Spec** | [design-spec.md](docs/design-spec.md) |
+| **Implementation Plan** | [implementation-plan.md](docs/implementation-plan.md) |
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Application Layer                         │
-│                        应用层                                 │
 ├─────────────────────────────────────────────────────────────┤
 │  Handlers  │  Middleware  │  Extractors  │  Response        │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │                     Nexus Runtime                            │
-│                      Nexus运行时                              │
 ├─────────────────────────────────────────────────────────────┤
 │  Task Scheduler  │  I/O Driver  │  Timer  │  Executor       │
 │  (Thread-per-Core)  │  (io-uring)   │                          │
@@ -118,66 +128,66 @@ nexus = "0.1"
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │                     System Layer                             │
-│                       系统层                                 │
 ├─────────────────────────────────────────────────────────────┤
 │       io-uring (Linux) / epoll / kqueue                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Development / 开发
+## 🛠️ Development
 
 ```bash
-# Clone repository / 克隆仓库
-git clone https://github.com/nexus-framework/nexus.git
+# Clone repository
+git clone https://github.com/nexus-rs/nexus.git
 cd nexus
 
-# Build / 构建
+# Build
 cargo build --workspace
 
-# Test / 测试
+# Test
 cargo test --workspace
 
-# Format / 格式化
+# Format
 cargo fmt --all
 
-# Lint / 检查
+# Lint
 cargo clippy --workspace -- -D warnings
 ```
 
-## Contributing / 贡献
+## 📋 Project Status
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-我们欢迎贡献！请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解指南。
+> **⚠️ Alpha Version**
+>
+> Nexus is currently in **Phase 1: Runtime Core** (completed). The async runtime is fully functional with io-uring/epoll/kqueue support. Phase 2 (HTTP Core) is in development.
 
-## Roadmap / 路线图
-
-| Phase / 阶段 | Status / 状态 | Description / 描述 |
-|---------------|---------------|-------------------|
-| Phase 0 | ✅ Complete / 已完成 | Foundation / 基础 |
-| Phase 1 | ✅ Complete / 已完成 | Runtime Core / 运行时核心 |
-| Phase 2 | 🔄 In Progress / 进行中 | HTTP Server / HTTP服务器 |
-| Phase 3 | 📋 Planned / 计划中 | Router & Middleware / 路由和中间件 |
-| Phase 4 | 📋 Planned / 计划中 | Resilience / 弹性 |
-| Phase 5 | 📋 Planned / 计划中 | Observability / 可观测性 |
-| Phase 6 | 📋 Planned / 计划中 | Web3 Integration / Web3集成 |
-| Phase 7 | 📋 Planned / 计划中 | Performance & Hardening / 性能和加固 |
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 0 | ✅ Complete | Foundation |
+| Phase 1 | ✅ Complete | Runtime Core |
+| Phase 2 | 🔄 In Progress | HTTP Server |
+| Phase 3 | 📋 Planned | Router & Middleware |
+| Phase 4 | 📋 Planned | Resilience |
+| Phase 5 | 📋 Planned | Observability |
+| Phase 6 | 📋 Planned | Web3 Integration |
+| Phase 7 | 📋 Planned | Performance & Hardening |
 
 See [implementation plan](docs/implementation-plan.md) for details.
-详情请参阅 [实施计划](docs/implementation-plan.md)。
 
-## License / 许可证
+## 🤝 Contributing
 
-Apache License 2.0 / Apache 许可证 2.0
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-See [LICENSE](LICENSE) for details.
-详情请参阅 [LICENSE](LICENSE)。
+## 📄 License
 
-## Acknowledgments / 致谢
+Nexus is licensed under either of
+
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0))
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT))
+
+## 🙏 Acknowledgments
 
 Nexus is inspired by excellent frameworks across multiple languages:
-Nexus 受多种语言中优秀框架的启发：
 
-- **Rust**: Axum, Actix Web, Monoio
+- **Rust**: Axum, Actix Web, Monoio, Salvo
 - **Go**: Gin, Echo
 - **Java**: Spring Boot, WebFlux
 - **Python**: FastAPI, Starlette
@@ -185,4 +195,3 @@ Nexus 受多种语言中优秀框架的启发：
 ---
 
 **Nexus Framework** — Built for the future of web development.
-**Nexus 框架** — 为 Web 开发的未来而构建。
