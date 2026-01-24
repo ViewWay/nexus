@@ -14,7 +14,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] / 未发布
 
 ### Added / 新增
-- Phase 2 HTTP Core development in progress / Phase 2 HTTP 核心开发中
+- Phase 7 documentation and examples complete
+- Migration guide for framework migrants
+- Comprehensive tutorial with step-by-step examples
+- Web3 example application
+
+## [0.1.0-alpha.2] - 2026-01-24
+
+### Phase 2-6: Core Features Complete / 核心功能完成
+
+This release marks the completion of Phases 2-6, delivering a production-ready web framework.
+此版本标志着第2-6阶段完成，提供了生产就绪的Web框架。
+
+### Phase 2: HTTP Core / HTTP核心 ✅
+
+- HTTP/1.1 parser with 170-620ns performance
+- Router with path parameters using `matchit`
+- Handler system with async support
+- Response builders with `IntoResponse` trait
+- 10 extractor types (Json, Query, Path, Form, State, Header, Cookie, etc.)
+- URI builder for URL construction
+- Performance benchmarks: 6.8 GiB/s throughput
+- 66 unit tests passing
+
+### Phase 3: Middleware / 中间件 ✅
+
+- Core middleware trait and pipeline
+- CORS middleware with configurable origins
+- Compression middleware (gzip, deflate, brotli)
+- WebSocket support for real-time communication
+- Logger middleware with structured logging
+
+### Phase 4: Resilience / 弹性 ✅
+
+- Circuit breaker with state machine (Closed, Open, Half-Open)
+- Rate limiter with token bucket algorithm
+- Retry with exponential backoff
+- Service discovery with health checking
+
+### Phase 5: Observability / 可观测性 ✅
+
+- Distributed tracing with Tracer, Span, TraceContext
+- W3C trace context propagation
+- Metrics: Counter, Gauge, Histogram
+- Prometheus export format
+- Structured logging with Logger and LoggerFactory
+- Multiple output formats (JSON, Pretty)
+
+### Phase 6: Web3 / Web3支持 ✅
+
+- Chain abstraction with EIP-155 support
+- Pre-configured chains (Ethereum, Polygon, BSC, Arbitrum, Optimism, Base, Avalanche, Fantom, Sepolia)
+- Wallet management with LocalWallet
+- Address with EIP-55 checksummed format
+- Transaction builder for EIP-1559 and Legacy transactions
+- RPC client with HTTP support and JSON-RPC 2.0
+- Smart contract interface with ABI encoding/decoding
+- ERC20/ERC721 standard interfaces with function selectors
+
+### Documentation / 文档
+
+- Updated Web3 documentation to reflect completed implementation
+- Added comprehensive tutorial (getting-started/tutorial.md)
+- Added migration guide (migration-guide.md)
+- API documentation with bilingual support (English/Chinese)
+
+### Examples / 示例
+
+- Web3 integration example
+- Spring Boot logging demo
+- Configuration examples
+- Cache examples
 
 ---
 
@@ -114,15 +184,16 @@ This release marks the completion of Phase 1, delivering a fully functional asyn
 |-------|--------|-------------|
 | Phase 0 | ✅ Complete | Foundation / 基础设施 |
 | Phase 1 | ✅ Complete | Runtime Core / 运行时核心 |
-| Phase 2 | 🔄 In Progress | HTTP Core / HTTP 核心 |
-| Phase 3 | 📋 Planned | Middleware & Extensions / 中间件与扩展 |
-| Phase 4 | 📋 Planned | Resilience & HA / 弹性与高可用 |
-| Phase 5 | 📋 Planned | Observability / 可观测性 |
-| Phase 6 | 📋 Planned | Web3 Support / Web3 支持 |
-| Phase 7 | 📋 Planned | Production Ready / 生产就绪 |
+| Phase 2 | ✅ Complete | HTTP Core / HTTP 核心 |
+| Phase 3 | ✅ Complete | Middleware / 中间件 |
+| Phase 4 | ✅ Complete | Resilience & HA / 弹性与高可用 |
+| Phase 5 | ✅ Complete | Observability / 可观测性 |
+| Phase 6 | ✅ Complete | Web3 Support / Web3 支持 |
+| Phase 7 | 🔄 In Progress | Production Ready / 生产就绪 |
 
 ---
 
-[Unreleased]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.1...HEAD
+[Unreleased]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.2...HEAD
+[0.1.0-alpha.2]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.1...v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/nexus-framework/nexus/compare/v0.0.1...v0.1.0-alpha.1
 [0.0.1]: https://github.com/nexus-framework/nexus/releases/tag/v0.0.1

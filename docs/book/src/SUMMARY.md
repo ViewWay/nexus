@@ -11,6 +11,7 @@
 - [Introduction / 简介](./getting-started/introduction.md)
 - [Installation / 安装](./getting-started/installation.md)
 - [Quick Start / 快速开始](./getting-started/quick-start.md)
+- [Tutorial / 教程](./getting-started/tutorial.md)
 
 # Core Concepts / 核心概念
 

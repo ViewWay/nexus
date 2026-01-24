@@ -54,6 +54,10 @@ path = "spring_style_example.rs"
 name = "logging_example"
 path = "logging_example.rs"
 
+[[bin]]
+name = "web3_example"
+path = "src/web3_example.rs"
+
 [dependencies]
 # Core framework / 核心框架
 nexus-runtime = { path = "../crates/nexus-runtime" }
@@ -67,7 +71,7 @@ nexus-resilience = { path = "../crates/nexus-resilience", features = ["full"] }
 nexus-observability = { path = "../crates/nexus-observability", features = ["full"] }
 nexus-config = { path = "../crates/nexus-config" }
 nexus-cache = { path = "../crates/nexus-cache" }
-# nexus-web3 = { path = "../crates/nexus-web3", features = ["full"] }  # Disabled: alloy compatibility issues
+nexus-web3 = { path = "../crates/nexus-web3", features = ["rpc"] }
 nexus-macros = { path = "../crates/nexus-macros", features = ["full"] }
 
 # Async runtime / 异步运行时
@@ -85,3 +89,4 @@ serde_json.workspace = true
 uuid.workspace = true
 chrono.workspace = true
 parking_lot = "0.12"
+env_logger = "0.11"
