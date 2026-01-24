@@ -235,7 +235,7 @@ serde_yaml = "0.9"
 proc-macro-error = "1.0"
 proc-macro-error-attr = "1.0"
 tracing-opentelemetry = "0.29"
-opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
+opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic"] }
 opentelemetry-prometheus = "0.27"
 prometheus = "0.13"
 metrics-exporter-prometheus = "0.16"
