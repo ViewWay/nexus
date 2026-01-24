@@ -533,17 +533,72 @@ where
 /// });
 /// ```
 ///
-/// Note: This is a placeholder implementation.
-/// 注意：这是占位符实现。
-pub fn block_on<F, T>(_future: F) -> T
+/// Note: This creates a temporary runtime for the execution.
+/// 注意：这会创建一个临时运行时来执行。
+pub fn block_on<F, T>(future: F) -> T
 where
     F: Future<Output = T> + Send + 'static,
     T: Send + 'static,
 {
-    // TODO: Implement blocking executor
-    // TODO: 实现阻塞执行器
-    panic!("block_on: Not yet implemented - requires runtime context");
+    use std::sync::mpsc;
+    use std::task::{Context, Poll, Waker};
+    use std::pin::Pin;
+
+    // Channel to communicate the result
+    // 通道用于通信结果
+    let (sender, receiver) = mpsc::channel();
+
+    // Create a no-op waker (we poll in a tight loop)
+    // 创建一个无操作的waker（我们在紧密循环中轮询）
+    let waker = unsafe {
+        Waker::from_raw(std::task::RawWaker::new(
+            std::ptr::null(),
+            &NOOP_RAW_WAKER_VTABLE,
+        ))
+    };
+
+    // Spawn a thread to run the future
+    // 生成一个线程来运行future
+    std::thread::spawn(move || {
+        let mut future = Box::pin(future);
+        let mut cx = Context::from_waker(&waker);
+
+        // Poll until complete
+        // 轮询直到完成
+        loop {
+            match Pin::as_mut(&mut future).poll(&mut cx) {
+                Poll::Ready(result) => {
+                    // Send result (ignore send errors - receiver may be dropped)
+                    // 发送结果（忽略发送错误 - 接收器可能已被删除）
+                    let _ = sender.send(result);
+                    break;
+                }
+                Poll::Pending => {
+                    // Continue polling (busy wait for simplicity)
+                    // 继续轮询（为简单起见使用忙等待）
+                    std::hint::spin_loop();
+                    continue;
+                }
+            }
+        }
+    });
+
+    // Block until result is ready
+    // 阻塞直到结果就绪
+    receiver.recv().unwrap_or_else(|_| {
+        panic!("block_on: Failed to receive result from executor")
+    })
 }
+
+// No-op raw waker vtable for simple polling
+// 用于简单轮询的无操作raw waker vtable
+const NOOP_RAW_WAKER_VTABLE: std::task::RawWakerVTable =
+    std::task::RawWakerVTable::new(
+        |_| std::task::RawWaker::new(std::ptr::null(), &NOOP_RAW_WAKER_VTABLE), // clone
+        |_| {}, // drop
+        |_| {}, // wake
+        |_| {}, // wake_by_ref
+    );
 
 #[cfg(test)]
 mod tests {
