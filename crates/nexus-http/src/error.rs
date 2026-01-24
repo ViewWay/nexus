@@ -86,6 +86,12 @@ impl Error {
         Error::Internal(msg.into())
     }
 
+    /// Create a connection error
+    /// 创建连接错误
+    pub fn connection(msg: impl Into<String>) -> Self {
+        Error::Connection(msg.into())
+    }
+
     /// Get the HTTP status code for this error
     /// 获取此错误的HTTP状态码
     pub fn status_code(&self) -> u16 {

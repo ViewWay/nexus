@@ -60,6 +60,7 @@ pub use status::StatusCode;
 pub use error::{Error, Result};
 pub use server::Server;
 pub use service::HttpService;
+pub use conn::{Connection, ConnectionState};
 pub use builder::{UriBuilder, Uri};
 pub use sse::{Event, Sse, SseKeepAlive};
 pub use websocket::{Message, WebSocket, WebSocketUpgrade, WebSocketConfig, CloseFrame, WebSocketError};
