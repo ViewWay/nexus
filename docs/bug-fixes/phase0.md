@@ -456,9 +456,32 @@ error[E0119]: conflicting implementations of trait `bean::Bean` for type `TestBe
 
 ---
 
+## Bug #018: Missing `timer_registry` field initialization
+
+## Bug #018: 缺失 `timer_registry` 字段初始化
+
+**Date / 日期**: 2026-01-24
+
+**Issue / 问题**: TimerWheel struct was enhanced with timer_registry field for cancellation support, but required ensuring proper initialization order.
+
+**Location / 位置**: `crates/nexus-runtime/src/time.rs`
+
+**Cause / 原因**: Added timer_registry to TimerWheel struct for timer cancellation functionality.
+
+**Fix / 修复**:
+- Ensured timer_registry: Mutex::new(HashMap::new()) is initialized in TimerWheel::new()
+- Added TimerLocation struct to track timer positions
+- Updated all timer insertion and processing functions
+
+**Files Modified / 修改的文件**:
+
+- `/crates/nexus-runtime/src/time.rs`
+
+---
+
 ## Summary / 总结
 
-**Total Bugs Fixed / 总修复 Bug 数**: 17
+**Total Bugs Fixed / 总修复 Bug 数**: 18
 
 **Categories / 类别**:
 
@@ -466,5 +489,6 @@ error[E0119]: conflicting implementations of trait `bean::Bean` for type `TestBe
 - Missing files: 6 (缺失文件)
 - Syntax errors: 2 (语法错误)
 - Trait conflicts: 1 (trait冲突)
+- Feature implementation: 1 (功能实现)
 
 **Workspace Status / 工作区状态**: ✅ All bugs fixed, ready for compilation / ✅ 所有bug已修复，准备编译
