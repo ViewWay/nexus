@@ -43,7 +43,9 @@ mod authority;
 mod context;
 mod encoder;
 mod error;
+mod jwt;
 mod pre_authorize;
+mod rbac;
 mod request_ext;
 mod role;
 mod secured;
@@ -54,9 +56,11 @@ pub use authority::{Authority, GrantedAuthority};
 pub use context::SecurityContext;
 pub use encoder::PasswordEncoder;
 pub use error::{SecurityError, SecurityResult};
+pub use jwt::{JwtAuthentication, JwtClaims, JwtTokenProvider, JwtUtil};
 pub use pre_authorize::{PreAuthorize, SecurityExpression};
+pub use rbac::{AuditLog, AuditLogger, ConsoleAuditLogger, PermissionEntry, RbacConfig, RbacManager, RolePermission, UserRole};
 pub use request_ext::{get_authentication_from_request, SecurityContextExt};
-pub use role::{Role, Roles};
+pub use role::{Permission, Role as RoleEnum, Roles};
 pub use secured::{Secured, SecuredHelper, SecurityMetadata};
 pub use user::{User, UserDetails, UserService};
 
@@ -64,9 +68,10 @@ pub use user::{User, UserDetails, UserService};
 /// 常用类型的重新导出
 pub mod prelude {
     pub use super::{
-        Authentication, AuthenticationManager, Authority, GrantedAuthority, PasswordEncoder,
-        PreAuthorize, Role, Role as Roles, SecurityContext, Secured, SecurityExpression, User,
-        UserDetails, UserService,
+        Authentication, AuthenticationManager, Authority, AuditLogger, ConsoleAuditLogger,
+        GrantedAuthority, JwtAuthentication, JwtClaims, JwtTokenProvider, JwtUtil, PasswordEncoder,
+        Permission, PermissionEntry, PreAuthorize, RbacConfig, RbacManager, RoleEnum, RolePermission,
+        Roles, SecurityContext, Secured, SecurityExpression, User, UserRole, UserDetails, UserService,
     };
 }
 

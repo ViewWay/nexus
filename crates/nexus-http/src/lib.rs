@@ -49,6 +49,7 @@ pub mod builder;
 pub mod sse;
 pub mod websocket;
 pub mod http2;
+pub mod validation;
 
 // Re-exports for convenience
 // 重新导出以便使用
@@ -68,6 +69,15 @@ pub use http2::{
     FrameType, ErrorCode, SettingsParameter, StreamId,
     Http2Config, ConnectionState, StreamState, Priority,
     Http2Error, StreamReset
+};
+pub use validation::{
+    ValidationError,
+    ValidationErrors,
+    Validated,
+    Validatable,
+    ValidatableExtractor,
+    ValidationMiddleware,
+    ValidationHelpers
 };
 
 /// Content-Type constants

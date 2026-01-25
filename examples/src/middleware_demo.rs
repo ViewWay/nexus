@@ -13,7 +13,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use nexus_http::{Body, Response, Server, StatusCode};
 use nexus_router::{Router, Stateful};
-use nexus_runtime::task::block_on;
+use nexus_runtime::{task::block_on, time::sleep};
 use nexus_middleware::{LoggerMiddleware, CorsMiddleware, CorsConfig, TimeoutMiddleware};
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .get("/api/slow", |_req: nexus_http::Request| async move {
             // Simulate slow operation
             // 模拟慢操作
-            tokio::time::sleep(Duration::from_secs(2)).await;
+            sleep(Duration::from_secs(2)).await;
             Ok(Response::builder()
                 .status(StatusCode::OK)
                 .header("content-type", "application/json")

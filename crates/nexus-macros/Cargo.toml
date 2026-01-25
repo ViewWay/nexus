@@ -23,8 +23,16 @@ proc-macro = true
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[lints]
-workspace = true
+[features]
+default = ["derive", "route"]
+derive = []  # #[derive(Handler, Extractor, Response)]
+route = []  # #[route], #[get], #[post], etc.
+component = []  # Spring @Component equivalent
+autowired = []  # Spring @Autowired equivalent
+config = []  # Spring @ConfigurationProperties equivalent
+scheduled = []  # Spring @Scheduled equivalent
+async = []  # Spring @Async equivalent
+full = ["derive", "route", "component", "autowired", "config", "scheduled", "async"]
 
 [dependencies]
 # Macro dependencies / 宏依赖 (Spring Annotation Processing)
@@ -47,19 +55,11 @@ serde_json = { workspace = true }
 # Runtime / 运行时
 nexus-runtime = { path = "../nexus-runtime" }
 
-[features]
-default = ["derive", "route"]
-derive = []  # #[derive(Handler, Extractor, Response)]
-route = []  # #[route], #[get], #[post], etc.
-component = []  # Spring @Component equivalent
-autowired = []  # Spring @Autowired equivalent
-config = []  # Spring @ConfigurationProperties equivalent
-scheduled = []  # Spring @Scheduled equivalent
-async = []  # Spring @Async equivalent
-full = ["derive", "route", "component", "autowired", "config", "scheduled", "async"]
+[lints]
+workspace = true
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)
 nexus-core = { path = "../nexus-core" }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-trybuild = "1.0"
+trybuild = { workspace = true }

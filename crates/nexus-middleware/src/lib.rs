@@ -24,6 +24,7 @@ pub mod compression;
 pub mod timeout;
 pub mod logger;
 pub mod static_files;
+pub mod jwt_auth;
 
 // Re-export core types from nexus-http and nexus-router
 // 从nexus-http和nexus-router重新导出核心类型
@@ -42,3 +43,4 @@ pub use compression::CompressionMiddleware;
 pub use timeout::TimeoutMiddleware;
 pub use logger::LoggerMiddleware;
 pub use static_files::StaticFiles;
+pub use jwt_auth::{JwtAuthenticationMiddleware, JwtRequestExt};

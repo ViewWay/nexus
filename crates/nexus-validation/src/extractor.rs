@@ -127,6 +127,16 @@ mod tests {
         assert!(result.is_ok());
     }
 
+    // Implement our Validate trait for tests
+    impl NexusValidate for TestUser {
+        fn validate(&self) -> Result<(), ValidationError> {
+            if self.username.len() < 3 {
+                return Err(ValidationError::new("username", "Username must be at least 3 characters"));
+            }
+            Ok(())
+        }
+    }
+
     #[test]
     fn test_valid_failure() {
         let user = TestUser {

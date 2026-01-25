@@ -5,7 +5,6 @@
 //! 本模块使用bevy_reflect提供动态Bean操作。
 
 use super::{
-    bean::Bean,
     error::{Error, Result},
 };
 use bevy_reflect::Reflect;

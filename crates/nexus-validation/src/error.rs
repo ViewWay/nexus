@@ -1,153 +1,218 @@
-//! Validation error types
-//! 验证错误类型
+//! 验证错误类型 / Validation error types
+//!
+//! # 验证错误 / Validation Errors
+//!
+//! ```rust,ignore
+//! use nexus_validation::{ValidationError, ValidationErrors};
+//!
+//! // 单个字段错误
+//! let error = ValidationError::new("username", "Username is required");
+//!
+//! // 多个字段错误
+//! let mut errors = ValidationErrors::new();
+//! errors.add("username", "Username is required");
+//! errors.add("email", "Email is invalid");
+//! ```
 
 use std::collections::HashMap;
 use std::fmt;
 
-/// Validation result type
-/// 验证结果类型
-pub type ValidationResult<T> = Result<T, ValidationError>;
-
-/// Validation error
-/// 验证错误
-///
-/// Equivalent to Spring's MethodArgumentNotValidException.
-/// 等价于Spring的MethodArgumentNotValidException。
+/// 单个验证错误 / Single validation error
 #[derive(Debug, Clone)]
 pub struct ValidationError {
-    /// Field errors
-    /// 字段错误
-    pub field_errors: HashMap<String, Vec<String>>,
-
-    /// Global errors
-    /// 全局错误
-    pub global_errors: Vec<String>,
+    /// 字段名 / Field name
+    pub field: String,
+    /// 错误消息 / Error message
+    pub message: String,
+    /// 错误代码 / Error code
+    pub code: String,
+    /// 无效值 / Invalid value
+    pub value: Option<String>,
 }
 
 impl ValidationError {
-    /// Create a new validation error
-    /// 创建新的验证错误
-    pub fn new() -> Self {
+    /// 创建新的验证错误 / Create new validation error
+    pub fn new(field: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
-            field_errors: HashMap::new(),
-            global_errors: Vec::new(),
+            field: field.into(),
+            message: message.into(),
+            code: "validation_failed".to_string(),
+            value: None,
         }
     }
 
-    /// Add a field error
-    /// 添加字段错误
-    pub fn add_field_error(&mut self, field: impl Into<String>, message: impl Into<String>) {
-        let field = field.into();
-        let message = message.into();
-        self.field_errors
-            .entry(field)
-            .or_insert_with(Vec::new)
-            .push(message);
+    /// 设置错误代码 / Set error code
+    pub fn with_code(mut self, code: impl Into<String>) -> Self {
+        self.code = code.into();
+        self
     }
 
-    /// Add a global error
-    /// 添加全局错误
-    pub fn add_global_error(&mut self, message: impl Into<String>) {
-        self.global_errors.push(message.into());
+    /// 设置无效值 / Set invalid value
+    pub fn with_value(mut self, value: impl Into<String>) -> Self {
+        self.value = Some(value.into());
+        self
     }
 
-    /// Check if there are any errors
-    /// 检查是否有任何错误
-    pub fn has_errors(&self) -> bool {
-        !self.field_errors.is_empty() || !self.global_errors.is_empty()
-    }
-
-    /// Get the total error count
-    /// 获取总错误数
-    pub fn error_count(&self) -> usize {
-        self.field_errors.values().map(|v| v.len()).sum::<usize>()
-            + self.global_errors.len()
-    }
-
-    /// Create from validator errors
-    /// 从验证器错误创建
-    pub fn from_validator_errors(errors: validator::ValidationErrors) -> Self {
-        let mut validation_error = Self::new();
-
-        for (field, field_errors_kind) in errors.errors() {
-            let field_name = field.to_string();
-            let mut messages = Vec::new();
-
-            // ValidationErrorsKind is an enum - match on its variants
-            match field_errors_kind {
-                validator::ValidationErrorsKind::Field(errs) => {
-                    // Field-level validation errors
-                    for err in errs {
-                        let message = if let Some(ref msg) = err.message {
-                            msg.to_string()
-                        } else {
-                            err.code.to_string()
-                        };
-                        messages.push(message);
-                    }
-                }
-                validator::ValidationErrorsKind::List(list_errors) => {
-                    // List/index-level validation errors (e.g., for Vec items)
-                    for (_index, nested_errors) in list_errors {
-                        // nested_errors is &Box<ValidationErrors>, need to extract errors from it
-                        for (_nested_field, nested_kind) in nested_errors.errors() {
-                            if let validator::ValidationErrorsKind::Field(errs) = nested_kind {
-                                for err in errs {
-                                    let message = if let Some(ref msg) = err.message {
-                                        msg.to_string()
-                                    } else {
-                                        err.code.to_string()
-                                    };
-                                    messages.push(message);
-                                }
-                            }
-                        }
-                    }
-                }
-                validator::ValidationErrorsKind::Struct(nested_errors) => {
-                    // Nested struct validation errors
-                    for (_nested_field, nested_kind) in nested_errors.errors() {
-                        if let validator::ValidationErrorsKind::Field(errs) = nested_kind {
-                            for err in errs {
-                                let message = if let Some(ref msg) = err.message {
-                                    msg.to_string()
-                                } else {
-                                    err.code.to_string()
-                                };
-                                messages.push(message);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if !messages.is_empty() {
-                validation_error.field_errors.insert(field_name, messages);
-            }
+    /// 必填错误 / Required error
+    pub fn required(field: impl Into<String>) -> Self {
+        Self {
+            field: field.into(),
+            message: format!("{} is required", field.into()),
+            code: "required".to_string(),
+            value: None,
         }
-
-        validation_error
     }
-}
 
-impl Default for ValidationError {
-    fn default() -> Self {
-        Self::new()
+    /// 邮箱格式错误 / Email format error
+    pub fn invalid_email(field: impl Into<String>) -> Self {
+        Self {
+            field: field.into(),
+            message: "Invalid email format".to_string(),
+            code: "invalid_email".to_string(),
+            value: None,
+        }
+    }
+
+    /// 长度错误 / Length error
+    pub fn invalid_length(field: impl Into<String>, min: usize, max: usize) -> Self {
+        Self {
+            field: field.into(),
+            message: format!("{} length must be between {} and {}", field.into(), min, max),
+            code: "invalid_length".to_string(),
+            value: None,
+        }
+    }
+
+    /// 范围错误 / Range error
+    pub fn out_of_range(field: impl Into<String>, min: i64, max: i64) -> Self {
+        Self {
+            field: field.into(),
+            message: format!("{} must be between {} and {}", field.into(), min, max),
+            code: "out_of_range".to_string(),
+            value: None,
+        }
+    }
+
+    /// 正则表达式错误 / Regex error
+    pub fn pattern_mismatch(field: impl Into<String>, pattern: &str) -> Self {
+        Self {
+            field: field.into(),
+            message: format!("{} does not match required pattern", field.into()),
+            code: "pattern_mismatch".to_string(),
+            value: Some(pattern.to_string()),
+        }
     }
 }
 
 impl fmt::Display for ValidationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Validation failed with {} errors", self.error_count())
+        write!(f, "{}: {}", self.field, self.message)
     }
 }
 
 impl std::error::Error for ValidationError {}
 
-/// Convert from validator::ValidationErrors
-impl From<validator::ValidationErrors> for ValidationError {
-    fn from(errors: validator::ValidationErrors) -> Self {
-        Self::from_validator_errors(errors)
+/// 多个验证错误集合 / Collection of validation errors
+#[derive(Debug, Clone, Default)]
+pub struct ValidationErrors {
+    /// 字段错误映射 / Field error mapping
+    pub errors: HashMap<String, Vec<ValidationError>>,
+}
+
+impl ValidationErrors {
+    /// 创建新的错误集合 / Create new error collection
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// 添加字段错误 / Add field error
+    pub fn add(&mut self, field: impl Into<String>, message: impl Into<String>) {
+        let field = field.into();
+        let error = ValidationError::new(&field, message);
+        self.errors.entry(field).or_default().push(error);
+    }
+
+    /// 添加验证错误对象 / Add validation error object
+    pub fn add_error(&mut self, error: ValidationError) {
+        let field = error.field.clone();
+        self.errors.entry(field).or_default().push(error);
+    }
+
+    /// 合并其他错误集合 / Merge another error collection
+    pub fn merge(&mut self, other: ValidationErrors) {
+        for (field, errors) in other.errors {
+            self.errors.entry(field).or_default().extend(errors);
+        }
+    }
+
+    /// 检查是否有错误 / Check if has errors
+    pub fn has_errors(&self) -> bool {
+        !self.errors.is_empty()
+    }
+
+    /// 获取字段数量 / Get field count
+    pub fn len(&self) -> usize {
+        self.errors.len()
+    }
+
+    /// 检查是否为空 / Check if empty
+    pub fn is_empty(&self) -> bool {
+        self.errors.is_empty()
+    }
+
+    /// 获取所有字段名 / Get all field names
+    pub fn fields(&self) -> Vec<String> {
+        self.errors.keys().cloned().collect()
+    }
+
+    /// 获取指定字段的错误 / Get errors for specific field
+    pub fn get(&self, field: &str) -> Option<&[ValidationError]> {
+        self.errors.get(field).map(|v| v.as_slice())
+    }
+
+    /// 转换为 JSON 值 / Convert to JSON value
+    pub fn to_map(&self) -> HashMap<String, Vec<String>> {
+        self.errors
+            .iter()
+            .map(|(field, errors)| {
+                let messages: Vec<String> = errors.iter().map(|e| e.message.clone()).collect();
+                (field.clone(), messages)
+            })
+            .collect()
+    }
+}
+
+impl fmt::Display for ValidationErrors {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Validation errors: ")?;
+        for (field, errors) in &self.errors {
+            for error in errors {
+                write!(f, "\n  - {}: {}", field, error.message)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl std::error::Error for ValidationErrors {}
+
+/// From 实现，方便从单个错误转换 / From impl for easy conversion
+impl From<ValidationError> for ValidationErrors {
+    fn from(error: ValidationError) -> Self {
+        let mut errors = Self::new();
+        errors.add_error(error);
+        errors
+    }
+}
+
+/// From 实现，方便从向量转换 / From impl for Vec
+impl From<Vec<ValidationError>> for ValidationErrors {
+    fn from(errors: Vec<ValidationError>) -> Self {
+        let mut result = Self::new();
+        for error in errors {
+            result.add_error(error);
+        }
+        result
     }
 }
 
@@ -157,24 +222,39 @@ mod tests {
 
     #[test]
     fn test_validation_error() {
-        let mut err = ValidationError::new();
-        err.add_field_error("username", "Username is required");
-        err.add_field_error("email", "Invalid email format");
-        err.add_global_error("Validation failed");
-
-        assert!(err.has_errors());
-        assert_eq!(err.error_count(), 3);
-        assert_eq!(err.field_errors.len(), 2);
-        assert_eq!(err.global_errors.len(), 1);
+        let error = ValidationError::new("username", "Username is required");
+        assert_eq!(error.field, "username");
+        assert_eq!(error.message, "Username is required");
     }
 
     #[test]
-    fn test_validation_error_display() {
-        let err = ValidationError::new();
-        assert_eq!(err.to_string(), "Validation failed with 0 errors");
+    fn test_validation_errors() {
+        let mut errors = ValidationErrors::new();
+        errors.add("username", "Username is required");
+        errors.add("email", "Email is invalid");
 
-        let mut err = ValidationError::new();
-        err.add_field_error("test", "error");
-        assert!(err.to_string().contains("1 error"));
+        assert_eq!(errors.len(), 2);
+        assert!(errors.has_errors());
+        assert_eq!(errors.get("username").unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_required_error() {
+        let error = ValidationError::required("password");
+        assert_eq!(error.code, "required");
+    }
+
+    #[test]
+    fn test_invalid_email() {
+        let error = ValidationError::invalid_email("email");
+        assert_eq!(error.code, "invalid_email");
+    }
+
+    #[test]
+    fn test_to_map() {
+        let mut errors = ValidationErrors::new();
+        errors.add("username", "Username is required");
+        let map = errors.to_map();
+        assert_eq!(map.get("username").unwrap().len(), 1);
     }
 }

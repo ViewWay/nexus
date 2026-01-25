@@ -35,9 +35,9 @@ pub struct QueryWrapper {
     /// WHERE 条件
     pub conditions: Vec<Condition>,
 
-    /// ORDER BY clauses
-    /// ORDER BY 子句
-    pub orders: Vec<Order>,
+    /// ORDER BY clauses (internal QueryOrder)
+    /// ORDER BY 子句（内部 QueryOrder）
+    pub orders: Vec<QueryOrder>,
 
     /// LIMIT clause
     /// LIMIT 子句
@@ -244,14 +244,14 @@ impl QueryWrapper {
     /// Add ORDER BY ASC
     /// 添加升序排序
     pub fn order_by_asc(mut self, field: &str) -> Self {
-        self.orders.push(Order::Asc(field.to_string()));
+        self.orders.push(QueryOrder::Asc(field.to_string()));
         self
     }
 
     /// Add ORDER BY DESC
     /// 添加降序排序
     pub fn order_by_desc(mut self, field: &str) -> Self {
-        self.orders.push(Order::Desc(field.to_string()));
+        self.orders.push(QueryOrder::Desc(field.to_string()));
         self
     }
 
@@ -496,11 +496,28 @@ impl Condition {
 /// Order clause for QueryWrapper
 /// QueryWrapper 的 ORDER BY 子句
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Order {
+pub enum QueryOrder {
     /// Ascending order
     Asc(String),
     /// Descending order
     Desc(String),
+}
+
+impl QueryOrder {
+    /// Convert to sort::Order
+    /// 转换为 sort::Order
+    pub fn to_order(&self) -> super::Order {
+        match self {
+            Self::Asc(field) => super::Order {
+                property: field.clone(),
+                direction: super::Direction::ASC,
+            },
+            Self::Desc(field) => super::Order {
+                property: field.clone(),
+                direction: super::Direction::DESC,
+            },
+        }
+    }
 }
 
 /// Query value
@@ -845,7 +862,7 @@ mod tests {
 
     #[test]
     fn test_query_wrapper_eq() {
-        let qw = QueryWrapper::new().eq("status", "active");
+        let qw = QueryWrapper::new().eq("status", Value::String("active".to_string()));
         assert!(qw.has_conditions());
         assert_eq!(qw.conditions.len(), 1);
     }
@@ -853,8 +870,8 @@ mod tests {
     #[test]
     fn test_query_wrapper_chain() {
         let qw = QueryWrapper::new()
-            .eq("status", "active")
-            .ge("age", 18)
+            .eq("status", Value::String("active".to_string()))
+            .ge("age", Value::I32(18))
             .like("name", "Alice");
         assert_eq!(qw.conditions.len(), 3);
     }

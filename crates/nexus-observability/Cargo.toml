@@ -20,8 +20,18 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[lints]
-workspace = true
+[features]
+default = ["trace", "log", "metrics", "nexus-format"]
+trace = ["dep:opentelemetry", "dep:opentelemetry_sdk"]
+jaeger = ["trace", "dep:opentelemetry-jaeger"]
+otlp = ["trace", "dep:opentelemetry-otlp"]
+zipkin = ["trace"]
+metrics = ["dep:prometheus", "dep:metrics-exporter-prometheus"]
+log = []
+nexus-format = []
+json = ["tracing-subscriber/json"]
+actuator = ["metrics", "log"]
+full = ["trace", "jaeger", "otlp", "metrics", "log", "json", "actuator", "nexus-format"]
 
 [dependencies]
 # Tracing / 追踪 (Spring Cloud Sleuth, Distributed Tracing)
@@ -69,18 +79,8 @@ slog = { workspace = true }
 uuid = { workspace = true }
 once_cell = { workspace = true }
 
-[features]
-default = ["trace", "log", "metrics", "nexus-format"]
-trace = ["dep:opentelemetry", "dep:opentelemetry_sdk"]
-jaeger = ["trace", "dep:opentelemetry-jaeger"]
-otlp = ["trace", "dep:opentelemetry-otlp"]
-zipkin = ["trace"]
-metrics = ["dep:prometheus", "dep:metrics-exporter-prometheus"]
-log = []
-nexus-format = []
-json = ["tracing-subscriber/json"]
-actuator = ["metrics", "log"]
-full = ["trace", "jaeger", "otlp", "metrics", "log", "json", "actuator", "nexus-format"]
+[lints]
+workspace = true
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)

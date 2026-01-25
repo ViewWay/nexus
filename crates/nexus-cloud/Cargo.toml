@@ -20,8 +20,11 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[lints]
-workspace = true
+[features]
+default = ["consul"]
+consul = ["dep:consul"]
+etcd = ["dep:etcd-rs"]
+all = ["consul", "etcd"]
 
 [dependencies]
 # Async runtime / 异步运行时
@@ -32,7 +35,7 @@ tokio = { workspace = true, features = ["sync", "time"] }
 hyper = { workspace = true }
 hyper-util = { workspace = true }
 http = { workspace = true }
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { workspace = true, features = ["json"] }
 
 # Utilities / 工具
 rand = { workspace = true }
@@ -59,6 +62,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
 # Consul / Consul (optional)
+# Note: consul and etcd-rs are not in workspace, keeping direct versions
 consul = { version = "0.4", optional = true }
 
 # Etcd / Etcd (optional)
@@ -68,11 +72,8 @@ etcd-rs = { version = "1.0", optional = true }
 # Use existing resilience crate
 nexus-resilience = { path = "../nexus-resilience" }
 
-[features]
-default = ["consul"]
-consul = ["dep:consul"]
-etcd = ["dep:etcd-rs"]
-all = ["consul", "etcd"]
+[lints]
+workspace = true
 
 [dev-dependencies]
 # Testing / 测试

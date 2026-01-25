@@ -1,0 +1,53 @@
+[package]
+name = "nexus-data-rdbc"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+description = """
+Reactive Database Connectivity (RDBC) for Nexus framework.
+Nexus框架的响应式数据库连接。
+Equivalent to: Spring Data R2DBC, R2DBC
+"""
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[lints]
+workspace = true
+
+[dependencies]
+# Data commons / 数据通用
+nexus-data-commons = { path = "../nexus-data-commons" }
+
+# Async trait / 异步trait
+async-trait = { workspace = true }
+
+# Database / 数据库
+sqlx = { workspace = true }
+
+# Serialization / 序列化
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling / 错误处理
+thiserror = { workspace = true }
+
+# Utilities / 工具
+futures = { workspace = true }
+futures-util = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+# Logging / 日志
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

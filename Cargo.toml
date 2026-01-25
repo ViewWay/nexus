@@ -23,6 +23,11 @@ members = [
     "crates/nexus-macros",
     "crates/nexus-benches",
     "crates/nexus-data-commons",
+    "crates/nexus-data-rdbc",
+    "crates/nexus-lombok",
+    "crates/nexus-data-annotations",
+    "crates/nexus-validation-annotations",
+    "crates/nexus-aop",
     "examples",
 ]
 resolver = "3"
@@ -101,6 +106,7 @@ proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "2.0", features = ["full", "visit-mut"] }
 darling = "0.23.0"
+darling_core = "0.23.0"
 
 # Error Handling / 错误处理
 # Equivalent to: Spring Exception Handling
@@ -115,6 +121,12 @@ futures = "0.3"
 futures-util = "0.3"
 pin-project = "1.1"
 pin-project-lite = "0.2"
+
+# Runtime utilities / 运行时工具
+rustc-hash = "2.1"
+flume = "0.11"
+num_cpus = "1.16"
+crossbeam = "0.8"
 
 # Configuration / 配置
 # Equivalent to: Spring Boot Configuration, @ConfigurationProperties
@@ -139,6 +151,10 @@ quick_cache = "0.6"
 governor = "0.10.4"
 tower = "0.5"
 tower_governor = "0.8.0"
+tower-http = "0.6"
+async-compression = "0.4"
+csrf = "0.5"
+headers = "0.4"
 
 # Scheduled Tasks / 定时任务
 # Equivalent to: Spring Scheduling, @Scheduled
@@ -164,6 +180,7 @@ base64 = "0.22"
 hex = "0.4"
 getrandom = "0.3"
 sha3 = "0.10"
+sha2 = "0.10"
 
 # Template Engines / 模板引擎
 # Equivalent to: Spring Thymeleaf, FreeMarker
@@ -190,6 +207,11 @@ h3-quinn = "^0.0.10"
 quinn = "0.11"
 futures-rustls = "0.26"
 
+# Platform-specific dependencies / 平台特定依赖
+io-uring = "0.7.11"
+libc = "0.2"
+kqueue = "1.0"
+
 # Web3 / 区块链
 # Equivalent to: Spring Web3 (community projects)
 # Note: Using latest stable versions (1.4.x) compatible with serde 1.0
@@ -215,37 +237,41 @@ quickcheck = "1.0"
 quickcheck_macros = "1.0"
 proptest = "1.5"
 mockito = "1.6"
+trybuild = "1.0"
+tokio-test = "0.4"
 
 # Utilities / 工具
 itertools = "0.14"
 indexmap = { version = "2.13.0", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 time = { version = "0.3.46", features = ["serde", "local-offset"] }
-uuid = { version = "1.12", features = ["v4", "serde"] }
+uuid = { version = "1.20.0", features = ["v4", "serde"] }
 url = "2.5"
 percent-encoding = "2.3"
 
 # Additional dependencies / 额外依赖
 mime = "0.3"
 mime_guess = "2.0"
-secp256k1 = "0.30"
+secp256k1 = "0.31.1"
 bip39 = "2.0"
 siphasher = "1.0"
 subtle = "2.5"
-md-5 = "0.11.0-rc.3"
+md-5 = "0.10.6"
 matchit = "0.9.1"
-serde_yaml = "0.9"
+serde_yaml = "0.9.34-deprecated"
+serde_yml = "0.0.12"
 proc-macro-error = "1.0"
 proc-macro-error-attr = "1.0"
-tracing-opentelemetry = "0.29"
+tracing-opentelemetry = "0.32.1"
 opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
-opentelemetry-prometheus = "0.27"
-prometheus = "0.13"
-metrics-exporter-prometheus = "0.16"
+opentelemetry-prometheus = "0.31.0"
+prometheus = "0.14.0"
+metrics-exporter-prometheus = "0.18.1"
 tracing-core = "0.1"
 log = "0.4"
 slog = "2.8"
-bevy_reflect = "0.13"
+env_logger = "0.11"
+bevy_reflect = "0.18.0"
 
 # ==============================================================================
 # Release Configuration / 发布配置

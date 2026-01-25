@@ -4750,6 +4750,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexus-data-rdbc"
+version = "0.1.0-alpha"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "futures",
+ "futures-util",
+ "nexus-data-commons",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "nexus-examples"
 version = "0.1.0-alpha"
 dependencies = [

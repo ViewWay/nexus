@@ -18,6 +18,7 @@
 
 **Key Features** / **核心特性**:
 - ✅ **Annotation-based** / **基于注解** - `@Cacheable`, `@CacheEvict`, `@CachePut`
+- ✅ **Conditional caching** / **条件缓存** - `condition`, `unless` expressions
 - ✅ **Multiple backends** / **多后端** - Memory, Redis, custom
 - ✅ **TTL support** / **TTL支持** - Time-to-live expiration
 - ✅ **Cache manager** / **缓存管理器** - Centralized cache management
@@ -30,6 +31,8 @@
 | Feature | Spring Equivalent | Description | Status |
 |---------|------------------|-------------|--------|
 | **@Cacheable** | `@Cacheable` | Cache method results | ✅ |
+| **@Cacheable (condition)** | `@Cacheable(condition=)` | Conditional caching | ✅ |
+| **@Cacheable (unless)** | `@Cacheable(unless=)` | Unless caching | ✅ |
 | **@CacheEvict** | `@CacheEvict` | Evict cache entries | ✅ |
 | **@CachePut** | `@CachePut` | Update cache | ✅ |
 | **CacheManager** | `CacheManager` | Cache management | ✅ |
@@ -346,6 +349,98 @@ let cache_manager = CacheManagerBuilder::new()
 
 ---
 
+## 🎯 Conditional Caching / 条件缓存
+
+### @Cacheable with Conditions
+
+Condition-based caching using expression evaluation:
+
+使用表达式求值的基于条件的缓存：
+
+```rust
+use nexus_cache::{evaluate_cache_condition, Cached};
+use std::collections::HashMap;
+
+// Cache only if user is active
+// 仅在用户活跃时缓存
+async fn get_user_cached_condition(cache: &Cache, id: i64) -> Option<User> {
+    let mut args = HashMap::new();
+    args.insert("id".to_string(), serde_json::json!(id));
+
+    let condition = "#id > 0";
+    let should_cache = evaluate_cache_condition(condition, &args, None);
+
+    if !should_cache {
+        return find_user_in_db(id).await;  // Skip caching / 跳过缓存
+    }
+
+    Cached::get_or_fetch(cache, &id, || async {
+        find_user_in_db(id).await
+    }).await
+}
+
+// Don't cache if result is null or empty
+// 如果结果为null或空则不缓存
+async fn get_user_cached_unless(cache: &Cache, id: i64) -> Option<User> {
+    let user = find_user_in_db(id).await?;
+
+    let mut args = HashMap::new();
+    args.insert("id".to_string(), serde_json::json!(id));
+
+    let unless = "#result == null or #result.isEmpty()";
+    let should_not_cache = evaluate_cache_condition(unless, &args, Some(&user));
+
+    if !should_not_cache {
+        cache.put(&format!("user:{}", id), user.clone()).await;
+    }
+
+    Some(user)
+}
+```
+
+**Supported Expressions** / **支持的表达式**:
+
+- **Parameter checks** / **参数检查**:
+  - `#id > 0` - Numeric comparison / 数值比较
+  - `#id == 100` - Equality / 相等性
+  - `#age >= 18` - Greater than or equal / 大于等于
+
+- **String operations** / **字符串操作**:
+  - `#name.isEmpty()` - Check if empty / 检查是否为空
+  - `#name.length() > 3` - Check length / 检查长度
+
+- **Result checks** / **结果检查**:
+  - `#result == null` - Null check / null检查
+  - `#result.isEmpty()` - Empty check / 空检查
+
+- **Logical operators** / **逻辑运算符**:
+  - `#age > 18 and #active` - AND / 与
+  - `has_role('ADMIN') or #is_admin` - OR / 或
+  - `!#disabled` - NOT / 非
+
+**Spring Boot Comparison** / **Spring Boot 对比**:
+
+```java
+// Spring Boot
+@Cacheable(value = "users", key = "#id", condition = "#id > 0")
+public User getUser(Long id) {
+    return userRepository.findById(id);
+}
+
+@Cacheable(value = "users", unless = "#result == null")
+public User getUser(Long id) {
+    return userRepository.findById(id);
+}
+
+// Nexus (with evaluate_cache_condition)
+let should_cache = evaluate_cache_condition("#id > 0", &args, None);
+if should_cache {
+    // Cache the result
+}
+```
+
+---
+
 ## ⚡ Performance / 性能
 
 ### Cache Hit Rates / 缓存命中率
@@ -432,11 +527,13 @@ mod tests {
 - [x] CacheManager
 - [x] Memory cache backend
 
-### Phase 4: Advanced Features 🔄 (In Progress / 进行中)
-- [ ] Redis cache backend
-- [ ] Distributed caching
-- [ ] Cache synchronization
-- [ ] Cache metrics integration
+### Phase 4: Advanced Features ✅ (Completed / 已完成)
+- [x] Conditional caching (condition, unless expressions)
+- [x] Expression evaluator for cache conditions
+- [ ] Redis cache backend (planned)
+- [ ] Distributed caching (planned)
+- [ ] Cache synchronization (planned)
+- [ ] Cache metrics integration (planned)
 
 ---
 

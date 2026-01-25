@@ -20,8 +20,17 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[lints]
-workspace = true
+[features]
+default = ["circuit-breaker", "rate-limit", "retry", "timeout", "bulkhead"]
+circuit-breaker = []
+rate-limit = []
+retry = []
+timeout = []
+bulkhead = []
+fallback = []
+discovery = ["dep:consul", "dep:etcd-rs", "dep:nacos"]
+metrics = ["dep:prometheus"]
+full = ["circuit-breaker", "rate-limit", "retry", "timeout", "bulkhead", "fallback", "discovery", "metrics"]
 
 [dependencies]
 # HTTP types / HTTP类型 (Spring Web HTTP)
@@ -59,6 +68,7 @@ pin-project-lite = { workspace = true }
 rand = { workspace = true }
 
 # Service discovery / 服务发现 (Spring Cloud Service Discovery)
+# Note: consul, etcd-rs, and nacos are not in workspace, keeping direct versions
 consul = { version = "0.4", optional = true }
 etcd-rs = { version = "1.0", optional = true }
 nacos = { version = "0.0", optional = true }
@@ -67,28 +77,19 @@ nacos = { version = "0.0", optional = true }
 tokio = { workspace = true }
 
 # Metrics / 指标 (Spring Cloud Circuit Breaker Metrics)
-prometheus = { version = "0.13", optional = true }
+prometheus = { workspace = true, optional = true }
 metrics = { workspace = true }
 
 # Tower middleware support (Spring Web Filter equivalent)
 tower = { workspace = true }
 
-[features]
-default = ["circuit-breaker", "rate-limit", "retry", "timeout", "bulkhead"]
-circuit-breaker = []
-rate-limit = []
-retry = []
-timeout = []
-bulkhead = []
-fallback = []
-discovery = ["dep:consul", "dep:etcd-rs", "dep:nacos"]
-metrics = ["dep:prometheus"]
-full = ["circuit-breaker", "rate-limit", "retry", "timeout", "bulkhead", "fallback", "discovery", "metrics"]
+[lints]
+workspace = true
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-criterion.workspace = true
+criterion = { workspace = true }
 
 # Benchmarks will be added in Phase 4
 # 基准测试将在第4阶段添加

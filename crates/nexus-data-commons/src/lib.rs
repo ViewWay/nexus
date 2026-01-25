@@ -64,10 +64,13 @@ mod query;
 mod entity;
 
 pub use error::{Error, Result};
-pub use repository::{Repository, CrudRepository, PagingAndSortingRepository};
+pub use repository::{Repository, CrudRepository, PagingAndSortingRepository, Identifier};
 pub use page::{Page, PageRequest, Slice, List};
 pub use sort::{Sort, Order, Direction};
-pub use query::{QueryWrapper, UpdateWrapper, LambdaQueryWrapper, Predicate, Specification};
+pub use query::{
+    QueryWrapper, UpdateWrapper, LambdaQueryWrapper, Predicate, Specification,
+    Condition, Value, ToValue, ToValueMap, QueryOrder,
+};
 pub use entity::{AggregateRoot, Auditable, LifecycleEvent};
 
 /// Core re-exports

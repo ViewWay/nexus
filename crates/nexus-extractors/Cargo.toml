@@ -20,8 +20,17 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[lints]
-workspace = true
+[features]
+default = ["json", "form", "query", "path", "header", "cookie"]
+json = []
+form = []
+query = []
+path = []
+header = []
+cookie = []
+multipart = ["dep:multer"]
+validation = ["dep:validator", "dep:email_address"]
+full = ["json", "form", "query", "path", "header", "cookie", "multipart", "validation"]
 
 [dependencies]
 # HTTP types / HTTP类型 (Spring Web HTTP)
@@ -50,17 +59,8 @@ anyhow = { workspace = true }
 # Async utilities / 异步工具
 futures = { workspace = true }
 
-[features]
-default = ["json", "form", "query", "path", "header", "cookie"]
-json = []
-form = []
-query = []
-path = []
-header = []
-cookie = []
-multipart = ["dep:multer"]
-validation = ["dep:validator", "dep:email_address"]
-full = ["json", "form", "query", "path", "header", "cookie", "multipart", "validation"]
+[lints]
+workspace = true
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)

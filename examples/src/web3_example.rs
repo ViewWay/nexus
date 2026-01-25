@@ -11,6 +11,11 @@ use nexus_web3::{
     TransactionBuilder, TxType, BlockNumber, RpcClient
 };
 
+#[cfg(feature = "ws")]
+use nexus_web3::{
+    WsClient, SubscriptionManager, SubscriptionType, LogFilter
+};
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logger / 初始化日志
@@ -162,6 +167,65 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("ERC721.TRANSFER_FROM: {}", ERC721::TRANSFER_FROM.to_hex());
     println!("ERC721.SAFE_TRANSFER_FROM: {}", ERC721::SAFE_TRANSFER_FROM.to_hex());
     println!();
+
+    // 8. WebSocket Subscriptions (when ws feature is enabled)
+    // 8. WebSocket订阅（启用ws功能时）
+    #[cfg(feature = "ws")]
+    {
+        println!("8. WebSocket Subscriptions / WebSocket订阅");
+        println!("---");
+        println!("WebSocket subscriptions allow real-time event monitoring.");
+        println!("WebSocket订阅允许实时事件监控。");
+        println!();
+
+        println!("Subscription types / 订阅类型:");
+        println!("  - NewHeads: Subscribe to new blocks / 订阅新区块");
+        println!("  - PendingTransactions: Subscribe to mempool / 订阅内存池");
+        println!("  - Logs: Subscribe to contract events / 订阅合约事件");
+        println!();
+
+        println!("Example: Log filter for contract events / 示例：合约事件的日志过滤器");
+        let filter = LogFilter::new()
+            .address(&address)
+            .topic("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef".to_string()); // Transfer event
+        println!("  Filter configured for address: {}", address.to_checksummed());
+        println!();
+
+        println!("Note: Actual WebSocket connection requires a real node.");
+        println!("注意：实际的WebSocket连接需要真实的节点。");
+        println!("Uncomment below to test with a real WebSocket endpoint:");
+        println!("取消下面的注释以使用真实的WebSocket端点测试：");
+        println!();
+
+        /*
+        let ws_url = std::env::var("ETH_WS_URL")
+            .unwrap_or_else(|_| "wss://eth.llamarpc.com".to_string());
+
+        // Subscribe to new blocks / 订阅新区块
+        let client = WsClient::connect(&ws_url).await?;
+        let mut blocks = client.subscribe_blocks().await?;
+
+        println!("Listening for new blocks... / 正在监听新区块...");
+        while let Some(block) = blocks.next().await {
+            println!("New block / 新区块: {} (hash: {})",
+                block.number_as_u64().unwrap_or(0),
+                block.hash
+            );
+        }
+        */
+
+        println!();
+    }
+
+    #[cfg(not(feature = "ws"))]
+    {
+        println!("8. WebSocket Subscriptions / WebSocket订阅");
+        println!("---");
+        println!("Enable the 'ws' feature to use WebSocket subscriptions.");
+        println!("启用'ws'功能以使用WebSocket订阅。");
+        println!("Run with: cargo run --bin web3_example --features ws");
+        println!();
+    }
 
     println!("=== Example Complete / 示例完成 ===");
 

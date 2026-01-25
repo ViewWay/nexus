@@ -251,32 +251,32 @@ impl Container {
         let type_id = TypeId::of::<T>();
         let bean_arc = Arc::new(bean);
 
-        let mut beans = self.beans.write()
-            .map_err(|e| Error::internal(format!("Lock error: {}", e)))?;
+        // First, check if there's a post-construct callback
+        // 首先检查是否有初始化后回调
+        let post_construct_callback = {
+            let beans = self.beans.read()
+                .map_err(|e| Error::internal(format!("Lock error: {}", e)))?;
+            beans.registrations.get(&type_id)
+                .and_then(|reg| reg.downcast_ref::<BeanRegistration<T>>())
+                .and_then(|reg_t| reg_t.post_construct.clone())
+        };
 
-        // Call post-construct callback if available
-        // 调用初始化后回调（如果有）
-        if let Some(reg) = beans.registrations.get(&type_id) {
-            if let Some(reg_t) = reg.downcast_ref::<BeanRegistration<T>>() {
-                if let Some(post_construct) = &reg_t.post_construct {
-                    // Temporarily release write lock before calling callback
-                    // 在调用回调之前临时释放写锁
-                    drop(beans);
-                    if let Err(e) = post_construct(&bean_arc) {
-                        return Err(Error::internal(format!(
-                            "Post-construct callback failed for {}: {}",
-                            std::any::type_name::<T>(),
-                            e
-                        )));
-                    }
-                    // Reacquire write lock
-                    // 重新获取写锁
-                    beans = self.beans.write()
-                        .map_err(|e| Error::internal(format!("Lock error: {}", e)))?;
-                }
+        // Call post-construct callback if available (without holding lock)
+        // 如果有回调，调用它（不持有锁）
+        if let Some(post_construct) = post_construct_callback {
+            if let Err(e) = post_construct(&bean_arc) {
+                return Err(Error::internal(format!(
+                    "Post-construct callback failed for {}: {}",
+                    std::any::type_name::<T>(),
+                    e
+                )));
             }
         }
 
+        // Now insert the bean (with write lock)
+        // 现在插入bean（使用写锁）
+        let mut beans = self.beans.write()
+            .map_err(|e| Error::internal(format!("Lock error: {}", e)))?;
         beans.singletons.insert(type_id, bean_arc);
         Ok(())
     }
@@ -675,7 +675,7 @@ impl ApplicationContext {
         // and call them. For now, we rely on the PreDestroy trait implementation.
         // 注意：在完整实现中，我们会检查注册中的销毁前回调并调用它们
         // 目前，我们依赖PreDestroy trait实现
-        for type_id in singletons_to_destroy {
+        for _type_id in singletons_to_destroy {
             // The bean will be dropped when cleared from the map
             // bean从映射清除时将被丢弃
         }

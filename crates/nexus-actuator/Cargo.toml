@@ -20,6 +20,9 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[features]
+default = []
+
 [lints]
 workspace = true
 

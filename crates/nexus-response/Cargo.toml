@@ -20,8 +20,15 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[lints]
-workspace = true
+[features]
+default = ["json"]
+json = []
+html = ["dep:tera"]
+xml = []
+ssr = ["dep:askama"]
+handlebars = ["dep:handlebars"]
+templates = ["dep:tera", "dep:askama", "dep:handlebars"]
+full = ["json", "html", "xml", "ssr", "templates"]
 
 [dependencies]
 # HTTP types / HTTP类型 (Spring Web HTTP)
@@ -54,15 +61,11 @@ handlebars = { workspace = true, optional = true }
 # Utilities / 工具
 indexmap = { workspace = true }
 
-[features]
-default = ["json"]
-json = []
-html = ["dep:tera"]
-xml = []
-ssr = ["dep:askama"]
-handlebars = ["dep:handlebars"]
-templates = ["dep:tera", "dep:askama", "dep:handlebars"]
-full = ["json", "html", "xml", "ssr", "templates"]
+# Time / 时间 (Spring LocalDateTime)
+chrono = { workspace = true }
+
+[lints]
+workspace = true
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)

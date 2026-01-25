@@ -50,7 +50,8 @@
       "Bash(echo:*)",
       "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH\" cargo bench:*)",
       "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH\" cargo build:*)",
-      "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH\" cargo check:*)"
+      "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH\" cargo check:*)",
+      "Bash(tree:*)"
     ]
   }
 }

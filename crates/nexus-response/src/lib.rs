@@ -13,7 +13,9 @@
 pub mod response;
 pub mod json;
 pub mod html;
+pub mod result;
 
 pub use response::{IntoResponse, Response};
 pub use json::Json;
 pub use html::Html;
+pub use result::{Result, ResultCode, PageResult};

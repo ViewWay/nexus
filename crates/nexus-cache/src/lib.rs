@@ -55,15 +55,17 @@ mod cache_manager;
 mod cache_put;
 mod key_generator;
 mod resolver;
+mod condition_evaluator;
 
 pub use cache::{Cache, CacheBuilder, CacheConfig, CacheStats, MemoryCache};
-pub use cacheable::{Cacheable, Cached};
+pub use cacheable::{Cacheable, Cached, CacheableOptions};
 pub use cache_config::CacheConfig as CacheSettings;
-pub use cache_evict::{CacheEvict, EvictPolicy};
+pub use cache_evict::{CacheEvict, EvictPolicy, CacheEvictOptions};
 pub use cache_manager::{CacheManager, CacheManagerBuilder};
-pub use cache_put::CachePut;
+pub use cache_put::{CachePut, CachePutOptions};
 pub use key_generator::{KeyGenerator, DefaultKeyGenerator, HashKeyGenerator};
 pub use resolver::{CacheResolver, SimpleCacheResolver};
+pub use condition_evaluator::evaluate_cache_condition;
 
 /// Re-exports of commonly used types
 /// 常用类型的重新导出

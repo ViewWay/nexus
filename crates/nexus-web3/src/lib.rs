@@ -16,6 +16,7 @@ pub mod contract;
 pub mod wallet;
 pub mod tx;
 pub mod rpc;
+pub mod subscribe;
 
 pub use chain::{ChainId, Eip155Chain, ChainConfig, Block, BlockNumber};
 pub use wallet::{Wallet, LocalWallet, Address};
@@ -28,3 +29,10 @@ pub use rpc::RpcClient;
 
 #[cfg(feature = "rpc")]
 pub use contract::{Contract, ContractCall, ERC20, ERC721};
+
+#[cfg(feature = "ws")]
+pub use subscribe::{
+    WsClient, SubscriptionManager, SubscriptionType, SubscriptionId,
+    SubscriptionNotification, LogFilter, NewBlockHeader, LogNotification,
+    PendingTransaction, WsError
+};
