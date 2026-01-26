@@ -567,13 +567,110 @@ nacos = { version = "0.0", optional = true }
 
 ---
 
+## Bug #022: Direct version specifications in nexus-cloud and nexus-data-commons
+
+## Bug #022: nexus-cloud 和 nexus-data-commons 中的直接版本规范
+
+**Date / 日期**: 2026-01-26
+
+**Error / 错误**:
+
+```
+❌ Found direct version specification in crates/nexus-cloud/Cargo.toml:
+reqwest = { version = "0.12", features = ["json"] }
+
+❌ Found direct version specifications in crates/nexus-data-commons/Cargo.toml:
+serde = { version = "1.0.228", features = ["derive"] }
+chrono = { version = "0.4.43", features = ["serde"] }
+uuid = { version = "1.12", features = ["v4", "serde"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+```
+
+**Location / 位置**:
+- `crates/nexus-cloud/Cargo.toml` (line 35)
+- `crates/nexus-data-commons/Cargo.toml` (lines 8, 11, 14, 18)
+
+**Cause / 原因**: Dependencies were using direct version specifications instead of workspace dependencies.
+
+**Fix / 修复**:
+1. Changed `reqwest` to `{ workspace = true }` in nexus-cloud
+2. Completely rewrote nexus-data-commons/Cargo.toml to use workspace dependencies
+3. Added `serde_yml` to workspace dependencies
+
+**Files Modified / 修改的文件**:
+
+- `/Cargo.toml` (added serde_yml)
+- `/crates/nexus-cloud/Cargo.toml`
+- `/crates/nexus-data-commons/Cargo.toml`
+
+---
+
+## Bug #023: Cargo.toml syntax errors and missing workspace dependencies
+
+## Bug #023: Cargo.toml 语法错误和缺失的 workspace 依赖
+
+**Date / 日期**: 2026-01-26
+
+**Error / 错误**:
+
+```
+error: key with no value, expected `=`
+  --> crates/nexus-runtime/Cargo.toml:90:9
+   |
+90 | criterio{ workspace = true }
+   |         ^
+
+error: `dependency.async-compression` was not found in `workspace.dependencies`
+error: `dependency.csrf` was not found in `workspace.dependencies`
+error: `dependency.sha2` was not found in `workspace.dependencies`
+error: `dependency.consul` was not found in `workspace.dependencies`
+error: `dependency.trybuild` was not found in `workspace.dependencies`
+error: `dependency.env_logger` was not found in `workspace.dependencies`
+```
+
+**Location / 位置**: Multiple Cargo.toml files
+
+**Cause / 原因**:
+1. Sed replacement command for old-style `.workspace = true` syntax was malformed, creating syntax errors like `criterio{ workspace = true }` instead of `criterion = { workspace = true }`
+2. Several dependencies were missing from workspace `[workspace.dependencies]`
+
+**Fix / 修复**:
+1. Fixed all malformed dependency syntax:
+   - `criterio{` → `criterion =`
+   - `quickchec{` → `quickcheck =`
+   - `quickcheck_macro{` → `quickcheck_macros =`
+   - `proptes{` → `proptest =`
+   - `versio{` → `version =`
+   - `editio{` → `edition =`
+
+2. Added missing workspace dependencies:
+   - `async-compression = "0.4"`
+   - `csrf = "0.5"`
+   - `headers = "0.4"`
+   - `sha2 = "0.10"`
+   - `consul = "0.4"`, `etcd-rs = "1.0"`, `nacos = "0.0"`
+   - `trybuild = "1.0"`, `tokio-test = "0.4"`
+   - `env_logger = "0.11"`
+
+**Files Modified / 修改的文件**:
+
+- `/Cargo.toml` (added missing dependencies)
+- `/crates/nexus-runtime/Cargo.toml`
+- `/crates/nexus-benches/Cargo.toml`
+- `/crates/nexus-core/Cargo.toml`
+- `/crates/nexus-http/Cargo.toml`
+- `/crates/nexus-resilience/Cargo.toml`
+- `/crates/nexus-router/Cargo.toml`
+
+---
+
 ## Summary / 总结
 
-**Total Bugs Fixed / 总修复 Bug 数**: 21
+**Total Bugs Fixed / 总修复 Bug 数**: 23
 
 **Categories / 类别**:
 
-- Configuration errors: 11 (配置错误)
+- Configuration errors: 13 (配置错误)
 - Missing files: 6 (缺失文件)
 - Syntax errors: 2 (语法错误)
 - Trait conflicts: 1 (trait冲突)
