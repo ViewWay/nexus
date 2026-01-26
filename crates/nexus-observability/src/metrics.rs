@@ -42,10 +42,10 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
-use std::sync::atomic::{AtomicU64, AtomicI64, Ordering};
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
+use std::sync::{Arc, RwLock};
 
 /// Metric ID
 /// 指标ID
@@ -535,23 +535,20 @@ impl Histogram {
     /// Get the total count of observations
     /// 获取观察总数
     pub fn count(&self) -> u64 {
-        self.data.read()
-            .map(|d| d.count)
-            .unwrap_or(0)
+        self.data.read().map(|d| d.count).unwrap_or(0)
     }
 
     /// Get the sum of observed values
     /// 获取观察值的总和
     pub fn sum(&self) -> f64 {
-        self.data.read()
-            .map(|d| d.sum)
-            .unwrap_or(0.0)
+        self.data.read().map(|d| d.sum).unwrap_or(0.0)
     }
 
     /// Get the buckets with cumulative counts
     /// 获取桶及其累积计数
     pub fn buckets(&self) -> Vec<Bucket> {
-        self.data.read()
+        self.data
+            .read()
             .map(|d| d.get_buckets())
             .unwrap_or_default()
     }
@@ -669,7 +666,11 @@ impl MetricsRegistry {
 
     /// Register or retrieve a labeled counter
     /// 注册或检索带标签的计数器
-    pub fn counter_with_labels(&self, name: impl Into<String>, labels: Vec<(String, String)>) -> Counter {
+    pub fn counter_with_labels(
+        &self,
+        name: impl Into<String>,
+        labels: Vec<(String, String)>,
+    ) -> Counter {
         let name = name.into();
         let mut all_labels = (*self.common_labels).clone();
         all_labels.extend(labels);
@@ -697,7 +698,11 @@ impl MetricsRegistry {
 
     /// Register or retrieve a labeled gauge
     /// 注册或检索带标签的仪表
-    pub fn gauge_with_labels(&self, name: impl Into<String>, labels: Vec<(String, String)>) -> Gauge {
+    pub fn gauge_with_labels(
+        &self,
+        name: impl Into<String>,
+        labels: Vec<(String, String)>,
+    ) -> Gauge {
         let name = name.into();
         let mut all_labels = (*self.common_labels).clone();
         all_labels.extend(labels);
@@ -725,7 +730,11 @@ impl MetricsRegistry {
 
     /// Register or retrieve a labeled histogram
     /// 注册或检索带标签的直方图
-    pub fn histogram_with_labels(&self, name: impl Into<String>, labels: Vec<(String, String)>) -> Histogram {
+    pub fn histogram_with_labels(
+        &self,
+        name: impl Into<String>,
+        labels: Vec<(String, String)>,
+    ) -> Histogram {
         let name = name.into();
         let mut all_labels = (*self.common_labels).clone();
         all_labels.extend(labels);
@@ -794,10 +803,10 @@ impl MetricsRegistry {
                 match metric {
                     Metric::Counter(counter) => {
                         output.push_str(&export_metric_line(&counter.id(), counter.get()));
-                    }
+                    },
                     Metric::Gauge(gauge) => {
                         output.push_str(&export_metric_line(&gauge.id(), gauge.get() as u64));
-                    }
+                    },
                     Metric::Histogram(histogram) => {
                         // Export bucket counts
                         for bucket in histogram.buckets() {
@@ -813,7 +822,7 @@ impl MetricsRegistry {
                         let mut count_id = histogram.id().clone();
                         count_id.labels.push(("_count".to_string(), "".to_string()));
                         output.push_str(&export_metric_line(&count_id, histogram.count()));
-                    }
+                    },
                 }
             }
         }
@@ -847,7 +856,11 @@ fn export_metric_line(id: &MetricId, value: u64) -> String {
     }
 
     // Handle suffixes like _sum, _count which have empty value labels
-    let labels: Vec<_> = id.labels.iter().filter(|(k, _)| !k.starts_with('_')).collect();
+    let labels: Vec<_> = id
+        .labels
+        .iter()
+        .filter(|(k, _)| !k.starts_with('_'))
+        .collect();
     if !labels.is_empty() && id.labels.len() != labels.len() {
         // Rebuild line without empty labels
         line = id.name.clone();
@@ -1082,8 +1095,10 @@ mod tests {
     fn test_registry_labeled_metrics() {
         let registry = MetricsRegistry::new();
 
-        let counter1 = registry.counter_with_labels("requests", vec![("method".to_string(), "GET".to_string())]);
-        let counter2 = registry.counter_with_labels("requests", vec![("method".to_string(), "POST".to_string())]);
+        let counter1 = registry
+            .counter_with_labels("requests", vec![("method".to_string(), "GET".to_string())]);
+        let counter2 = registry
+            .counter_with_labels("requests", vec![("method".to_string(), "POST".to_string())]);
 
         counter1.increment();
         counter1.increment();
@@ -1101,8 +1116,20 @@ mod tests {
         ]);
 
         let counter = registry.counter("requests");
-        assert!(counter.id().labels.iter().any(|(k, v)| k == "service" && v == "test"));
-        assert!(counter.id().labels.iter().any(|(k, v)| k == "env" && v == "dev"));
+        assert!(
+            counter
+                .id()
+                .labels
+                .iter()
+                .any(|(k, v)| k == "service" && v == "test")
+        );
+        assert!(
+            counter
+                .id()
+                .labels
+                .iter()
+                .any(|(k, v)| k == "env" && v == "dev")
+        );
     }
 
     #[test]
@@ -1155,10 +1182,13 @@ mod tests {
     #[test]
     fn test_export_prometheus_labeled() {
         let registry = MetricsRegistry::new();
-        let counter = registry.counter_with_labels("requests", vec![
-            ("method".to_string(), "GET".to_string()),
-            ("status".to_string(), "200".to_string()),
-        ]);
+        let counter = registry.counter_with_labels(
+            "requests",
+            vec![
+                ("method".to_string(), "GET".to_string()),
+                ("status".to_string(), "200".to_string()),
+            ],
+        );
         counter.increment();
 
         let exported = registry.export_prometheus();

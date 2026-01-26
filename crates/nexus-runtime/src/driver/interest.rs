@@ -207,9 +207,7 @@ mod tests {
 
     #[test]
     fn test_interest_builder() {
-        let interest = Interest::readable()
-            .with_writable()
-            .with_edge();
+        let interest = Interest::readable().with_writable().with_edge();
 
         assert!(interest.readable);
         assert!(interest.writable);

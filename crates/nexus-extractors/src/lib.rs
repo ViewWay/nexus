@@ -18,27 +18,27 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
+pub mod attribute;
+pub mod cookie;
+pub mod form;
+pub mod header;
+pub mod json;
+pub mod matrix;
+pub mod model;
 pub mod path;
 pub mod query;
-pub mod json;
-pub mod form;
-pub mod model;
-pub mod attribute;
 pub mod state;
-pub mod header;
-pub mod cookie;
-pub mod matrix;
 
+pub use attribute::{NamedRequestAttribute, RequestAttribute};
+pub use cookie::{Cookie, CookieOption, NamedCookie};
+pub use form::Form;
+pub use header::{Header, HeaderOption, NamedHeader};
+pub use json::Json;
+pub use matrix::{MatrixPath, MatrixVariable, MatrixVariables};
+pub use model::{ModelAttribute, QueryParams};
 pub use path::Path;
 pub use query::Query;
-pub use json::Json;
-pub use form::Form;
-pub use model::{ModelAttribute, QueryParams};
-pub use attribute::{RequestAttribute, NamedRequestAttribute};
 pub use state::State;
-pub use header::{Header, HeaderOption, NamedHeader};
-pub use cookie::{Cookie, CookieOption, NamedCookie};
-pub use matrix::{MatrixVariable, MatrixVariables, MatrixPath};
 
 use std::future::Future;
 use std::pin::Pin;

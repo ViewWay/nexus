@@ -8,7 +8,7 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use super::{request::Request, response::Response, error::Result};
+use super::{error::Result, request::Request, response::Response};
 use std::future::Future;
 
 /// HTTP Service trait
@@ -33,9 +33,7 @@ where
     Fut: Future<Output = Result<Response>> + Send,
 {
     fn call(&self, req: Request) -> impl Future<Output = Result<Response>> + Send {
-        async move {
-            self(req).await
-        }
+        async move { self(req).await }
     }
 }
 

@@ -20,9 +20,9 @@
 #![warn(unreachable_pub)]
 
 use crate::{ExtractorError, FromRequest, Request};
+use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
-use std::collections::HashMap;
 
 /// Matrix variable extractor - extracts the first matrix variable value
 /// 矩阵变量提取器 - 提取第一个矩阵变量值
@@ -91,7 +91,9 @@ impl<T> FromRequest for MatrixVariable<T>
 where
     T: for<'de> serde::Deserialize<'de> + Send + 'static,
 {
-    fn from_request(req: &Request) -> Pin<Box<dyn Future<Output = Result<Self, ExtractorError>> + Send>> {
+    fn from_request(
+        req: &Request,
+    ) -> Pin<Box<dyn Future<Output = Result<Self, ExtractorError>> + Send>> {
         let path = req.path().to_string();
 
         Box::pin(async move {
@@ -107,7 +109,9 @@ where
                 // Single value - try to deserialize directly
                 serde_json::from_value(serde_json::Value::String(value))
             }
-            .map_err(|e| ExtractorError::Invalid(format!("Invalid matrix variable value: {}", e)))?;
+            .map_err(|e| {
+                ExtractorError::Invalid(format!("Invalid matrix variable value: {}", e))
+            })?;
 
             Ok(MatrixVariable(parsed))
         })
@@ -115,7 +119,9 @@ where
 }
 
 impl FromRequest for MatrixVariables {
-    fn from_request(req: &Request) -> Pin<Box<dyn Future<Output = Result<Self, ExtractorError>> + Send>> {
+    fn from_request(
+        req: &Request,
+    ) -> Pin<Box<dyn Future<Output = Result<Self, ExtractorError>> + Send>> {
         let path = req.path().to_string();
 
         Box::pin(async move {
@@ -126,7 +132,9 @@ impl FromRequest for MatrixVariables {
 }
 
 impl FromRequest for MatrixPath {
-    fn from_request(req: &Request) -> Pin<Box<dyn Future<Output = Result<Self, ExtractorError>> + Send>> {
+    fn from_request(
+        req: &Request,
+    ) -> Pin<Box<dyn Future<Output = Result<Self, ExtractorError>> + Send>> {
         let path = req.path().to_string();
 
         Box::pin(async move {
@@ -146,7 +154,11 @@ impl MatrixVariables {
     /// Get a specific matrix variable by name, returning a default if not found
     /// 通过名称获取特定的矩阵变量，如果未找到则返回默认值
     pub fn get_or(&self, key: &str, default: &str) -> String {
-        self.0.get(key).map(|s| s.as_str()).unwrap_or(default).to_string()
+        self.0
+            .get(key)
+            .map(|s| s.as_str())
+            .unwrap_or(default)
+            .to_string()
     }
 }
 
@@ -254,10 +266,13 @@ mod tests {
     fn test_parse_matrix_variables_as_vec() {
         let path = "/users;color=red;size=large/123";
         let vars = parse_matrix_variables_as_vec(path);
-        assert_eq!(vars, vec![
-            ("color".to_string(), "red".to_string()),
-            ("size".to_string(), "large".to_string()),
-        ]);
+        assert_eq!(
+            vars,
+            vec![
+                ("color".to_string(), "red".to_string()),
+                ("size".to_string(), "large".to_string()),
+            ]
+        );
     }
 
     #[test]
@@ -269,10 +284,14 @@ mod tests {
 
     #[test]
     fn test_matrix_variables_get() {
-        let vars = MatrixVariables(vec![
-            ("color".to_string(), "red".to_string()),
-            ("size".to_string(), "large".to_string()),
-        ].into_iter().collect());
+        let vars = MatrixVariables(
+            vec![
+                ("color".to_string(), "red".to_string()),
+                ("size".to_string(), "large".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+        );
 
         assert_eq!(vars.get("color"), Some(&"red".to_string()));
         assert_eq!(vars.get("missing"), None);
@@ -280,9 +299,11 @@ mod tests {
 
     #[test]
     fn test_matrix_variables_get_or() {
-        let vars = MatrixVariables(vec![
-            ("color".to_string(), "red".to_string()),
-        ].into_iter().collect());
+        let vars = MatrixVariables(
+            vec![("color".to_string(), "red".to_string())]
+                .into_iter()
+                .collect(),
+        );
 
         assert_eq!(vars.get_or("color", "blue"), "red");
         assert_eq!(vars.get_or("missing", "default"), "default");

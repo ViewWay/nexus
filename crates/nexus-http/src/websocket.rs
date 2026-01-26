@@ -42,7 +42,7 @@
 
 use std::fmt;
 
-use crate::{Body, Response, StatusCode, Error};
+use crate::{Body, Error, Response, StatusCode};
 
 /// WebSocket message
 /// WebSocket消息
@@ -450,7 +450,9 @@ impl fmt::Display for WebSocketError {
             WebSocketError::MissingConnectionHeader => write!(f, "Missing Connection header"),
             WebSocketError::InvalidVersion => write!(f, "Invalid WebSocket version"),
             WebSocketError::MissingKey => write!(f, "Missing WebSocket key"),
-            WebSocketError::ProtocolNotSupported(proto) => write!(f, "Protocol not supported: {}", proto),
+            WebSocketError::ProtocolNotSupported(proto) => {
+                write!(f, "Protocol not supported: {}", proto)
+            },
             WebSocketError::Other(msg) => write!(f, "WebSocket error: {}", msg),
         }
     }
@@ -495,7 +497,7 @@ pub struct WebSocketConfig {
 impl Default for WebSocketConfig {
     fn default() -> Self {
         Self {
-            max_frame_size: 64 * 1024 * 1024, // 64 MiB
+            max_frame_size: 64 * 1024 * 1024,   // 64 MiB
             max_message_size: 64 * 1024 * 1024, // 64 MiB
             ping_interval: 30,
             ping_timeout: 60,

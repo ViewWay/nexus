@@ -17,7 +17,7 @@
 //! }
 //! ```
 
-use crate::{ExtractorError, FromRequest, ExtractorFuture, Request};
+use crate::{ExtractorError, ExtractorFuture, FromRequest, Request};
 
 /// Header extractor
 /// Header提取器
@@ -94,9 +94,9 @@ impl FromRequest for Header<String> {
             .map(|s| s.to_string());
 
         Box::pin(async move {
-            value.map(Header).ok_or_else(|| {
-                ExtractorError::Missing("header".to_string())
-            })
+            value
+                .map(Header)
+                .ok_or_else(|| ExtractorError::Missing("header".to_string()))
         })
     }
 }

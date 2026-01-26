@@ -34,7 +34,7 @@
 
 use std::future::Future;
 use std::io;
-use std::net::{SocketAddr, Shutdown};
+use std::net::{Shutdown, SocketAddr};
 use std::os::fd::{AsRawFd, FromRawFd, RawFd};
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -105,7 +105,7 @@ impl TcpStream {
                     io::ErrorKind::InvalidInput,
                     "Invalid address format, use IP:PORT",
                 ));
-            }
+            },
         };
 
         ConnectFuture::Connecting(ConnectingState {
@@ -213,7 +213,7 @@ impl Future for ConnectFuture {
             ConnectFuture::Error(e) => {
                 let e = std::mem::replace(e, io::Error::new(io::ErrorKind::Other, ""));
                 Poll::Ready(Err(e))
-            }
+            },
             ConnectFuture::Done => panic!("ConnectFuture polled after completion"),
             ConnectFuture::Connecting(state) => {
                 if !state.started {
@@ -263,7 +263,7 @@ impl Future for ConnectFuture {
                 } else {
                     Poll::Pending
                 }
-            }
+            },
         }
     }
 }
@@ -406,13 +406,7 @@ impl<'a, 'b> Future for ReadFuture<'a, 'b> {
 
         #[cfg(unix)]
         {
-            let result = unsafe {
-                libc::read(
-                    stream_fd,
-                    buf_ptr as *mut _,
-                    buf_len,
-                )
-            };
+            let result = unsafe { libc::read(stream_fd, buf_ptr as *mut _, buf_len) };
 
             if result < 0 {
                 let err = io::Error::last_os_error();
@@ -549,7 +543,7 @@ impl TcpListener {
                     io::ErrorKind::InvalidInput,
                     "Invalid address format, use IP:PORT",
                 ));
-            }
+            },
         };
 
         BindFuture::Binding(BindingState { addr })
@@ -573,7 +567,8 @@ impl TcpListener {
                 self.as_raw_fd(),
                 &mut addr as *mut _ as *mut libc::sockaddr,
                 &mut len,
-            ) < 0 {
+            ) < 0
+            {
                 return Err(io::Error::last_os_error());
             }
 
@@ -621,7 +616,7 @@ impl Future for BindFuture {
             BindFuture::Error(e) => {
                 let e = std::mem::replace(e, io::Error::new(io::ErrorKind::Other, ""));
                 Poll::Ready(Err(e))
-            }
+            },
             BindFuture::Done => panic!("BindFuture polled after completion"),
             BindFuture::Binding(state) => {
                 // Create and bind socket
@@ -643,7 +638,8 @@ impl Future for BindFuture {
                         libc::SO_REUSEADDR,
                         &opt as *const _ as *const _,
                         std::mem::size_of::<i32>() as libc::socklen_t,
-                    ) < 0 {
+                    ) < 0
+                    {
                         libc::close(fd);
                         return Poll::Ready(Err(io::Error::last_os_error()));
                     }
@@ -681,7 +677,7 @@ impl Future for BindFuture {
                         "TCP bind not yet implemented on this platform",
                     )))
                 }
-            }
+            },
         }
     }
 }
@@ -895,7 +891,7 @@ impl UdpSocket {
                     io::ErrorKind::InvalidInput,
                     "Invalid address format, use IP:PORT",
                 ));
-            }
+            },
         };
 
         BindUdpFuture::Binding(BindingUdpState { addr })
@@ -968,7 +964,7 @@ impl Future for BindUdpFuture {
             BindUdpFuture::Error(e) => {
                 let e = std::mem::replace(e, io::Error::new(io::ErrorKind::Other, ""));
                 Poll::Ready(Err(e))
-            }
+            },
             BindUdpFuture::Done => panic!("BindUdpFuture polled after completion"),
             BindUdpFuture::Binding(state) => {
                 // Create and bind UDP socket
@@ -995,7 +991,7 @@ impl Future for BindUdpFuture {
 
                 *self = BindUdpFuture::Done;
                 Poll::Ready(Ok(socket))
-            }
+            },
         }
     }
 }
@@ -1008,7 +1004,8 @@ fn create_udp_socket(ipv4: bool) -> RawFd {
         let domain = if ipv4 { libc::AF_INET } else { libc::AF_INET6 };
 
         #[cfg(target_os = "linux")]
-        let fd = libc::socket(domain, libc::SOCK_DGRAM | libc::SOCK_CLOEXEC | libc::SOCK_NONBLOCK, 0);
+        let fd =
+            libc::socket(domain, libc::SOCK_DGRAM | libc::SOCK_CLOEXEC | libc::SOCK_NONBLOCK, 0);
 
         #[cfg(not(target_os = "linux"))]
         let fd = libc::socket(domain, libc::SOCK_DGRAM, 0);
@@ -1199,14 +1196,8 @@ impl<'a, 'b> Future for SendToFuture<'a, 'b> {
         {
             // For now, use regular send (TODO: add send_to with address)
             // 目前使用普通send（TODO：添加带地址的send_to）
-            let result = unsafe {
-                libc::send(
-                    stream_fd,
-                    self.buf.as_ptr() as *const _,
-                    self.buf.len(),
-                    0,
-                )
-            };
+            let result =
+                unsafe { libc::send(stream_fd, self.buf.as_ptr() as *const _, self.buf.len(), 0) };
 
             if result < 0 {
                 let err = io::Error::last_os_error();
@@ -1280,7 +1271,7 @@ impl Future for ConnectUdpFuture {
                             &sockaddr as *const _ as *const libc::sockaddr,
                             std::mem::size_of::<libc::sockaddr_in>() as libc::socklen_t,
                         )
-                    }
+                    },
                     SocketAddr::V6(v6) => {
                         #[cfg(target_os = "linux")]
                         let sockaddr = libc::sockaddr_in6 {
@@ -1310,7 +1301,7 @@ impl Future for ConnectUdpFuture {
                             &sockaddr as *const _ as *const libc::sockaddr,
                             std::mem::size_of::<libc::sockaddr_in6>() as libc::socklen_t,
                         )
-                    }
+                    },
                 }
             };
 
@@ -1351,7 +1342,7 @@ mod tests {
         // Should create Error future
         // 应该创建Error future
         match future {
-            BindFuture::Error(_) => {}
+            BindFuture::Error(_) => {},
             _ => panic!("Expected Error future"),
         }
     }
@@ -1360,7 +1351,7 @@ mod tests {
     fn test_connect_invalid_addr() {
         let future = TcpStream::connect("not_an_address");
         match future {
-            ConnectFuture::Error(_) => {}
+            ConnectFuture::Error(_) => {},
             _ => panic!("Expected Error future for invalid address"),
         }
     }

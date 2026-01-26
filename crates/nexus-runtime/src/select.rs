@@ -82,8 +82,8 @@ where
                 Poll::Ready(value) => {
                     self.future1 = None;
                     return Poll::Ready(SelectTwoOutput::First(value));
-                }
-                Poll::Pending => {}
+                },
+                Poll::Pending => {},
             }
         }
 
@@ -94,8 +94,8 @@ where
                 Poll::Ready(value) => {
                     self.future2 = None;
                     return Poll::Ready(SelectTwoOutput::Second(value));
-                }
-                Poll::Pending => {}
+                },
+                Poll::Pending => {},
             }
         }
 
@@ -146,8 +146,8 @@ where
             match Pin::new(future).poll(cx) {
                 Poll::Ready(value) => {
                     return Poll::Ready(SelectMultipleOutput::Completed(index, value));
-                }
-                Poll::Pending => {}
+                },
+                Poll::Pending => {},
             }
         }
 
@@ -212,9 +212,6 @@ mod tests {
         let mut context = Context::from_waker(&noop_waker);
 
         let mut future = Box::pin(Ready);
-        assert!(matches!(
-            Pin::new(&mut future).poll(&mut context),
-            Poll::Ready(42)
-        ));
+        assert!(matches!(Pin::new(&mut future).poll(&mut context), Poll::Ready(42)));
     }
 }

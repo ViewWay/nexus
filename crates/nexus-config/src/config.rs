@@ -8,7 +8,7 @@
 //! - `FileFormat` - Configuration file formats
 //! - `ReloadStrategy` - Configuration reload strategies
 
-use crate::{environment::Environment, error::ConfigError, ConfigResult, PropertySource, Value};
+use crate::{ConfigResult, PropertySource, Value, environment::Environment, error::ConfigError};
 use indexmap::IndexMap;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -365,7 +365,7 @@ impl Config {
                                 result.push(c);
                             }
                         }
-                    }
+                    },
                     Some(next) => result.push(next),
                     None => result.push('\\'),
                 }
@@ -418,16 +418,22 @@ impl Config {
                 } else {
                     Value::Null
                 }
-            }
+            },
             serde_yaml::Value::String(v) => Value::String(v.clone()),
-            serde_yaml::Value::Sequence(v) => {
-                Value::List(v.iter().map(|x| Self::yaml_to_value(x)).collect::<ConfigResult<Vec<_>>>()?)
-            }
-            serde_yaml::Value::Mapping(v) => {
-                Value::Object(v.iter().filter_map(|(k, v)| {
-                    k.as_str().map(|key| (key.to_string(), Self::yaml_to_value(v).ok()))
-                }).filter_map(|(k, v)| v.map(|val| (k, val))).collect())
-            }
+            serde_yaml::Value::Sequence(v) => Value::List(
+                v.iter()
+                    .map(|x| Self::yaml_to_value(x))
+                    .collect::<ConfigResult<Vec<_>>>()?,
+            ),
+            serde_yaml::Value::Mapping(v) => Value::Object(
+                v.iter()
+                    .filter_map(|(k, v)| {
+                        k.as_str()
+                            .map(|key| (key.to_string(), Self::yaml_to_value(v).ok()))
+                    })
+                    .filter_map(|(k, v)| v.map(|val| (k, val)))
+                    .collect(),
+            ),
             _ => Value::Null,
         })
     }
@@ -464,12 +470,13 @@ impl Config {
             toml::Value::Integer(v) => Value::Integer(*v as i64),
             toml::Value::Float(v) => Value::Float(*v),
             toml::Value::String(v) => Value::String(v.clone()),
-            toml::Value::Array(v) => {
-                Value::List(v.iter().map(Self::toml_to_value).collect())
-            }
-            toml::Value::Table(table) => {
-                Value::Object(table.iter().map(|(k, v)| (k.clone(), Self::toml_to_value(v))).collect())
-            }
+            toml::Value::Array(v) => Value::List(v.iter().map(Self::toml_to_value).collect()),
+            toml::Value::Table(table) => Value::Object(
+                table
+                    .iter()
+                    .map(|(k, v)| (k.clone(), Self::toml_to_value(v)))
+                    .collect(),
+            ),
             toml::Value::Datetime(v) => Value::String(v.to_string()),
         }
     }
@@ -512,14 +519,14 @@ impl Config {
                 } else {
                     Value::Null
                 }
-            }
+            },
             serde_json::Value::String(v) => Value::String(v.clone()),
-            serde_json::Value::Array(v) => {
-                Value::List(v.iter().map(Self::json_to_value).collect())
-            }
-            serde_json::Value::Object(obj) => {
-                Value::Object(obj.iter().map(|(k, v)| (k.clone(), Self::json_to_value(v))).collect())
-            }
+            serde_json::Value::Array(v) => Value::List(v.iter().map(Self::json_to_value).collect()),
+            serde_json::Value::Object(obj) => Value::Object(
+                obj.iter()
+                    .map(|(k, v)| (k.clone(), Self::json_to_value(v)))
+                    .collect(),
+            ),
         }
     }
 }

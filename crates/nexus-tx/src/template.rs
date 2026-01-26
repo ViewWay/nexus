@@ -151,11 +151,11 @@ impl TransactionTemplate {
             Ok(value) => {
                 self.manager.commit(status).await?;
                 Ok(value)
-            }
+            },
             Err(e) => {
                 self.manager.rollback(status).await?;
                 Err(e.into())
-            }
+            },
         }
     }
 

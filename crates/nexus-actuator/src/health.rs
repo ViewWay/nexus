@@ -237,8 +237,7 @@ mod tests {
 
     #[test]
     fn test_health() {
-        let health = Health::up()
-            .with_component("db", ComponentHealth::new(HealthStatus::Up));
+        let health = Health::up().with_component("db", ComponentHealth::new(HealthStatus::Up));
 
         assert_eq!(health.status, HealthStatus::Up);
         assert!(health.components.contains_key("db"));

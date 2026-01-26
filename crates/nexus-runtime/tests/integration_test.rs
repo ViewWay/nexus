@@ -140,10 +140,13 @@ fn test_future_polling() {
     // 第二次轮询应该返回Ready
     let result = Pin::new(&mut future).poll(&mut context);
     assert!(result.is_ready());
-    assert_eq!(match result {
-        Poll::Ready(v) => v,
-        Poll::Pending => unreachable!(),
-    }, 42);
+    assert_eq!(
+        match result {
+            Poll::Ready(v) => v,
+            Poll::Pending => unreachable!(),
+        },
+        42
+    );
 }
 
 #[test]
@@ -159,10 +162,7 @@ fn test_atomic_operations() {
 
     // Test compare_exchange
     // 测试compare_exchange
-    assert_eq!(
-        atomic.compare_exchange(1, 10, Ordering::SeqCst, Ordering::SeqCst),
-        Ok(1)
-    );
+    assert_eq!(atomic.compare_exchange(1, 10, Ordering::SeqCst, Ordering::SeqCst), Ok(1));
     assert_eq!(atomic.load(Ordering::SeqCst), 10);
 }
 
@@ -233,14 +233,14 @@ fn test_bind_future_tcp() {
     match future {
         nexus_runtime::io::BindFuture::Error(_) => {
             // Expected / 符合预期
-        }
+        },
         nexus_runtime::io::BindFuture::Done => {
             panic!("Expected Error future for invalid address");
-        }
+        },
         _ => {
             // Binding state is also valid for valid addresses
             // Binding状态对有效地址也是有效的
-        }
+        },
     }
 
     let future = TcpListener::bind("127.0.0.1:0");
@@ -250,10 +250,10 @@ fn test_bind_future_tcp() {
     match future {
         nexus_runtime::io::BindFuture::Error(_) => {
             panic!("Expected non-Error future for valid address");
-        }
+        },
         _ => {
             // Expected / 符合预期
-        }
+        },
     }
 }
 
@@ -270,14 +270,14 @@ fn test_bind_future_udp() {
     match future {
         nexus_runtime::io::BindUdpFuture::Error(_) => {
             // Expected / 符合预期
-        }
+        },
         nexus_runtime::io::BindUdpFuture::Done => {
             panic!("Expected Error future for invalid address");
-        }
+        },
         _ => {
             // Binding state is also valid for valid addresses
             // Binding状态对有效地址也是有效的
-        }
+        },
     }
 
     let future = UdpSocket::bind("127.0.0.1:0");
@@ -287,10 +287,10 @@ fn test_bind_future_udp() {
     match future {
         nexus_runtime::io::BindUdpFuture::Error(_) => {
             panic!("Expected non-Error future for valid address");
-        }
+        },
         _ => {
             // Expected / 符合预期
-        }
+        },
     }
 }
 
@@ -305,14 +305,14 @@ fn test_connect_future() {
     match future {
         nexus_runtime::io::ConnectFuture::Error(_) => {
             // Expected / 符合预期
-        }
+        },
         nexus_runtime::io::ConnectFuture::Done => {
             panic!("Expected Error future for invalid address");
-        }
+        },
         _ => {
             // Connecting state is also valid for valid addresses
             // Connecting状态对有效地址也是有效的
-        }
+        },
     }
 
     // Test valid address format
@@ -322,10 +322,10 @@ fn test_connect_future() {
     match future {
         nexus_runtime::io::ConnectFuture::Error(_) => {
             panic!("Expected non-Error future for valid address");
-        }
+        },
         _ => {
             // Expected / 符合预期
-        }
+        },
     }
 }
 
@@ -443,8 +443,8 @@ fn benchmark_timer_wheel_advance() {
 
 #[test]
 fn test_arc_atomic_counter() {
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::thread;
 
     let counter = Arc::new(AtomicUsize::new(0));

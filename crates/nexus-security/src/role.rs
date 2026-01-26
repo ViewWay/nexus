@@ -213,6 +213,23 @@ impl Authority {
     pub fn is_permission(&self) -> bool {
         matches!(self, Authority::Permission(_))
     }
+
+    /// Create from string
+    /// 从字符串创建
+    pub fn from_string(s: &str) -> Option<Self> {
+        if s.starts_with("ROLE_") {
+            let role_str = s.strip_prefix("ROLE_")?;
+            Some(Authority::Role(Role::from_str(role_str)))
+        } else {
+            Some(Authority::Permission(s.to_string()))
+        }
+    }
+}
+
+impl fmt::Display for Authority {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.authority())
+    }
 }
 
 /// Trait for granted authorities

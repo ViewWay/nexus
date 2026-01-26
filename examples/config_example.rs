@@ -50,9 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::env::set_var("APP_PORT", "8080");
     std::env::set_var("APP_HOST", "localhost");
 
-    let config = Config::builder()
-        .load_env()
-        .build()?;
+    let config = Config::builder().load_env().build()?;
 
     // Note: ENV_VAR gets converted to env.var format
     // 注意：ENV_VAR被转换为env.var格式

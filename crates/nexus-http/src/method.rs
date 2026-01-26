@@ -71,7 +71,12 @@ impl Method {
     pub fn is_idempotent(&self) -> bool {
         matches!(
             self,
-            Method::GET | Method::HEAD | Method::PUT | Method::DELETE | Method::OPTIONS | Method::TRACE
+            Method::GET
+                | Method::HEAD
+                | Method::PUT
+                | Method::DELETE
+                | Method::OPTIONS
+                | Method::TRACE
         )
     }
 }

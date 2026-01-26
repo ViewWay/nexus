@@ -30,10 +30,12 @@
 #![warn(unreachable_pub)]
 
 pub mod error;
+pub mod extractor;
 pub mod field;
 pub mod form;
 
 pub use error::{MultipartError, MultipartResult};
+pub use extractor::{FileValidator, MultipartConfig, Part, mime_types};
 pub use field::MultipartFile;
 pub use form::Multipart;
 
@@ -51,6 +53,8 @@ pub const DEFAULT_MAX_BUFFER_SIZE: usize = 8 * 1024;
 /// Re-exports of commonly used types
 /// 常用类型的重新导出
 pub mod prelude {
-    pub use super::{Multipart, MultipartFile, MultipartError, MultipartResult};
-    pub use super::{DEFAULT_MAX_FILE_SIZE, DEFAULT_MAX_BUFFER_SIZE};
+    pub use super::mime_types;
+    pub use super::{DEFAULT_MAX_BUFFER_SIZE, DEFAULT_MAX_FILE_SIZE};
+    pub use super::{FileValidator, MultipartConfig, Part};
+    pub use super::{Multipart, MultipartError, MultipartFile, MultipartResult};
 }

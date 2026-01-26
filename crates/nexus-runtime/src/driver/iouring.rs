@@ -12,13 +12,11 @@
 
 use std::cell::UnsafeCell;
 use std::os::fd::{AsRawFd, RawFd};
-use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 use std::time::Duration;
 
-use crate::driver::{
-    CompletionEntry, Driver, ERROR_TRANSPORT, Interest, SubmitEntry,
-};
+use crate::driver::{CompletionEntry, Driver, ERROR_TRANSPORT, Interest, SubmitEntry};
 
 /// Minimum io_uring instance size / 最小io_uring实例大小
 const MIN_IOURING_SIZE: u32 = 32;
@@ -464,9 +462,7 @@ impl IoUringDriver {
         }
 
         let index = self.sq_pos(tail);
-        unsafe {
-            Some(self.sq.sqes.add(index as usize))
-        }
+        unsafe { Some(self.sq.sqes.add(index as usize)) }
     }
 }
 
@@ -678,11 +674,9 @@ impl Driver for IoUringDriver {
 
         // Get a free SQE
         // 获取一个空闲的SQE
-        let sqe = self.get_free_sqe()
-            .ok_or_else(|| std::io::Error::new(
-                std::io::ErrorKind::WouldBlock,
-                "Submission queue full",
-            ))?;
+        let sqe = self.get_free_sqe().ok_or_else(|| {
+            std::io::Error::new(std::io::ErrorKind::WouldBlock, "Submission queue full")
+        })?;
 
         unsafe {
             (*sqe).opcode = 6; // IORING_OP_POLL_ADD
@@ -705,11 +699,9 @@ impl Driver for IoUringDriver {
     fn deregister(&self, fd: RawFd) -> std::io::Result<()> {
         // Use POLL_REMOVE to deregister
         // 使用POLL_REMOVE注销
-        let sqe = self.get_free_sqe()
-            .ok_or_else(|| std::io::Error::new(
-                std::io::ErrorKind::WouldBlock,
-                "Submission queue full",
-            ))?;
+        let sqe = self.get_free_sqe().ok_or_else(|| {
+            std::io::Error::new(std::io::ErrorKind::WouldBlock, "Submission queue full")
+        })?;
 
         unsafe {
             (*sqe).opcode = 7; // IORING_OP_POLL_REMOVE

@@ -15,8 +15,8 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use nexus_http::{Request, Method, Body, Response, StatusCode};
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
+use nexus_http::{Body, Method, Request, Response, StatusCode};
 use std::time::Duration;
 
 /// Benchmark: Simple GET request parsing
@@ -116,9 +116,9 @@ fn bench_throughput(c: &mut Criterion) {
         let body = "x".repeat(*size);
         let raw_request = format!(
             "POST /api/echo HTTP/1.1\r\nHost: example.com\r\nContent-Length: {}\r\n\r\n{}",
-            size,
-            body
-        ).into_bytes();
+            size, body
+        )
+        .into_bytes();
 
         group.throughput(Throughput::Bytes(*size as u64));
         group.bench_with_input(BenchmarkId::new("parse_post", size), size, |b, _| {
@@ -166,8 +166,4 @@ criterion_group! {
     targets = bench_throughput,
 }
 
-criterion_main!(
-    extractor_parsing,
-    extractor_response,
-    extractor_throughput,
-);
+criterion_main!(extractor_parsing, extractor_response, extractor_throughput,);

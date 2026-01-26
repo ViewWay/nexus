@@ -12,25 +12,24 @@
 #![warn(unreachable_pub)]
 
 pub mod circuit;
+pub mod discovery;
 pub mod rate_limit;
 pub mod retry;
 pub mod timeout;
-pub mod discovery;
 
 pub use circuit::{
-    CircuitBreaker, CircuitState, CircuitBreakerConfig,
-    CircuitBreakerError, CircuitBreakerRegistry, CircuitMetrics
-};
-pub use rate_limit::{
-    RateLimiter, RateLimiterType, RateLimiterConfig,
-    RateLimitError, RateLimiterMetrics, RateLimiterRegistry
-};
-pub use retry::{
-    RetryPolicy, BackoffType, retry, retry_with_predicate,
-    RetryError, RetryState, ShouldRetry, RetryAll, RetryErrors
+    CircuitBreaker, CircuitBreakerConfig, CircuitBreakerError, CircuitBreakerRegistry,
+    CircuitMetrics, CircuitState,
 };
 pub use discovery::{
-    ServiceInstance, InstanceStatus, ServiceRegistry,
-    SimpleServiceRegistry, ServiceDiscovery, LoadBalanceStrategy,
-    DiscoveryError
+    DiscoveryError, InstanceStatus, LoadBalanceStrategy, ServiceDiscovery, ServiceInstance,
+    ServiceRegistry, SimpleServiceRegistry,
+};
+pub use rate_limit::{
+    RateLimitError, RateLimiter, RateLimiterConfig, RateLimiterMetrics, RateLimiterRegistry,
+    RateLimiterType,
+};
+pub use retry::{
+    BackoffType, RetryAll, RetryError, RetryErrors, RetryPolicy, RetryState, ShouldRetry, retry,
+    retry_with_predicate,
 };

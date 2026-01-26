@@ -89,7 +89,7 @@ where
                         "Request timed out after {:?}",
                         timeout
                     )))
-                }
+                },
             }
         })
     }
@@ -107,8 +107,8 @@ mod tests {
 
     #[test]
     fn test_timeout_builder() {
-        let timeout = TimeoutMiddleware::new(Duration::from_secs(10))
-            .with_timeout(Duration::from_secs(60));
+        let timeout =
+            TimeoutMiddleware::new(Duration::from_secs(10)).with_timeout(Duration::from_secs(60));
         assert_eq!(timeout.timeout, Duration::from_secs(60));
     }
 }

@@ -38,9 +38,9 @@ pub use load_balancer::{LoadBalancer, RoundRobinLoadBalancer};
 /// 常用类型的重新导出
 pub mod prelude {
     pub use super::{
-        CircuitBreaker, CircuitState, ConfigClient, ConfigServerClient, Gateway,
-        GatewayFilter, GatewayRoute, LoadBalancer, RemoteConfigSource, RoundRobinLoadBalancer,
-        ServiceDiscovery, ServiceInstance, ServiceRegistry,
+        CircuitBreaker, CircuitState, ConfigClient, ConfigServerClient, Gateway, GatewayFilter,
+        GatewayRoute, LoadBalancer, RemoteConfigSource, RoundRobinLoadBalancer, ServiceDiscovery,
+        ServiceInstance, ServiceRegistry,
     };
 }
 

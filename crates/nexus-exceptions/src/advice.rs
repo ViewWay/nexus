@@ -88,7 +88,9 @@ where
     H: ExceptionHandler<E> + Send + Sync + 'static,
 {
     fn handle_box(&self, error: &dyn Any, request: &nexus_http::Request) -> Option<Response> {
-        error.downcast_ref::<E>().map(|e| self.handler.handle(e.clone(), request))
+        error
+            .downcast_ref::<E>()
+            .map(|e| self.handler.handle(e.clone(), request))
     }
 
     fn priority(&self) -> i32 {
@@ -194,18 +196,17 @@ impl ControllerAdvice {
     /// Create a default controller advice with standard handlers
     /// 创建带有标准处理器的默认 controller advice
     pub fn default() -> Self {
-        Self::new()
-            .with_handler(|err: String, _req: &nexus_http::Request| {
-                if err.contains("not found") || err.contains("Not Found") {
-                    Response::not_found()
-                } else if err.contains("unauthorized") || err.contains("Unauthorized") {
-                    Response::unauthorized()
-                } else if err.contains("forbidden") || err.contains("Forbidden") {
-                    Response::forbidden()
-                } else {
-                    Response::bad_request()
-                }
-            })
+        Self::new().with_handler(|err: String, _req: &nexus_http::Request| {
+            if err.contains("not found") || err.contains("Not Found") {
+                Response::not_found()
+            } else if err.contains("unauthorized") || err.contains("Unauthorized") {
+                Response::unauthorized()
+            } else if err.contains("forbidden") || err.contains("Forbidden") {
+                Response::forbidden()
+            } else {
+                Response::bad_request()
+            }
+        })
     }
 }
 

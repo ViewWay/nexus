@@ -35,17 +35,15 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
+use once_cell::sync::Lazy;
 use std::fmt;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
-use once_cell::sync::Lazy;
 
 /// Global trace ID generator
 /// 全局追踪ID生成器
-static TRACE_ID_GENERATOR: Lazy<Arc<IdGenerator>> = Lazy::new(|| {
-    Arc::new(IdGenerator::new())
-});
+static TRACE_ID_GENERATOR: Lazy<Arc<IdGenerator>> = Lazy::new(|| Arc::new(IdGenerator::new()));
 
 /// ID generator for trace and span IDs
 /// ID生成器，用于追踪和span ID
@@ -113,9 +111,10 @@ impl TraceId {
     /// 从十六进制字符串解析
     pub fn from_hex(hex: &str) -> Option<Self> {
         let bytes = if hex.len() == 32 {
-            hex.as_bytes().chunks(2).map(|chunk| {
-                u8::from_str_radix(std::str::from_utf8(chunk).ok()?, 16).ok()
-            }).collect::<Option<Vec<_>>>()?
+            hex.as_bytes()
+                .chunks(2)
+                .map(|chunk| u8::from_str_radix(std::str::from_utf8(chunk).ok()?, 16).ok())
+                .collect::<Option<Vec<_>>>()?
         } else {
             return None;
         };
@@ -184,9 +183,11 @@ impl SpanId {
     /// 从十六进制字符串解析
     pub fn from_hex(hex: &str) -> Option<Self> {
         if hex.len() == 16 {
-            let bytes = hex.as_bytes().chunks(2).map(|chunk| {
-                u8::from_str_radix(std::str::from_utf8(chunk).ok()?, 16).ok()
-            }).collect::<Option<Vec<_>>>()?;
+            let bytes = hex
+                .as_bytes()
+                .chunks(2)
+                .map(|chunk| u8::from_str_radix(std::str::from_utf8(chunk).ok()?, 16).ok())
+                .collect::<Option<Vec<_>>>()?;
             return Some(Self(bytes.try_into().ok()?));
         }
         None
@@ -355,12 +356,7 @@ impl TraceContext {
     /// Convert to W3C traceparent header value
     /// 转换为W3C traceparent头值
     pub fn to_traceparent(&self) -> String {
-        format!(
-            "00-{}-{}-{:02x}",
-            self.trace_id.to_hex(),
-            self.span_id.to_hex(),
-            self.flags.0
-        )
+        format!("00-{}-{}-{:02x}", self.trace_id.to_hex(), self.span_id.to_hex(), self.flags.0)
     }
 
     /// Check if this trace is sampled
@@ -690,7 +686,7 @@ impl Span {
                 SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .unwrap()
-                    .as_nanos() as u64
+                    .as_nanos() as u64,
             );
         }
     }
@@ -771,8 +767,7 @@ impl SpanBuilder {
     /// 构建span
     pub fn build(self) -> Span {
         let context = self.context.unwrap_or_default();
-        let mut span = Span::with_context(self.name, context)
-            .with_kind(self.kind);
+        let mut span = Span::with_context(self.name, context).with_kind(self.kind);
 
         for (key, value) in self.attributes {
             span.add_attribute(key, value);
@@ -881,9 +876,8 @@ impl fmt::Debug for Tracer {
 
 /// Global tracer instance
 /// 全局追踪器实例
-static GLOBAL_TRACER: Lazy<std::sync::RwLock<Option<Tracer>>> = Lazy::new(|| {
-    std::sync::RwLock::new(None)
-});
+static GLOBAL_TRACER: Lazy<std::sync::RwLock<Option<Tracer>>> =
+    Lazy::new(|| std::sync::RwLock::new(None));
 
 /// Initialize the global tracer
 /// 初始化全局追踪器
@@ -962,7 +956,10 @@ mod tests {
 
     #[test]
     fn test_trace_context_traceparent() {
-        let ctx = TraceContext::from_traceparent("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01").unwrap();
+        let ctx = TraceContext::from_traceparent(
+            "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+        )
+        .unwrap();
         assert_eq!(ctx.trace_id.to_hex(), "4bf92f3577b34da6a3ce929d0e0e4736");
         assert_eq!(ctx.span_id.to_hex(), "00f067aa0ba902b7");
         assert!(ctx.is_sampled());
@@ -1060,7 +1057,11 @@ mod tests {
 
         assert_eq!(span.name(), "handle_request");
         assert_eq!(span.kind(), SpanKind::Server);
-        assert!(span.attributes().iter().any(|(k, v)| k == "service.name" && v == "my-service"));
+        assert!(
+            span.attributes()
+                .iter()
+                .any(|(k, v)| k == "service.name" && v == "my-service")
+        );
     }
 
     #[test]

@@ -137,7 +137,8 @@ impl Authentication {
     /// Check if has role
     /// 检查是否有角色
     pub fn has_role(&self, role: &crate::Role) -> bool {
-        self.authorities.contains(&crate::Authority::Role(role.clone()))
+        self.authorities
+            .contains(&crate::Authority::Role(role.clone()))
     }
 }
 
@@ -319,7 +320,7 @@ impl AuthenticationManager for SimpleAuthenticationManager {
                     ));
                 }
                 return Err(e);
-            }
+            },
         };
 
         // Validate user
@@ -336,16 +337,12 @@ impl AuthenticationManager for SimpleAuthenticationManager {
         }
 
         if !user.is_credentials_non_expired() {
-            return Err(SecurityError::CredentialsExpired(
-                "Credentials expired".to_string(),
-            ));
+            return Err(SecurityError::CredentialsExpired("Credentials expired".to_string()));
         }
 
         // Check password
         if !self.password_encoder.matches(password, user.password()) {
-            return Err(SecurityError::InvalidCredentials(
-                "Invalid credentials".to_string(),
-            ));
+            return Err(SecurityError::InvalidCredentials("Invalid credentials".to_string()));
         }
 
         // Create authenticated authentication
@@ -403,7 +400,7 @@ impl RememberMeAuthentication {
     /// Create remember me authentication
     /// 创建记住我认证
     pub fn new(key: &str) -> Self {
-        use md5::{Md5, Digest};
+        use md5::{Digest, Md5};
         let hash = Md5::digest(key.as_bytes());
         Self {
             key_hash: hex::encode(hash),
@@ -413,7 +410,7 @@ impl RememberMeAuthentication {
     /// Verify remember me key
     /// 验证记住我密钥
     pub fn verify(&self, key: &str) -> bool {
-        use md5::{Md5, Digest};
+        use md5::{Digest, Md5};
         let hash = Md5::digest(key.as_bytes());
         hex::encode(hash) == self.key_hash
     }
@@ -439,11 +436,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_simple_auth_manager() {
-        let user_service = Arc::new(crate::InMemoryUserService::with_users(vec![User::with_roles(
-            "john",
-            "HASH:secret123",
-            &[Role::User],
-        )]));
+        let user_service =
+            Arc::new(crate::InMemoryUserService::with_users(vec![User::with_roles(
+                "john",
+                "HASH:secret123",
+                &[Role::User],
+            )]));
 
         let manager = SimpleAuthenticationManager::new(user_service, Arc::new(MockPasswordEncoder));
 

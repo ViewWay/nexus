@@ -13,7 +13,6 @@
 ///     userRepository.deleteById(id);
 /// }
 /// ```
-
 use crate::{Cache, CacheManager};
 use std::future::Future;
 use std::pin::Pin;
@@ -73,7 +72,12 @@ where
 {
     /// Execute and evict from cache
     /// 执行并从缓存驱逐
-    fn execute_and_evict(&self, cache: &dyn Cache<K, ()>, key: K, f: F) -> Pin<Box<dyn Future<Output = ()> + Send>>;
+    fn execute_and_evict(
+        &self,
+        cache: &dyn Cache<K, ()>,
+        key: K,
+        f: F,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send>>;
 }
 
 /// CacheEvict wrapper for async functions
@@ -89,10 +93,8 @@ impl CacheEvictExec {
     ///
     /// Equivalent to Spring's `@CacheEvict(key = "#id")`.
     /// 等价于Spring的`@CacheEvict(key = "#id")`。
-    pub async fn evict_key<K, V>(
-        cache: &dyn Cache<K, V>,
-        key: &K,
-    ) where
+    pub async fn evict_key<K, V>(cache: &dyn Cache<K, V>, key: &K)
+    where
         K: std::hash::Hash + Eq + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
     {
@@ -117,11 +119,8 @@ impl CacheEvictExec {
     ///
     /// Equivalent to Spring's @CacheEvict method execution.
     /// 等价于Spring的@CacheEvict方法执行。
-    pub async fn execute_and_evict_key<K, V, F>(
-        cache: &dyn Cache<K, V>,
-        key: &K,
-        f: F,
-    ) where
+    pub async fn execute_and_evict_key<K, V, F>(cache: &dyn Cache<K, V>, key: &K, f: F)
+    where
         K: std::hash::Hash + Eq + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: Future<Output = ()> + Send,
@@ -132,10 +131,8 @@ impl CacheEvictExec {
 
     /// Execute function and evict all
     /// 执行函数并驱逐所有
-    pub async fn execute_and_evict_all<K, V, F>(
-        cache: &dyn Cache<K, V>,
-        f: F,
-    ) where
+    pub async fn execute_and_evict_all<K, V, F>(cache: &dyn Cache<K, V>, f: F)
+    where
         K: std::hash::Hash + Eq + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: Future<Output = ()> + Send,
@@ -149,10 +146,8 @@ impl CacheEvictExec {
     ///
     /// Equivalent to Spring's `@CacheEvict(allEntries = true, beforeInvocation = true)`.
     /// 等价于Spring的`@CacheEvict(allEntries = true, beforeInvocation = true)`。
-    pub async fn evict_all_before_execute<K, V, F>(
-        cache: &dyn Cache<K, V>,
-        f: F,
-    ) where
+    pub async fn evict_all_before_execute<K, V, F>(cache: &dyn Cache<K, V>, f: F)
+    where
         K: std::hash::Hash + Eq + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: Future<Output = ()> + Send,
@@ -166,10 +161,8 @@ impl CacheEvictExec {
     ///
     /// Note: In Spring, this is the default behavior.
     /// 注意：在Spring中，这是默认行为。
-    pub async fn execute_and_evict_all_always<K, V, F>(
-        cache: &dyn Cache<K, V>,
-        f: F,
-    ) where
+    pub async fn execute_and_evict_all_always<K, V, F>(cache: &dyn Cache<K, V>, f: F)
+    where
         K: std::hash::Hash + Eq + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
         F: Future<Output = ()> + Send,

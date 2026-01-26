@@ -1,52 +1,120 @@
-//! Nexus Validation - Spring @Validated equivalent features
-//! Nexus Validation - Spring @Validated 等价功能
+//! Nexus Validation - 验证模块 / Validation Module
 //!
-//! # Equivalent to Spring / 等价于 Spring
+//! 提供请求参数校验功能 / Provides request parameter validation
 //!
-//! - `@Validated` - `Validated` extractor
-//! - `@Valid` - `Valid` extractor
-//! - `@Validated` on method parameters - automatic validation
-//! - Validation errors - structured error response
+//! # 基本使用 / Basic Usage
 //!
-//! # Example / 示例
+//! ```rust,ignore
+//! use nexus_validation::{Validate, ValidationErrors};
+//! use serde::{Deserialize, Serialize};
 //!
-//! ```rust,no_run,ignore
-//! use nexus_validation::Valid;
-//! use serde::Deserialize;
-//!
-//! #[derive(Deserialize, Validate)]
-//! struct CreateUser {
-//!     #[validate(length(min = 3, max = 50))]
+//! #[derive(Debug, Deserialize, Serialize, Validate)]
+//! struct CreateUserRequest {
+//!     #[validate(length(min = 3, max = 20))]
 //!     username: String,
 //!
 //!     #[validate(email)]
 //!     email: String,
 //!
-//!     #[validate(length(min = 8))]
-//!     password: String,
+//!     #[validate(range(min = 18, max = 120))]
+//!     age: u32,
 //! }
 //!
-//! async fn create_user(Valid(user): Valid<CreateUser>) -> String {
-//!     format!("User created: {}", user.username)
+//! #[nexus_macros::post("/users")]
+//! async fn create_user(
+//!     #[validated] request: CreateUserRequest,
+//! ) -> Result<Json<User>, Error> {
+//!     // request is validated
+//!     Ok(Json(user))
 //! }
 //! ```
 
-#![warn(missing_docs)]
-#![warn(unreachable_pub)]
-
 pub mod error;
 pub mod extractor;
-pub mod validate;
+pub mod traits;
+pub mod validators;
 
-pub use error::{ValidationError, ValidationResult};
+// Re-exports commonly used types
+pub use error::{ValidationError, ValidationErrors};
 pub use extractor::Valid;
-pub use validate::Validate;
+pub use traits::Validate;
+pub use validators::*;
 
-/// Version of the validation module
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+use std::fmt;
 
-/// Re-exports of commonly used types
-/// 常用类型的重新导出
-pub mod prelude {
-    pub use super::{Valid, Validate, ValidationError, ValidationResult};
+/// 验证结果 / Validation result
+pub type ValidationResult<T> = Result<T, ValidationErrors>;
+
+/// 验证上下文 / Validation context
+#[derive(Debug, Clone)]
+pub struct ValidationContext {
+    /// 字段名 / Field name
+    pub field: String,
+    /// 字段值 / Field value
+    pub value: String,
+    /// 自定义消息 / Custom message
+    pub message: Option<String>,
+    /// 代码 / Code
+    pub code: String,
+}
+
+impl ValidationContext {
+    pub fn new(field: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            field: field.into(),
+            value: value.into(),
+            message: None,
+            code: "validation_failed".to_string(),
+        }
+    }
+
+    pub fn with_message(mut self, message: impl Into<String>) -> Self {
+        self.message = Some(message.into());
+        self
+    }
+
+    pub fn with_code(mut self, code: impl Into<String>) -> Self {
+        self.code = code.into();
+        self
+    }
+}
+
+/// 验证规则 / Validation rules
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ValidationRule {
+    /// 非空 / Not empty
+    NotEmpty,
+    /// 长度范围 / Length range
+    Length {
+        min: Option<usize>,
+        max: Option<usize>,
+    },
+    /// 数值范围 / Range
+    Range { min: Option<i64>, max: Option<i64> },
+    /// 邮箱 / Email
+    Email,
+    /// URL
+    Url,
+    /// 正则表达式 / Regex
+    Regex(&'static str),
+    /// 自定义 / Custom
+    Custom(&'static str),
+}
+
+impl fmt::Display for ValidationRule {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ValidationRule::NotEmpty => write!(f, "not_empty"),
+            ValidationRule::Length { min, max } => {
+                write!(f, "length(min={:?}, max={:?})", min, max)
+            },
+            ValidationRule::Range { min, max } => {
+                write!(f, "range(min={:?}, max={:?})", min, max)
+            },
+            ValidationRule::Email => write!(f, "email"),
+            ValidationRule::Url => write!(f, "url"),
+            ValidationRule::Regex(pattern) => write!(f, "regex({})", pattern),
+            ValidationRule::Custom(name) => write!(f, "custom({})", name),
+        }
+    }
 }

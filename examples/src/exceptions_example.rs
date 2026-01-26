@@ -10,16 +10,16 @@
 // Equivalent to: Spring @ControllerAdvice, Exception Handlers
 // 等价于：Spring @ControllerAdvice, Exception Handlers
 
-use nexus_http::{Request, Response, StatusCode};
-use nexus_router::Router;
 use nexus_exceptions::{
     Error, ErrorResponse,
     exception::{
-        NotFoundException, BadRequestException, UnauthorizedException,
-        ForbiddenException, ConflictException, ValidationException,
+        BadRequestException, ConflictException, ForbiddenException, NotFoundException,
+        UnauthorizedException, ValidationException,
     },
     handler::ExceptionHandler,
 };
+use nexus_http::{Request, Response, StatusCode};
+use nexus_router::Router;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -68,9 +68,13 @@ impl Error for UserError {
         match self {
             UserError::UserNotFound(id) => format!("User {} does not exist", id),
             UserError::InvalidCredentials => "Username or password is incorrect".to_string(),
-            UserError::EmailAlreadyExists(email) => format!("Email {} is already registered", email),
+            UserError::EmailAlreadyExists(email) => {
+                format!("Email {} is already registered", email)
+            },
             UserError::AccountLocked(id) => format!("User account {} is locked", id),
-            UserError::InsufficientPermissions => "You don't have permission to access this resource".to_string(),
+            UserError::InsufficientPermissions => {
+                "You don't have permission to access this resource".to_string()
+            },
         }
     }
 
@@ -89,8 +93,16 @@ impl Error for UserError {
 #[derive(Debug)]
 enum OrderError {
     ProductNotFound(String),
-    InsufficientStock { product_id: String, requested: u32, available: u32 },
-    InvalidOrderStatus { order_id: String, current: String, requested: String },
+    InsufficientStock {
+        product_id: String,
+        requested: u32,
+        available: u32,
+    },
+    InvalidOrderStatus {
+        order_id: String,
+        current: String,
+        requested: String,
+    },
     PaymentFailed(String),
 }
 
@@ -98,14 +110,28 @@ impl fmt::Display for OrderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             OrderError::ProductNotFound(id) => write!(f, "Product not found: {}", id),
-            OrderError::InsufficientStock { product_id, requested, available } => {
-                write!(f, "Insufficient stock for product {}: requested {}, available {}",
-                    product_id, requested, available)
-            }
-            OrderError::InvalidOrderStatus { order_id, current, requested } => {
-                write!(f, "Invalid order status for {}: cannot change from {} to {}",
-                    order_id, current, requested)
-            }
+            OrderError::InsufficientStock {
+                product_id,
+                requested,
+                available,
+            } => {
+                write!(
+                    f,
+                    "Insufficient stock for product {}: requested {}, available {}",
+                    product_id, requested, available
+                )
+            },
+            OrderError::InvalidOrderStatus {
+                order_id,
+                current,
+                requested,
+            } => {
+                write!(
+                    f,
+                    "Invalid order status for {}: cannot change from {} to {}",
+                    order_id, current, requested
+                )
+            },
             OrderError::PaymentFailed(reason) => write!(f, "Payment failed: {}", reason),
         }
     }
@@ -132,8 +158,12 @@ impl Error for OrderError {
     fn error_message(&self) -> String {
         match self {
             OrderError::ProductNotFound(id) => format!("Product {} is not available", id),
-            OrderError::InsufficientStock { .. } => "Requested quantity is not available".to_string(),
-            OrderError::InvalidOrderStatus { .. } => "Cannot update order to requested status".to_string(),
+            OrderError::InsufficientStock { .. } => {
+                "Requested quantity is not available".to_string()
+            },
+            OrderError::InvalidOrderStatus { .. } => {
+                "Cannot update order to requested status".to_string()
+            },
             OrderError::PaymentFailed(reason) => format!("Payment processing failed: {}", reason),
         }
     }
@@ -204,7 +234,7 @@ async fn error_handling_demo() {
             println!("Status: {}", e.status_code());
             println!("Code: {}", e.error_code());
             println!("Message: {}", e.error_message());
-        }
+        },
     }
 
     // Email already exists / 邮箱已存在
@@ -216,7 +246,7 @@ async fn error_handling_demo() {
             println!("Status: {}", e.status_code());
             println!("Code: {}", e.error_code());
             println!("Message: {}", e.error_message());
-        }
+        },
     }
 
     // Product not found / 产品未找到
@@ -228,7 +258,7 @@ async fn error_handling_demo() {
             println!("Status: {}", e.status_code());
             println!("Code: {}", e.error_code());
             println!("Message: {}", e.error_message());
-        }
+        },
     }
 
     // Insufficient stock / 库存不足
@@ -240,7 +270,7 @@ async fn error_handling_demo() {
             println!("Status: {}", e.status_code());
             println!("Code: {}", e.error_code());
             println!("Message: {}", e.error_message());
-        }
+        },
     }
 
     println!();
@@ -280,11 +310,7 @@ async fn error_handling_endpoints() {
             match service.get_user(&id).await {
                 Ok(user_id) => Response::builder()
                     .status(StatusCode::OK)
-                    .body(
-                        serde_json::json!({ "id": user_id })
-                            .to_string()
-                            .into(),
-                    )
+                    .body(serde_json::json!({ "id": user_id }).to_string().into())
                     .unwrap(),
                 Err(e) => http_error_handler(e).await,
             }
@@ -298,11 +324,7 @@ async fn error_handling_endpoints() {
             match service.create_user(&req.email).await {
                 Ok(user_id) => Response::builder()
                     .status(StatusCode::CREATED)
-                    .body(
-                        serde_json::json!({ "id": user_id })
-                            .to_string()
-                            .into(),
-                    )
+                    .body(serde_json::json!({ "id": user_id }).to_string().into())
                     .unwrap(),
                 Err(e) => http_error_handler(e).await,
             }

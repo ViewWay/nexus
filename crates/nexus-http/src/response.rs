@@ -10,8 +10,8 @@
 
 use super::{
     body::Body,
-    status::StatusCode,
     error::{Error, Result},
+    status::StatusCode,
 };
 use std::collections::HashMap;
 
@@ -83,7 +83,8 @@ impl Response {
     pub fn json<T: serde::Serialize>(value: &T) -> Self {
         match serde_json::to_vec(value) {
             Ok(bytes) => Self::ok().with_body(Body::from(bytes)),
-            Err(_) => Self::internal_server_error().with_body(Body::from("{\"error\":\"Failed to serialize response\"}")),
+            Err(_) => Self::internal_server_error()
+                .with_body(Body::from("{\"error\":\"Failed to serialize response\"}")),
         }
     }
 }
@@ -184,7 +185,10 @@ impl BodyBuilder {
 
     /// Add multiple headers to the response
     /// 向响应添加多个headers
-    pub fn headers(mut self, headers: impl IntoIterator<Item = (impl Into<String>, impl Into<String>)>) -> Self {
+    pub fn headers(
+        mut self,
+        headers: impl IntoIterator<Item = (impl Into<String>, impl Into<String>)>,
+    ) -> Self {
         for (name, value) in headers {
             self.headers.insert(name.into(), value.into());
         }

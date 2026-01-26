@@ -20,8 +20,8 @@
 //! }
 //! ```
 
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
 
 /// Circuit state
@@ -219,14 +219,14 @@ impl CircuitBreaker {
             Ok(value) => {
                 self.on_success().await;
                 Ok(value)
-            }
+            },
             Err(e) => {
                 self.on_failure().await;
                 Err(CircuitBreakerError::Failed {
                     circuit: self.name.clone(),
                     error: e,
                 })
-            }
+            },
         }
     }
 
@@ -244,8 +244,8 @@ impl CircuitBreaker {
                         self.successes.store(0, Ordering::SeqCst);
                     }
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 
@@ -257,15 +257,15 @@ impl CircuitBreaker {
         match state {
             CircuitState::Closed => {
                 self.failures.store(0, Ordering::SeqCst);
-            }
+            },
             CircuitState::HalfOpen => {
                 let successes = self.successes.fetch_add(1, Ordering::SeqCst) + 1;
                 if successes >= self.config.success_threshold as u64 {
                     *self.state.write().await = CircuitState::Closed;
                     self.failures.store(0, Ordering::SeqCst);
                 }
-            }
-            CircuitState::Open => {}
+            },
+            CircuitState::Open => {},
         }
     }
 

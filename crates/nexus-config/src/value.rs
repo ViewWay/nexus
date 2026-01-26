@@ -133,7 +133,7 @@ impl Value {
     /// Check if value is object
     /// 检查值是否为对象
     pub fn is_object(&self) -> bool {
-        matches!(self,Value::Object(_))
+        matches!(self, Value::Object(_))
     }
 
     /// Get as boolean
@@ -228,11 +228,17 @@ impl Value {
         let json_value = match &self {
             Value::String(s) => {
                 // Try to parse as common numeric types for better UX
-                if type_name.contains("u8") || type_name.contains("u16") || type_name.contains("u32")
-                    || type_name.contains("u64") || type_name.contains("i8")
-                    || type_name.contains("i16") || type_name.contains("i32")
-                    || type_name.contains("i64") || type_name.contains("usize")
-                    || type_name.contains("isize") || type_name.contains("f32")
+                if type_name.contains("u8")
+                    || type_name.contains("u16")
+                    || type_name.contains("u32")
+                    || type_name.contains("u64")
+                    || type_name.contains("i8")
+                    || type_name.contains("i16")
+                    || type_name.contains("i32")
+                    || type_name.contains("i64")
+                    || type_name.contains("usize")
+                    || type_name.contains("isize")
+                    || type_name.contains("f32")
                     || type_name.contains("f64")
                 {
                     // Try to parse as integer or float
@@ -249,7 +255,7 @@ impl Value {
                 } else {
                     serde_json::to_value(&self)
                 }
-            }
+            },
             _ => serde_json::to_value(&self),
         };
 
@@ -370,11 +376,11 @@ impl<'de> Deserialize<'de> for Value {
                 } else {
                     return Err(D::Error::custom("Invalid number"));
                 }
-            }
+            },
             serde_json::Value::String(v) => Value::String(v),
             serde_json::Value::Array(v) => {
                 Value::List(v.into_iter().map(|x| Self::from_json(x)).collect())
-            }
+            },
             serde_json::Value::Object(v) => Value::Object(
                 v.into_iter()
                     .map(|(k, v)| (k, Self::from_json(v)))
@@ -399,11 +405,11 @@ impl Value {
                 } else {
                     Value::Null
                 }
-            }
+            },
             serde_json::Value::String(v) => Value::String(v),
             serde_json::Value::Array(v) => {
                 Value::List(v.into_iter().map(|x| Self::from_json(x)).collect())
-            }
+            },
             serde_json::Value::Object(v) => Value::Object(
                 v.into_iter()
                     .map(|(k, v)| (k, Self::from_json(v)))

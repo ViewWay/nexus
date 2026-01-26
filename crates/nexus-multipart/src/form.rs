@@ -38,11 +38,7 @@ impl Multipart {
     /// * `content_type` - The Content-Type header value
     /// * `body` - The request body as bytes
     /// * `max_file_size` - Maximum file size in bytes
-    pub fn new(
-        content_type: &str,
-        body: Bytes,
-        max_file_size: usize,
-    ) -> MultipartResult<Self> {
+    pub fn new(content_type: &str, body: Bytes, max_file_size: usize) -> MultipartResult<Self> {
         let boundary = Self::extract_boundary(content_type)?;
 
         // Create a stream from the body bytes
@@ -51,9 +47,8 @@ impl Multipart {
         let multipart = multer::Multipart::with_constraints(
             stream,
             boundary,
-            multer::Constraints::new().size_limit(
-                multer::SizeLimit::new().whole_stream(max_file_size as u64)
-            ),
+            multer::Constraints::new()
+                .size_limit(multer::SizeLimit::new().whole_stream(max_file_size as u64)),
         );
 
         Ok(Self { inner: multipart })
@@ -92,7 +87,7 @@ impl Multipart {
                     content_type,
                     data,
                 }))
-            }
+            },
             Ok(None) => Ok(None),
             Err(e) => Err(MultipartError::from(e)),
         }

@@ -9,12 +9,12 @@
 //! - CORS middleware (cross-origin support)
 //! - Timeout middleware (request timeout)
 
+use nexus_http::{Body, Response, Server, StatusCode};
+use nexus_middleware::{CorsConfig, CorsMiddleware, LoggerMiddleware, TimeoutMiddleware};
+use nexus_router::{Router, Stateful};
+use nexus_runtime::{task::block_on, time::sleep};
 use std::sync::Arc;
 use std::time::Duration;
-use nexus_http::{Body, Response, Server, StatusCode};
-use nexus_router::{Router, Stateful};
-use nexus_runtime::task::block_on;
-use nexus_middleware::{LoggerMiddleware, CorsMiddleware, CorsConfig, TimeoutMiddleware};
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Initialize tracing
@@ -40,10 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Create middleware stack
     // 创建中间件栈
     let logger = Arc::new(LoggerMiddleware::new().log_headers(true));
-    let cors = Arc::new(CorsMiddleware::new(
-        CorsConfig::new()
-            .allow_all()
-    ));
+    let cors = Arc::new(CorsMiddleware::new(CorsConfig::new().allow_all()));
     let timeout = Arc::new(TimeoutMiddleware::new(Duration::from_secs(30)));
 
     // Build the router with middleware and state
@@ -74,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .get("/api/slow", |_req: nexus_http::Request| async move {
             // Simulate slow operation
             // 模拟慢操作
-            tokio::time::sleep(Duration::from_secs(2)).await;
+            sleep(Duration::from_secs(2)).await;
             Ok(Response::builder()
                 .status(StatusCode::OK)
                 .header("content-type", "application/json")
@@ -111,9 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Run the async server using the runtime
     // 使用运行时运行异步服务器
     block_on(async {
-        let _server = Server::bind("127.0.0.1:8080")
-            .run(app)
-            .await?;
+        let _server = Server::bind("127.0.0.1:8080").run(app).await?;
 
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     })

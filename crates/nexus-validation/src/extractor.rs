@@ -1,8 +1,10 @@
 //! Validation extractor
 //! 验证提取器
 
-use crate::validate::Validate as NexusValidate;
 use crate::ValidationError;
+// Use the Validate trait from the crate root (re-exported from traits module)
+// 使用从 crate 根目录导出的 Validate trait（从 traits 模块重新导出）
+use crate::Validate as NexusValidate;
 use serde::de::DeserializeOwned;
 use std::fmt;
 
@@ -125,6 +127,19 @@ mod tests {
 
         let result = Valid::validate(user);
         assert!(result.is_ok());
+    }
+
+    // Implement our Validate trait for tests
+    impl NexusValidate for TestUser {
+        fn validate(&self) -> Result<(), ValidationError> {
+            if self.username.len() < 3 {
+                return Err(ValidationError::new(
+                    "username",
+                    "Username must be at least 3 characters",
+                ));
+            }
+            Ok(())
+        }
     }
 
     #[test]

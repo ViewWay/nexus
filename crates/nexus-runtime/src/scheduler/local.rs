@@ -7,7 +7,7 @@ use std::sync::Mutex;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-use super::{handle::SchedulerHandle, queue::LocalQueue, RawTask};
+use super::{RawTask, handle::SchedulerHandle, queue::LocalQueue};
 
 /// Configuration for the scheduler
 /// 调度器配置
@@ -98,24 +98,17 @@ impl Scheduler {
 
         // Spawn the worker thread
         // 生成工作线程
-        let thread_handle = thread::Builder::new()
-            .name(thread_name)
-            .spawn(move || {
-                // Set CPU affinity if specified
-                // 如果指定了，设置CPU亲和性
-                if let Some(core) = config.cpu_affinity {
-                    Self::set_cpu_affinity(core);
-                }
+        let thread_handle = thread::Builder::new().name(thread_name).spawn(move || {
+            // Set CPU affinity if specified
+            // 如果指定了，设置CPU亲和性
+            if let Some(core) = config.cpu_affinity {
+                Self::set_cpu_affinity(core);
+            }
 
-                // Run the scheduler loop
-                // 运行调度器循环
-                Self::run_scheduler(
-                    &queue_clone,
-                    &inject_queue_clone,
-                    &wake_clone,
-                    &state_clone,
-                );
-            })?;
+            // Run the scheduler loop
+            // 运行调度器循环
+            Self::run_scheduler(&queue_clone, &inject_queue_clone, &wake_clone, &state_clone);
+        })?;
 
         Ok(Self {
             queue,
@@ -157,26 +150,19 @@ impl Scheduler {
 
         // Spawn the worker thread
         // 生成工作线程
-        let thread_handle = thread::Builder::new()
-            .name(thread_name)
-            .spawn(move || {
-                // Set CPU affinity if specified
-                // 如果指定了，设置CPU亲和性
-                if let Some(core) = config.cpu_affinity {
-                    Self::set_cpu_affinity(core);
-                }
+        let thread_handle = thread::Builder::new().name(thread_name).spawn(move || {
+            // Set CPU affinity if specified
+            // 如果指定了，设置CPU亲和性
+            if let Some(core) = config.cpu_affinity {
+                Self::set_cpu_affinity(core);
+            }
 
-                // Run the scheduler loop with driver
-                // 运行带driver的调度器循环
-                // TODO: Integrate driver for I/O events
-                // TODO: 与driver集成以处理I/O事件
-                Self::run_scheduler(
-                    &queue_clone,
-                    &inject_queue_clone,
-                    &wake_clone,
-                    &state_clone,
-                );
-            })?;
+            // Run the scheduler loop with driver
+            // 运行带driver的调度器循环
+            // TODO: Integrate driver for I/O events
+            // TODO: 与driver集成以处理I/O事件
+            Self::run_scheduler(&queue_clone, &inject_queue_clone, &wake_clone, &state_clone);
+        })?;
 
         Ok(Self {
             queue,
@@ -262,16 +248,9 @@ impl Scheduler {
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
             libc::CPU_ZERO(&mut cpu_set);
-            libc::CPU_SET(
-                core % libc::CPU_SETSIZE as usize,
-                &mut cpu_set,
-            );
+            libc::CPU_SET(core % libc::CPU_SETSIZE as usize, &mut cpu_set);
 
-            let _ = libc::sched_setaffinity(
-                0,
-                std::mem::size_of::<libc::cpu_set_t>(),
-                &cpu_set,
-            );
+            let _ = libc::sched_setaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &cpu_set);
         }
     }
 

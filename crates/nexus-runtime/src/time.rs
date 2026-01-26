@@ -38,9 +38,9 @@ use std::cell::UnsafeCell;
 use std::collections::{HashMap, LinkedList};
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::task::{Context, Poll, Waker};
 
 /// Standard library duration re-export
@@ -83,7 +83,8 @@ const WHEEL3_MASK: usize = WHEEL3_SIZE - 1;
 /// Maximum timeout in milliseconds (about 18.6 hours)
 /// 最大超时时间（毫秒，约18.6小时）
 #[allow(dead_code)]
-const MAX_TIMEOUT_MS: u64 = (WHEEL0_SIZE * WHEEL1_SIZE * WHEEL2_SIZE * WHEEL3_SIZE) as u64 * TICK_MS;
+const MAX_TIMEOUT_MS: u64 =
+    (WHEEL0_SIZE * WHEEL1_SIZE * WHEEL2_SIZE * WHEEL3_SIZE) as u64 * TICK_MS;
 
 /// Timer entry in the timing wheel
 /// 时间轮中的定时器条目
@@ -288,7 +289,7 @@ impl TimerWheel {
                         // Check if timer is still in registry
                         // 检查定时器是否仍在注册表中
                         let is_active = {
-                            let mut registry = self.timer_registry.lock().unwrap();
+                            let registry = self.timer_registry.lock().unwrap();
                             registry.contains_key(&timer.id)
                         };
 
@@ -310,7 +311,7 @@ impl TimerWheel {
                     for timer in timers {
                         // Check if timer is still in registry
                         let is_active = {
-                            let mut registry = self.timer_registry.lock().unwrap();
+                            let registry = self.timer_registry.lock().unwrap();
                             registry.contains_key(&timer.id)
                         };
 
@@ -324,13 +325,14 @@ impl TimerWheel {
             // Cascade to wheel 3 every (WHEEL0_SIZE * WHEEL1_SIZE * WHEEL2_SIZE) ticks
             // 每(WHEEL0_SIZE * WHEEL1_SIZE * WHEEL2_SIZE)个滴答级联到轮3
             if tick & ((WHEEL0_SIZE * WHEEL1_SIZE * WHEEL2_SIZE) as u64 - 1) == 0 {
-                let pos3 = ((tick >> (WHEEL0_SHIFT + WHEEL1_SHIFT + WHEEL2_SHIFT)) & WHEEL3_MASK as u64) as usize;
+                let pos3 = ((tick >> (WHEEL0_SHIFT + WHEEL1_SHIFT + WHEEL2_SHIFT))
+                    & WHEEL3_MASK as u64) as usize;
                 unsafe {
                     let timers = self.wheel3[pos3].take_all();
                     for timer in timers {
                         // Check if timer is still in registry
                         let is_active = {
-                            let mut registry = self.timer_registry.lock().unwrap();
+                            let registry = self.timer_registry.lock().unwrap();
                             registry.contains_key(&timer.id)
                         };
 
@@ -369,16 +371,30 @@ impl TimerWheel {
         } else if ticks < (WHEEL0_SIZE * WHEEL1_SIZE) as u64 {
             (1u8, (((current + ticks) >> WHEEL0_SHIFT) & WHEEL1_MASK as u64) as usize)
         } else if ticks < (WHEEL0_SIZE * WHEEL1_SIZE * WHEEL2_SIZE) as u64 {
-            (2u8, (((current + ticks) >> (WHEEL0_SHIFT + WHEEL1_SHIFT)) & WHEEL2_MASK as u64) as usize)
+            (
+                2u8,
+                (((current + ticks) >> (WHEEL0_SHIFT + WHEEL1_SHIFT)) & WHEEL2_MASK as u64)
+                    as usize,
+            )
         } else {
-            (3u8, (((current + ticks) >> (WHEEL0_SHIFT + WHEEL1_SHIFT + WHEEL2_SHIFT)) & WHEEL3_MASK as u64) as usize)
+            (
+                3u8,
+                (((current + ticks) >> (WHEEL0_SHIFT + WHEEL1_SHIFT + WHEEL2_SHIFT))
+                    & WHEEL3_MASK as u64) as usize,
+            )
         };
 
         // Add to registry before inserting into wheel
         // 在插入到轮之前添加到注册表
         {
             let mut registry = self.timer_registry.lock().unwrap();
-            registry.insert(id, TimerLocation { wheel_level, slot_index: pos });
+            registry.insert(
+                id,
+                TimerLocation {
+                    wheel_level,
+                    slot_index: pos,
+                },
+            );
         }
 
         // Insert into appropriate wheel
@@ -596,7 +612,9 @@ pub fn sleep_until(instant: Instant) -> SleepUntil {
         Duration::ZERO
     };
 
-    SleepUntil { sleep: sleep(duration) }
+    SleepUntil {
+        sleep: sleep(duration),
+    }
 }
 
 /// Sleep until future

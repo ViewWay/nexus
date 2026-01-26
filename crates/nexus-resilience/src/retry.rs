@@ -183,9 +183,7 @@ impl RetryPolicy {
         match self.backoff_type {
             BackoffType::None => Duration::ZERO,
             BackoffType::Fixed => self.initial_delay,
-            BackoffType::Linear => {
-                self.initial_delay.saturating_mul(attempt as u32)
-            }
+            BackoffType::Linear => self.initial_delay.saturating_mul(attempt as u32),
             BackoffType::Exponential => {
                 let delay_ms = self.initial_delay.as_millis() as f64
                     * self.multiplier.powi(attempt as i32 - 1);
@@ -195,7 +193,7 @@ impl RetryPolicy {
                 } else {
                     delay
                 }
-            }
+            },
             BackoffType::ExponentialWithJitter => {
                 let delay_ms = self.initial_delay.as_millis() as f64
                     * self.multiplier.powi(attempt as i32 - 1);
@@ -208,7 +206,7 @@ impl RetryPolicy {
                 } else {
                     delay
                 }
-            }
+            },
         }
     }
 }
@@ -357,7 +355,7 @@ where
                 if attempt + 1 >= policy.max_attempts {
                     break;
                 }
-            }
+            },
         }
     }
 

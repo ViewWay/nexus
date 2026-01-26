@@ -21,6 +21,7 @@
 - ✅ **Compression** - Response compression (gzip, brotli)
 - ✅ **Logging** - Request/response logging
 - ✅ **Timeout** - Request timeout handling
+- ✅ **JWT Authentication** - JWT token verification
 - ✅ **Composable** - Chain multiple middlewares
 
 ---
@@ -33,6 +34,7 @@
 | **CompressionMiddleware** | `GzipFilter` | Response compression | ✅ |
 | **LoggerMiddleware** | `LoggingFilter`, MDC | Request logging | ✅ |
 | **TimeoutMiddleware** | `TimeoutFilter` | Request timeout | ✅ |
+| **JwtAuthenticationMiddleware** | `JwtAuthenticationFilter` | JWT authentication | ✅ |
 
 ---
 
@@ -48,9 +50,10 @@ nexus-middleware = "0.1.0-alpha"
 ### Basic Usage / 基本用法
 
 ```rust
-use nexus_middleware::{CorsMiddleware, CompressionMiddleware, LoggerMiddleware};
+use nexus_middleware::{CorsMiddleware, CompressionMiddleware, LoggerMiddleware, JwtAuthenticationMiddleware};
 use nexus_http::Server;
 use nexus_router::Router;
+use std::sync::Arc;
 
 let app = Router::new()
     .get("/", handler);
@@ -59,6 +62,7 @@ Server::bind("0.0.0.0:3000")
     .middleware(CorsMiddleware::permissive())
     .middleware(CompressionMiddleware::default())
     .middleware(LoggerMiddleware::new())
+    .middleware(Arc::new(JwtAuthenticationMiddleware::new()))
     .serve(app)
     .await?;
 ```
@@ -260,6 +264,113 @@ let app = Router::new()
 - 超时时返回 `408 Request Timeout`
 - 取消处理器 future
 - 记录超时事件
+
+---
+
+### JWT Authentication Middleware / JWT 认证中间件
+
+Verify JWT tokens from Authorization header:
+
+从 Authorization 头验证 JWT token：
+
+```rust
+use nexus_middleware::{JwtAuthenticationMiddleware, JwtRequestExt};
+use std::sync::Arc;
+
+// Create JWT middleware / 创建 JWT 中间件
+let jwt_middleware = Arc::new(
+    JwtAuthenticationMiddleware::new()
+        .skip_path("/api/auth/login")      // Skip login / 跳过登录
+        .skip_path("/api/auth/register")   // Skip register / 跳过注册
+        .skip_path("/health")              // Skip health check / 跳过健康检查
+);
+
+// Use with router / 与路由器一起使用
+let app = Router::new()
+    .get("/api/users/me", get_current_user)  // Requires JWT / 需要 JWT
+    .get("/health", health_check)             // Public / 公开
+    .middleware(jwt_middleware);
+
+// In handler / 在处理器中
+use nexus_middleware::JwtRequestExt;
+
+async fn get_current_user(req: &Request) -> Result<UserInfo, Error> {
+    // Get authentication from request (injected by middleware)
+    // 从请求获取认证（由中间件注入）
+    let auth = req.get_jwt_auth()
+        .ok_or(Error::Unauthorized)?;
+
+    Ok(UserInfo {
+        user_id: auth.user_id.clone(),
+        username: auth.username.clone(),
+    })
+}
+
+// Or use helper methods / 或使用辅助方法
+async fn get_user_id(req: &Request) -> Result<String, Error> {
+    let user_id = req.get_current_user_id()
+        .ok_or(Error::Unauthorized)?;
+    Ok(user_id.to_string())
+}
+```
+
+**Spring Equivalent** / **Spring等价物**:
+
+```java
+// Spring Boot
+public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) {
+        String jwt = resolveToken(request);
+        if (jwt != null && jwtProvider.validateToken(jwt)) {
+            Authentication auth = jwtProvider.getAuthentication(jwt);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
+        chain.doFilter(request, response);
+    }
+}
+```
+
+**Configuration Options** / **配置选项**:
+
+```rust
+// Custom token header / 自定义 token 头
+let jwt_middleware = JwtAuthenticationMiddleware::new()
+    .with_token_header("X-Auth-Token")    // Default: Authorization
+    .with_token_prefix("Token ");         // Default: "Bearer "
+
+// Skip specific paths / 跳过特定路径
+let jwt_middleware = JwtAuthenticationMiddleware::new()
+    .skip_path("/api/public")
+    .skip_path("/api/docs")
+    .skip_path("/metrics");
+
+// Combine options / 组合选项
+let jwt_middleware = Arc::new(
+    JwtAuthenticationMiddleware::new()
+        .with_token_header("Authorization")
+        .with_token_prefix("Bearer ")
+        .skip_path("/api/auth/login")
+        .skip_path("/api/auth/register")
+);
+```
+
+**Request Format** / **请求格式**:
+
+```http
+GET /api/users/me HTTP/1.1
+Host: example.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Error Responses** / **错误响应**:
+
+- `401 Unauthorized` - Missing or invalid token / 缺失或无效的token
+- `401 Unauthorized` - Token expired / Token过期
+
+---
 
 ---
 
@@ -467,12 +578,17 @@ mod tests {
 - [x] Logger middleware
 - [x] Timeout middleware
 
-### Phase 3: Advanced Middleware 🔄 (In Progress / 进行中)
+### Phase 3: Advanced Middleware ✅ (Completed / 已完成)
+- [x] JWT authentication middleware
+- [x] Request extension injection
+- [x] Configurable skip paths
+
+### Phase 4: Additional Middleware 🔄 (In Progress / 进行中)
 - [ ] Rate limiting middleware
-- [ ] Authentication middleware
-- [ ] CSRF protection
+- [ ] CSRF protection middleware
 - [ ] Request ID middleware
 - [ ] Metrics middleware
+- [ ] Static files middleware
 
 ---
 

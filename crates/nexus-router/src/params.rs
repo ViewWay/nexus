@@ -79,7 +79,7 @@ impl<'a> PathDeserializer<'a> {
     ///
     /// 将字符串参数的HashMap转换为目标类型。
     /// 这使用serde通过JSON中间格式的反序列化。
-    pub fn deserialize<T: Deserialize<'a>>(&self) -> Result<T, String> {
+    pub fn deserialize<T: for<'de> Deserialize<'de>>(&self) -> Result<T, String> {
         // Convert HashMap to a JSON value for deserialization
         // 将HashMap转换为JSON值以进行反序列化
         let mut map = serde_json::Map::new();
@@ -88,7 +88,7 @@ impl<'a> PathDeserializer<'a> {
         }
 
         let json_value = serde_json::Value::Object(map);
-        T::deserialize(&json_value).map_err(|e| e.to_string())
+        serde_json::from_value(json_value).map_err(|e| e.to_string())
     }
 }
 

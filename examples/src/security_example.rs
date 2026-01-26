@@ -13,7 +13,7 @@
 use nexus_http::{Request, Response, StatusCode};
 use nexus_router::Router;
 use nexus_security::{
-    jwt::{JwtClaims, JwtEncoder, JwtDecoder},
+    jwt::{JwtClaims, JwtDecoder, JwtEncoder},
     password::{PasswordEncoder, PasswordHasher},
 };
 use serde::{Deserialize, Serialize};
@@ -31,10 +31,10 @@ struct User {
 /// JWT Claims / JWT 声明
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Claims {
-    sub: String, // Subject (user ID) / 主题（用户ID）
+    sub: String,  // Subject (user ID) / 主题（用户ID）
     name: String, // Username / 用户名
-    exp: usize, // Expiration time / 过期时间
-    iat: usize, // Issued at / 签发时间
+    exp: usize,   // Expiration time / 过期时间
+    iat: usize,   // Issued at / 签发时间
 }
 
 /// Password hashing example / 密码哈希示例
@@ -89,7 +89,7 @@ fn jwt_generation_example() {
             println!("Header: {}...", &parts[0].chars().take(20).collect::<String>());
             println!("Payload: {}...", &parts[1].chars().take(20).collect::<String>());
             println!("Signature: {}...\n", &parts[2].chars().take(20).collect::<String>());
-        }
+        },
         Err(e) => println!("Error generating token: {}\n", e),
     }
 }
@@ -125,10 +125,10 @@ fn jwt_validation_example() {
                     println!("User ID: {}", decoded_claims.sub);
                     println!("Username: {}", decoded_claims.name);
                     println!("Expires at: {}\n", decoded_claims.exp);
-                }
+                },
                 Err(e) => println!("Token validation failed: {}\n", e),
             }
-        }
+        },
         Err(e) => println!("Error generating token: {}\n", e),
     }
 
@@ -202,16 +202,16 @@ async fn auth_flow_example() {
                             Ok(decoded) => {
                                 println!("Token verified for: {}", decoded.name);
                                 println!("Token expires at: {}", decoded.exp);
-                            }
+                            },
                             Err(e) => println!("Token verification failed: {}", e),
                         }
-                    }
+                    },
                     Err(e) => println!("Token generation failed: {}", e),
                 }
             } else {
                 println!("Invalid password for {}", username);
             }
-        }
+        },
         None => println!("User not found: {}", username),
     }
 
@@ -240,12 +240,11 @@ async fn auth_server_example() {
         });
 
     // Protected routes / 受保护的路由
-    let protected_router = Router::new()
-        .get("/api/users/me", || async {
-            Response::builder()
-                .status(StatusCode::OK)
-                .body(
-                    r#"{"id":"1","username":"alice","email":"alice@example.com"}#
+    let protected_router = Router::new().get("/api/users/me", || async {
+        Response::builder()
+            .status(StatusCode::OK)
+            .body(
+                r#"{"id":"1","username":"alice","email":"alice@example.com"}#
                         .into(),
                 )
                 .unwrap()
@@ -253,9 +252,11 @@ async fn auth_server_example() {
         .get("/api/orders", || async {
             Response::builder()
                 .status(StatusCode::OK)
-                .body(r#"{"orders":[]}"#.into())
-                .unwrap()
-        });
+                .body(r#"{"orders":[]}"#
+                    .into(),
+            )
+            .unwrap()
+    });
 
     println!("Server configured with:");
     println!("  - Public routes: /, /auth/login");

@@ -188,21 +188,12 @@ impl ConfigServerClient {
     /// Build config URL
     /// 构建配置URL
     fn build_url(&self, application: &str, profile: &str, label: &str) -> String {
-        format!(
-            "{}/{}/{}/{}",
-            self.base_url.trim_end_matches('/'),
-            application,
-            profile,
-            label
-        )
+        format!("{}/{}/{}/{}", self.base_url.trim_end_matches('/'), application, profile, label)
     }
 
     /// Fetch configuration
     /// 获取配置
-    async fn fetch_config(
-        &self,
-        url: &str,
-    ) -> Result<RemoteConfig, ConfigError> {
+    async fn fetch_config(&self, url: &str) -> Result<RemoteConfig, ConfigError> {
         let response = self
             .client
             .get(url)

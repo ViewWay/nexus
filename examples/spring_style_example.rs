@@ -51,7 +51,8 @@ impl DemoController {
     // 等价于 @GetMapping("/helloworld")
     #[nexus_macros::get("/helloworld")]
     fn hello(&self) -> &'static str {
-        self.log().info(format_args!("Handling /helloworld request"));
+        self.log()
+            .info(format_args!("Handling /helloworld request"));
         "Hello World!"
     }
 
@@ -59,7 +60,8 @@ impl DemoController {
     // 等价于 @GetMapping("/user/{id}")
     #[nexus_macros::get("/user/{id}")]
     fn get_user(&self, id: u64) -> String {
-        self.log().info(format_args!("Getting user with id: {}", id));
+        self.log()
+            .info(format_args!("Getting user with id: {}", id));
         format!("User: {}", id)
     }
 

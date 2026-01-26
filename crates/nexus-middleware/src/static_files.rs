@@ -7,13 +7,13 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use std::future::Future;
-use std::pin::Pin;
 use std::fs;
+use std::future::Future;
 use std::path::{Path, PathBuf};
+use std::pin::Pin;
 use std::sync::Arc;
 
-use nexus_http::{Request, Response, Result, StatusCode, Body, Error};
+use nexus_http::{Body, Error, Request, Response, Result, StatusCode};
 use nexus_router::{Middleware, Next};
 
 /// Static file serving configuration
@@ -144,9 +144,8 @@ impl StaticFiles {
     /// 服务文件
     fn serve_file(&self, file_path: &Path) -> Result<Response> {
         // Read file contents
-        let contents = fs::read(file_path).map_err(|e| {
-            Error::internal(format!("Failed to read file: {}", e))
-        })?;
+        let contents = fs::read(file_path)
+            .map_err(|e| Error::internal(format!("Failed to read file: {}", e)))?;
 
         // Get content type
         let content_type = Self::get_content_type(file_path);
@@ -161,19 +160,17 @@ impl StaticFiles {
             builder = builder.header("cache-control", cache);
         }
 
-        Ok(builder
-            .body(Body::from(contents))
-            .unwrap())
+        Ok(builder.body(Body::from(contents)).unwrap())
     }
 
     /// Serve directory listing
     /// 服务目录列表
     fn serve_listing(&self, dir_path: &Path, request_path: &str) -> Result<Response> {
-        let entries = fs::read_dir(dir_path).map_err(|e| {
-            Error::internal(format!("Failed to read directory: {}", e))
-        })?;
+        let entries = fs::read_dir(dir_path)
+            .map_err(|e| Error::internal(format!("Failed to read directory: {}", e)))?;
 
-        let mut html = String::from(r#"<!DOCTYPE html>
+        let mut html = String::from(
+            r#"<!DOCTYPE html>
 <html>
 <head>
     <title>Directory Listing</title>
@@ -185,35 +182,49 @@ impl StaticFiles {
     </style>
 </head>
 <body>
-    <h1>Index of "#);
+    <h1>Index of "#,
+        );
         html.push_str(request_path);
-        html.push_str(r#"</h1>
+        html.push_str(
+            r#"</h1>
     <hr>
     <ul>
-"#);
+"#,
+        );
 
         // Parent directory link
         if request_path != &self.uri_prefix {
-            html.push_str(r#"        <li><a class="parent" href="../">../</a></li>
-"#);
+            html.push_str(
+                r#"        <li><a class="parent" href="../">../</a></li>
+"#,
+            );
         }
 
         // Directory entries
         for entry_result in entries {
-            let entry = entry_result.map_err(|e| Error::internal(format!("Failed to read entry: {}", e)))?;
+            let entry = entry_result
+                .map_err(|e| Error::internal(format!("Failed to read entry: {}", e)))?;
             let name = entry.file_name().to_string_lossy().to_string();
-            let is_dir = entry.file_type().map(|ft: std::fs::FileType| ft.is_dir()).unwrap_or(false);
+            let is_dir = entry
+                .file_type()
+                .map(|ft: std::fs::FileType| ft.is_dir())
+                .unwrap_or(false);
 
             let suffix = if is_dir { "/" } else { "" };
-            html.push_str(&format!(r#"        <li><a href="{}{}">{}</a></li>
-"#, name, suffix, name));
+            html.push_str(&format!(
+                r#"        <li><a href="{}{}">{}</a></li>
+"#,
+                name, suffix, name
+            ));
         }
 
-        html.push_str(r#"    </ul>
+        html.push_str(
+            r#"    </ul>
     <hr>
 </body>
 </html>
-"#);
+"#,
+        );
 
         Ok(Response::builder()
             .status(StatusCode::OK)
@@ -261,7 +272,13 @@ where
             // Check for path traversal attacks
             if file_path
                 .canonicalize()
-                .map(|p| !p.starts_with(&base_path.canonicalize().unwrap_or_else(|_| base_path.clone())))
+                .map(|p| {
+                    !p.starts_with(
+                        &base_path
+                            .canonicalize()
+                            .unwrap_or_else(|_| base_path.clone()),
+                    )
+                })
                 .unwrap_or(false)
             {
                 return Ok(Response::builder()
@@ -286,7 +303,8 @@ where
                                 allowed_extensions,
                                 show_listing,
                                 cache_control,
-                            }.serve_file(&file_path);
+                            }
+                            .serve_file(&file_path);
                         }
                     }
                 }
@@ -307,7 +325,8 @@ where
                             allowed_extensions,
                             show_listing,
                             cache_control,
-                        }.serve_file(&index_path);
+                        }
+                        .serve_file(&index_path);
                     }
                 }
 
@@ -321,7 +340,8 @@ where
                         allowed_extensions,
                         show_listing,
                         cache_control,
-                    }.serve_listing(&file_path, path);
+                    }
+                    .serve_listing(&file_path, path);
                 }
 
                 // Otherwise, try next

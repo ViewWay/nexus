@@ -174,10 +174,7 @@ mod tests {
 
     #[test]
     fn test_info_builder() {
-        let info = InfoBuilder::new()
-            .name("my-app")
-            .version("1.0.0")
-            .build();
+        let info = InfoBuilder::new().name("my-app").version("1.0.0").build();
 
         assert_eq!(info.name, Some("my-app".to_string()));
         assert_eq!(info.version, Some("1.0.0".to_string()));
@@ -185,9 +182,7 @@ mod tests {
 
     #[test]
     fn test_app_info_to_json() {
-        let info = AppInfo::new()
-            .with_name("my-app")
-            .with_version("1.0.0");
+        let info = AppInfo::new().with_name("my-app").with_version("1.0.0");
 
         let json = info.to_json().unwrap();
         assert!(json.contains("my-app"));

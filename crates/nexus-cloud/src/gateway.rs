@@ -374,11 +374,7 @@ impl GatewayFilter for LoggingFilter {
         request: GatewayRequest,
     ) -> Pin<Box<dyn Future<Output = GatewayRequest> + Send>> {
         Box::pin(async move {
-            tracing::info!(
-                "Gateway Request: {} {}",
-                request.method,
-                request.uri()
-            );
+            tracing::info!("Gateway Request: {} {}", request.method, request.uri());
             request
         })
     }
@@ -388,10 +384,7 @@ impl GatewayFilter for LoggingFilter {
         response: GatewayResponse,
     ) -> Pin<Box<dyn Future<Output = GatewayResponse> + Send>> {
         Box::pin(async move {
-            tracing::info!(
-                "Gateway Response: {}",
-                response.status
-            );
+            tracing::info!("Gateway Response: {}", response.status);
             response
         })
     }

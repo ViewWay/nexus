@@ -9,11 +9,11 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use std::fmt;
+use nexus_http::{Request, Response, Result, StatusCode};
 use std::collections::HashMap;
+use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
-use nexus_http::{Request, Response, Result};
 
 /// Route handler function signature
 /// 路由处理函数签名
@@ -24,11 +24,19 @@ pub type HandlerFn = fn();
 ///
 /// This is the primary handler type for user-defined route handlers.
 /// 这是用户定义路由处理程序的主要类型。
-pub type AsyncHandlerFn = fn(Request, HashMap<String, String>) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>>;
+pub type AsyncHandlerFn =
+    fn(Request, HashMap<String, String>) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>>;
 
 /// Boxed async handler (for dynamic handler registration)
 /// 装箱的异步处理程序（用于动态处理程序注册）
-pub type BoxedAsyncHandler = Box<dyn Fn(Request, HashMap<String, String>) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>> + Send + Sync>;
+pub type BoxedAsyncHandler = Box<
+    dyn Fn(
+            Request,
+            HashMap<String, String>,
+        ) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>>
+        + Send
+        + Sync,
+>;
 
 /// A route in the router
 /// 路由器中的路由
@@ -151,7 +159,6 @@ impl fmt::Debug for Route {
 ///
 /// let handler: AsyncHandlerFn = |req, params| Box::pin(get_user(req, params));
 /// ```
-#[derive(Clone)]
 pub enum Handler {
     /// A function pointer handler (synchronous, no arguments)
     /// 函数指针处理程序（同步，无参数）
@@ -201,25 +208,35 @@ impl Handler {
     /// 创建异步处理程序
     pub fn async_fn<F>(f: F) -> Self
     where
-        F: Fn(Request, HashMap<String, String>) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>> + Send + Sync + 'static,
+        F: Fn(
+                Request,
+                HashMap<String, String>,
+            ) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>>
+            + Send
+            + Sync
+            + 'static,
     {
         Self::BoxedAsync(Box::new(f))
     }
 
     /// Call the handler with the given request and path parameters
     /// 使用给定请求和路径参数调用处理程序
-    pub fn call(&self, req: Request, params: HashMap<String, String>) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>> {
+    pub fn call(
+        &self,
+        req: Request,
+        params: HashMap<String, String>,
+    ) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>> {
         match self {
             Handler::Async(f) => {
                 // Call the async handler function
                 // 调用异步处理程序函数
                 f(req, params)
-            }
+            },
             Handler::BoxedAsync(f) => {
                 // Call the boxed async handler
                 // 调用装箱的异步处理程序
                 f(req, params)
-            }
+            },
             Handler::Static(s) => {
                 // Return static string as response
                 // 将静态字符串作为响应返回
@@ -233,7 +250,7 @@ impl Handler {
                         .body(Body::from(s))
                         .unwrap())
                 })
-            }
+            },
             Handler::StaticBytes(b) => {
                 // Return static bytes as response
                 // 将静态字节作为响应返回
@@ -247,7 +264,7 @@ impl Handler {
                         .body(Body::from(b))
                         .unwrap())
                 })
-            }
+            },
             Handler::Fn(f) => {
                 // Call the sync function and return empty response
                 // 调用同步函数并返回空响应
@@ -260,7 +277,7 @@ impl Handler {
                         .body(Body::empty())
                         .unwrap())
                 })
-            }
+            },
             Handler::Unimplemented => {
                 // Return 501 Not Implemented
                 // 返回501 Not Implemented
@@ -271,7 +288,7 @@ impl Handler {
                         .body(Body::from("Not Implemented"))
                         .unwrap())
                 })
-            }
+            },
         }
     }
 }
@@ -292,6 +309,21 @@ impl fmt::Debug for Handler {
 impl Default for Handler {
     fn default() -> Self {
         Self::Unimplemented
+    }
+}
+
+impl Clone for Handler {
+    fn clone(&self) -> Self {
+        match self {
+            Handler::Fn(f) => Handler::Fn(*f),
+            Handler::Async(f) => Handler::Async(*f),
+            // BoxedAsync cannot be cloned, return Unimplemented instead
+            // BoxedAsync 无法克隆，返回 Unimplemented 代替
+            Handler::BoxedAsync(_) => Handler::Unimplemented,
+            Handler::Static(s) => Handler::Static(s),
+            Handler::StaticBytes(b) => Handler::StaticBytes(b),
+            Handler::Unimplemented => Handler::Unimplemented,
+        }
     }
 }
 

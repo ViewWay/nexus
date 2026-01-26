@@ -25,16 +25,16 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-pub mod error;
-pub mod context;
-pub mod extension;
-pub mod container;
 pub mod bean;
+pub mod container;
+pub mod context;
+pub mod error;
+pub mod extension;
 pub mod reflect;
 
 // Re-exports / 重新导出
+pub use bean::{Bean, BeanDefinition, BeanFactory, Scope};
+pub use container::{ApplicationContext, Container};
 pub use error::{Error, ErrorKind, Result};
 pub use extension::Extensions;
-pub use container::{Container, ApplicationContext};
-pub use bean::{Bean, BeanFactory, BeanDefinition, Scope};
 pub use reflect::{ContainerReflectExt, ReflectContainer};

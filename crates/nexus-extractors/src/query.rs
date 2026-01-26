@@ -24,7 +24,7 @@
 //! }
 //! ```
 
-use crate::{ExtractorError, FromRequest, ExtractorFuture, Request};
+use crate::{ExtractorError, ExtractorFuture, FromRequest, Request};
 use serde::Deserialize;
 use std::collections::HashMap;
 

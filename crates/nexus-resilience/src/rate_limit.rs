@@ -39,8 +39,8 @@
 
 use std::collections::HashMap;
 use std::fmt;
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 /// Rate limiter type
@@ -102,11 +102,9 @@ pub enum RateLimitError {
 impl fmt::Display for RateLimitError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Exceeded { retry_after } => write!(
-                f,
-                "Rate limit exceeded. Retry after {}ms",
-                retry_after.as_millis()
-            ),
+            Self::Exceeded { retry_after } => {
+                write!(f, "Rate limit exceeded. Retry after {}ms", retry_after.as_millis())
+            },
             Self::InvalidConfig(msg) => write!(f, "Invalid configuration: {}", msg),
             Self::Internal(msg) => write!(f, "Internal error: {}", msg),
         }
@@ -292,7 +290,9 @@ impl SlidingWindowState {
         } else {
             // Calculate retry after based on oldest timestamp
             if let Some(oldest) = timestamps.first() {
-                let retry_after = self.window_duration.saturating_sub(now.duration_since(*oldest));
+                let retry_after = self
+                    .window_duration
+                    .saturating_sub(now.duration_since(*oldest));
                 Err(RateLimitError::Exceeded { retry_after })
             } else {
                 Err(RateLimitError::Exceeded {
@@ -397,35 +397,23 @@ impl RateLimiter {
         let limiter_type = config.limiter_type;
 
         let (token_bucket, sliding_window, fixed_window) = match limiter_type {
-            RateLimiterType::TokenBucket => (
-                Some(Arc::new(TokenBucketState::new(config.capacity))),
-                None,
-                None,
-            ),
+            RateLimiterType::TokenBucket => {
+                (Some(Arc::new(TokenBucketState::new(config.capacity))), None, None)
+            },
             RateLimiterType::SlidingWindow => (
                 None,
-                Some(Arc::new(SlidingWindowState::new(
-                    config.capacity,
-                    config.window_duration,
-                ))),
+                Some(Arc::new(SlidingWindowState::new(config.capacity, config.window_duration))),
                 None,
             ),
             RateLimiterType::FixedWindow => (
                 None,
                 None,
-                Some(Arc::new(FixedWindowState::new(
-                    config.capacity,
-                    config.window_duration,
-                ))),
+                Some(Arc::new(FixedWindowState::new(config.capacity, config.window_duration))),
             ),
             RateLimiterType::LeakyBucket => {
                 // Leaky bucket is similar to token bucket for our purposes
-                (
-                    Some(Arc::new(TokenBucketState::new(config.capacity))),
-                    None,
-                    None,
-                )
-            }
+                (Some(Arc::new(TokenBucketState::new(config.capacity))), None, None)
+            },
         };
 
         Self {
@@ -465,21 +453,21 @@ impl RateLimiter {
                 } else {
                     Err(RateLimitError::Internal("Token bucket not initialized".to_string()))
                 }
-            }
+            },
             RateLimiterType::SlidingWindow => {
                 if let Some(ref window) = self.sliding_window {
                     window.try_acquire()
                 } else {
                     Err(RateLimitError::Internal("Sliding window not initialized".to_string()))
                 }
-            }
+            },
             RateLimiterType::FixedWindow => {
                 if let Some(ref window) = self.fixed_window {
                     window.try_acquire()
                 } else {
                     Err(RateLimitError::Internal("Fixed window not initialized".to_string()))
                 }
-            }
+            },
         }
     }
 
@@ -496,7 +484,7 @@ impl RateLimiter {
                     // In a real async implementation, we would sleep here
                     // For now, just return the error
                     return Err(RateLimitError::Exceeded { retry_after });
-                }
+                },
                 Err(e) => return Err(e),
             }
         }
@@ -518,7 +506,7 @@ impl RateLimiter {
                         window_count: None,
                     }
                 }
-            }
+            },
             RateLimiterType::SlidingWindow => {
                 if let Some(ref window) = self.sliding_window {
                     let timestamps = window.timestamps.lock().unwrap();
@@ -532,7 +520,7 @@ impl RateLimiter {
                         window_count: None,
                     }
                 }
-            }
+            },
             RateLimiterType::FixedWindow => {
                 if let Some(ref window) = self.fixed_window {
                     RateLimiterMetrics {
@@ -545,7 +533,7 @@ impl RateLimiter {
                         window_count: None,
                     }
                 }
-            }
+            },
         }
     }
 }

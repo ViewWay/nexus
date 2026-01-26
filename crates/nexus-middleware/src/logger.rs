@@ -145,12 +145,12 @@ where
             };
 
             // Extract client IP and user agent for logging
-            let client_ip = req.header("X-Forwarded-For")
+            let client_ip = req
+                .header("X-Forwarded-For")
                 .or_else(|| req.header("X-Real-IP"))
                 .map(|s| s.to_string());
 
-            let user_agent = req.header("User-Agent")
-                .map(|s| s.to_string());
+            let user_agent = req.header("User-Agent").map(|s| s.to_string());
 
             let start = Instant::now();
 
@@ -223,7 +223,7 @@ where
                                     duration_ms = duration_ms,
                                     "Completed"
                                 );
-                            }
+                            },
                             tracing::Level::INFO => {
                                 tracing::info!(
                                     target: "nexus.middleware.http",
@@ -233,7 +233,7 @@ where
                                     duration_ms = duration_ms,
                                     "Completed"
                                 );
-                            }
+                            },
                             tracing::Level::WARN => {
                                 tracing::warn!(
                                     target: "nexus.middleware.http",
@@ -243,11 +243,11 @@ where
                                     duration_ms = duration_ms,
                                     "Completed"
                                 );
-                            }
-                            _ => {}
+                            },
+                            _ => {},
                         }
                     }
-                }
+                },
                 Err(e) => {
                     let level = match error_level {
                         LogLevel::Debug => tracing::Level::DEBUG,
@@ -266,7 +266,7 @@ where
                                 error = %e,
                                 "Failed"
                             );
-                        }
+                        },
                         tracing::Level::INFO => {
                             tracing::info!(
                                 target: "nexus.middleware.http",
@@ -277,7 +277,7 @@ where
                                 error = %e,
                                 "Failed"
                             );
-                        }
+                        },
                         tracing::Level::WARN => {
                             tracing::warn!(
                                 target: "nexus.middleware.http",
@@ -288,10 +288,10 @@ where
                                 error = %e,
                                 "Failed"
                             );
-                        }
-                        _ => {}
+                        },
+                        _ => {},
                     }
-                }
+                },
             }
 
             response

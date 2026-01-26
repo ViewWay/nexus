@@ -60,7 +60,7 @@ hex = { workspace = true }
 md-5 = { workspace = true }
 
 # SHA2 for PBKDF2
-sha2 = "0.10"
+sha2 = { workspace = true }
 
 # Constant-time comparisons
 subtle = { workspace = true }

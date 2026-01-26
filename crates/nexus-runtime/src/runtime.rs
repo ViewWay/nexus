@@ -220,11 +220,13 @@ impl Runtime {
     pub fn with_config(config: RuntimeConfig) -> io::Result<Self> {
         // Create the driver
         // 创建driver
-        let driver = DriverFactory::create_with_config(config.driver_type, config.driver_io.clone())?;
+        let driver =
+            DriverFactory::create_with_config(config.driver_type, config.driver_io.clone())?;
 
         // Create the scheduler with the driver
         // 使用driver创建调度器
-        let scheduler = Scheduler::with_config_and_driver(config.scheduler.clone(), driver.clone())?;
+        let scheduler =
+            Scheduler::with_config_and_driver(config.scheduler.clone(), driver.clone())?;
 
         Ok(Self {
             scheduler,
@@ -279,12 +281,12 @@ impl Runtime {
                     // Future完成，刷新任何剩余事件
                     let _ = self.flush_events();
                     return Ok(());
-                }
+                },
                 Poll::Pending => {
                     // Future is not ready, run the event loop
                     // Future未就绪，运行事件循环
                     self.run_once()?;
-                }
+                },
             }
         }
     }

@@ -8,13 +8,11 @@
 
 use std::cell::UnsafeCell;
 use std::os::fd::{AsRawFd, RawFd};
-use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 use std::time::Duration;
 
-use crate::driver::{
-    CompletionEntry, Driver, ERROR_TRANSPORT, Interest, SubmitEntry,
-};
+use crate::driver::{CompletionEntry, Driver, ERROR_TRANSPORT, Interest, SubmitEntry};
 
 /// Minimum epoll instance size / 最小epoll实例大小
 const MIN_EPOLL_SIZE: u32 = 32;
@@ -175,13 +173,7 @@ impl EpollDriver {
                 completion_head: AtomicUsize::new(0),
                 completion_tail: AtomicU32::new(0),
             }),
-            event_buffer: UnsafeCell::new(vec![
-                libc::epoll_event {
-                    events: 0,
-                    u64: 0
-                };
-                capacity
-            ]),
+            event_buffer: UnsafeCell::new(vec![libc::epoll_event { events: 0, u64: 0 }; capacity]),
         })
     }
 
@@ -192,16 +184,10 @@ impl EpollDriver {
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
             libc::CPU_ZERO(&mut cpu_set);
-            libc::CPU_SET(
-                core % libc::CPU_SETSIZE as usize,
-                &mut cpu_set,
-            );
+            libc::CPU_SET(core % libc::CPU_SETSIZE as usize, &mut cpu_set);
 
-            let result = libc::sched_setaffinity(
-                0,
-                std::mem::size_of::<libc::cpu_set_t>(),
-                &cpu_set,
-            );
+            let result =
+                libc::sched_setaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &cpu_set);
 
             if result < 0 {
                 return Err(std::io::Error::last_os_error());
@@ -269,12 +255,11 @@ impl Driver for EpollDriver {
                 match entry.opcode {
                     crate::driver::opcode::READ => event.events |= libc::EPOLLIN as u32,
                     crate::driver::opcode::WRITE => event.events |= libc::EPOLLOUT as u32,
-                    _ => {}
+                    _ => {},
                 }
 
                 let op = libc::EPOLL_CTL_MOD;
-                let result =
-                    unsafe { libc::epoll_ctl(self.epoll_fd, op, entry.fd, &mut event) };
+                let result = unsafe { libc::epoll_ctl(self.epoll_fd, op, entry.fd, &mut event) };
 
                 if result < 0 {
                     let err = std::io::Error::last_os_error();
@@ -371,7 +356,9 @@ impl Driver for EpollDriver {
             }
 
             let new_head = head + 1;
-            self.state.completion_head.store(new_head, Ordering::Release);
+            self.state
+                .completion_head
+                .store(new_head, Ordering::Release);
         }
     }
 
@@ -381,8 +368,7 @@ impl Driver for EpollDriver {
             u64: 0,
         };
 
-        let result =
-            unsafe { libc::epoll_ctl(self.epoll_fd, libc::EPOLL_CTL_ADD, fd, &mut event) };
+        let result = unsafe { libc::epoll_ctl(self.epoll_fd, libc::EPOLL_CTL_ADD, fd, &mut event) };
 
         if result < 0 {
             Err(std::io::Error::last_os_error())
@@ -392,13 +378,9 @@ impl Driver for EpollDriver {
     }
 
     fn deregister(&self, fd: RawFd) -> std::io::Result<()> {
-        let mut event = libc::epoll_event {
-            events: 0,
-            u64: 0,
-        };
+        let mut event = libc::epoll_event { events: 0, u64: 0 };
 
-        let result =
-            unsafe { libc::epoll_ctl(self.epoll_fd, libc::EPOLL_CTL_DEL, fd, &mut event) };
+        let result = unsafe { libc::epoll_ctl(self.epoll_fd, libc::EPOLL_CTL_DEL, fd, &mut event) };
 
         if result < 0 {
             Err(std::io::Error::last_os_error())
@@ -413,8 +395,7 @@ impl Driver for EpollDriver {
             u64: 0,
         };
 
-        let result =
-            unsafe { libc::epoll_ctl(self.epoll_fd, libc::EPOLL_CTL_MOD, fd, &mut event) };
+        let result = unsafe { libc::epoll_ctl(self.epoll_fd, libc::EPOLL_CTL_MOD, fd, &mut event) };
 
         if result < 0 {
             Err(std::io::Error::last_os_error())
@@ -449,14 +430,7 @@ impl EpollDriver {
         let ptr = event_buffer.as_mut_ptr();
         let len = event_buffer.len() as i32;
 
-        let result = unsafe {
-            libc::epoll_wait(
-                self.epoll_fd,
-                ptr,
-                len,
-                timeout_ms.unwrap_or(-1),
-            )
-        };
+        let result = unsafe { libc::epoll_wait(self.epoll_fd, ptr, len, timeout_ms.unwrap_or(-1)) };
 
         if result < 0 {
             return Err(std::io::Error::last_os_error());
@@ -484,12 +458,14 @@ impl EpollDriver {
             };
 
             unsafe {
-                self.completion_queue
-                    .set(pos, Some(CompletionEntry {
+                self.completion_queue.set(
+                    pos,
+                    Some(CompletionEntry {
                         user_data: event.u64,
                         result,
                         flags: event.events,
-                    }));
+                    }),
+                );
             }
 
             self.state

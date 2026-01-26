@@ -20,8 +20,23 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[lints]
-workspace = true
+[features]
+default = ["ethereum"]
+ethereum = ["dep:alloy", "dep:secp256k1", "dep:hyper", "dep:hyper-util"]
+wallet = ["ethereum", "dep:bip39"]
+rpc = ["dep:reqwest"]
+contract = ["ethereum", "alloy?/contract"]
+http = ["dep:hyper", "dep:hyper-util"]
+ws = ["dep:tokio-tungstenite", "dep:tungstenite"]
+full = ["ethereum", "wallet", "rpc", "contract", "http", "ws"]
+
+# Chain-specific features / 特定链功能
+# Equivalent to: Spring Cloud service discovery
+arbitrum = ["ethereum"]
+optimism = ["ethereum"]
+polygon = ["ethereum"]
+bnb = ["ethereum"]
+base = ["ethereum"]
 
 [dependencies]
 # Alloy - Ethereum primitives / Alloy以太坊原语
@@ -79,23 +94,8 @@ time = { workspace = true }
 url = { workspace = true }
 indexmap = { workspace = true }
 
-[features]
-default = ["ethereum"]
-ethereum = ["dep:alloy", "dep:secp256k1", "dep:hyper", "dep:hyper-util"]
-wallet = ["ethereum", "dep:bip39"]
-rpc = ["dep:reqwest"]
-contract = ["ethereum", "alloy?/contract"]
-http = ["dep:hyper", "dep:hyper-util"]
-ws = ["dep:tokio-tungstenite", "dep:tungstenite"]
-full = ["ethereum", "wallet", "rpc", "contract", "http", "ws"]
-
-# Chain-specific features / 特定链功能
-# Equivalent to: Spring Cloud service discovery
-arbitrum = ["ethereum"]
-optimism = ["ethereum"]
-polygon = ["ethereum"]
-bnb = ["ethereum"]
-base = ["ethereum"]
+[lints]
+workspace = true
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)

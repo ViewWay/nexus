@@ -25,12 +25,28 @@ pub enum MultipartError {
     /// File too large
     /// 文件过大
     FileTooLarge {
-        /// Field name / 字段名
-        field: String,
         /// File size / 文件大小
         size: usize,
         /// Max allowed size / 最大允许大小
-        max_size: usize,
+        max: usize,
+    },
+
+    /// Invalid file type / MIME type
+    /// 无效的文件类型 / MIME 类型
+    InvalidType {
+        /// Found type / 发现的类型
+        found: String,
+        /// Allowed types / 允许的类型
+        allowed: String,
+    },
+
+    /// Invalid file extension
+    /// 无效的文件扩展名
+    InvalidExtension {
+        /// Found extension / 发现的扩展名
+        found: String,
+        /// Allowed extensions / 允许的扩展名
+        allowed: String,
     },
 
     /// IO error
@@ -51,9 +67,15 @@ impl fmt::Display for MultipartError {
         match self {
             Self::InvalidRequest(msg) => write!(f, "Invalid multipart request: {}", msg),
             Self::FieldNotFound(name) => write!(f, "Field not found: {}", name),
-            Self::FileTooLarge { field, size, max_size } => {
-                write!(f, "File too large: field={}, size={}, max_size={}", field, size, max_size)
-            }
+            Self::FileTooLarge { size, max } => {
+                write!(f, "File too large: size={} (max: {})", size, max)
+            },
+            Self::InvalidType { found, allowed } => {
+                write!(f, "Invalid file type: found='{}', allowed=[{}]", found, allowed)
+            },
+            Self::InvalidExtension { found, allowed } => {
+                write!(f, "Invalid file extension: found='{}', allowed=[{}]", found, allowed)
+            },
             Self::Io(err) => write!(f, "IO error: {}", err),
             Self::Decode(msg) => write!(f, "Decode error: {}", msg),
             Self::UnknownField(name) => write!(f, "Unknown field: {}", name),
@@ -75,10 +97,10 @@ impl From<multer::Error> for MultipartError {
         match err {
             multer::Error::UnknownField { field_name } => {
                 Self::UnknownField(field_name.unwrap_or_else(|| "unknown".to_string()))
-            }
+            },
             multer::Error::IncompleteFieldData { .. } => {
                 Self::InvalidRequest("Incomplete field data".to_string())
-            }
+            },
             _ => Self::InvalidRequest(err.to_string()),
         }
     }
@@ -100,10 +122,21 @@ mod tests {
         assert_eq!(err.to_string(), "Field not found: file");
 
         let err = MultipartError::FileTooLarge {
-            field: "upload".to_string(),
             size: 20 * 1024 * 1024,
-            max_size: 10 * 1024 * 1024,
+            max: 10 * 1024 * 1024,
         };
         assert!(err.to_string().contains("File too large"));
+
+        let err = MultipartError::InvalidType {
+            found: "text/html".to_string(),
+            allowed: "image/jpeg, image/png".to_string(),
+        };
+        assert!(err.to_string().contains("Invalid file type"));
+
+        let err = MultipartError::InvalidExtension {
+            found: "exe".to_string(),
+            allowed: "jpg, png, gif".to_string(),
+        };
+        assert!(err.to_string().contains("Invalid file extension"));
     }
 }

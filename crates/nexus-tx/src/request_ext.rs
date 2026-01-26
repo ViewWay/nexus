@@ -171,25 +171,25 @@ pub async fn has_active_transaction_in_request(req: &Request) -> bool {
 mod tests {
     use super::*;
     use crate::Transaction;
-    use nexus_http::{Request, Method};
+    use nexus_http::{Method, Request};
 
     #[tokio::test]
     async fn test_transaction_context_ext() {
         let mut req = Request::from_method_uri(Method::GET, "/test");
-        
+
         // Set TransactionContext
         let ctx = TransactionContextExt::set_to_request(&mut req);
-        
+
         // Get from Request
         let ctx2 = TransactionContextExt::from_request(&req).unwrap();
         assert_eq!(Arc::as_ptr(&ctx), Arc::as_ptr(&ctx2));
-        
+
         // Test transaction
         let tx = Transaction::new("test");
         ctx.set_current_transaction(tx.clone()).await;
-        
+
         assert!(ctx.has_active_transaction().await);
-        
+
         // Get from Request again
         let tx_from_req = get_transaction_from_request(&req).await;
         assert_eq!(tx_from_req.map(|t| t.status().name().to_string()), Some("test".to_string()));

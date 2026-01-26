@@ -5,15 +5,15 @@
 //! and work-stealing scheduler implementations.
 //! 本模块提供 thread-per-core 任务调度器和工作窃取调度器实现。
 
-pub mod local;
 pub mod handle;
+pub mod local;
 pub mod queue;
 pub mod work_stealing;
 
 pub use handle::SchedulerHandle;
 pub use local::{Scheduler, SchedulerConfig};
 pub use queue::LocalQueue;
-pub use work_stealing::{WorkStealingScheduler, WorkStealingConfig, WorkStealingHandle};
+pub use work_stealing::{WorkStealingConfig, WorkStealingHandle, WorkStealingScheduler};
 
 use std::future::Future;
 use std::pin::Pin;

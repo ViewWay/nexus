@@ -44,8 +44,8 @@
 #![warn(unreachable_pub)]
 
 use std::fmt;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 /// Circuit breaker state
@@ -258,10 +258,7 @@ impl CircuitBreakerConfig {
     /// Panics if threshold is not between 0.0 and 1.0
     /// 如果阈值不在0.0和1.0之间则恐慌
     pub fn with_error_threshold(mut self, threshold: f64) -> Self {
-        assert!(
-            (0.0..=1.0).contains(&threshold),
-            "Error threshold must be between 0.0 and 1.0"
-        );
+        assert!((0.0..=1.0).contains(&threshold), "Error threshold must be between 0.0 and 1.0");
         self.error_threshold = threshold;
         self
     }
@@ -441,7 +438,9 @@ impl CircuitBreaker {
     /// 使用熔断器保护执行函数
     pub async fn call<F, T, E>(&self, f: F) -> Result<T>
     where
-        F: FnOnce() -> std::pin::Pin<Box<dyn std::future::Future<Output = std::result::Result<T, E>> + Send>>,
+        F: FnOnce() -> std::pin::Pin<
+            Box<dyn std::future::Future<Output = std::result::Result<T, E>> + Send>,
+        >,
         E: std::error::Error,
     {
         // Check if request is permitted
@@ -457,11 +456,11 @@ impl CircuitBreaker {
             Ok(result) => {
                 self.on_success();
                 Ok(result)
-            }
+            },
             Err(err) => {
                 self.on_error();
                 Err(CircuitBreakerError::ServiceFailed(err.to_string()))
-            }
+            },
         }
     }
 
@@ -474,13 +473,13 @@ impl CircuitBreaker {
         match data.get_state() {
             CircuitState::Closed => {
                 // Stay in Closed state
-            }
+            },
             CircuitState::Open => {
                 // Should not happen, but handle it
                 if data.should_attempt_reset(self.config.open_duration) {
                     data.set_state(CircuitState::HalfOpen);
                 }
-            }
+            },
             CircuitState::HalfOpen => {
                 data.half_open_success_count += 1;
                 data.half_open_total_count += 1;
@@ -490,7 +489,7 @@ impl CircuitBreaker {
                 } else if data.half_open_total_count >= self.config.max_calls_in_half_open {
                     data.set_state(CircuitState::Open);
                 }
-            }
+            },
         }
     }
 
@@ -510,15 +509,15 @@ impl CircuitBreaker {
                         data.set_state(CircuitState::Open);
                     }
                 }
-            }
+            },
             CircuitState::Open => {
                 // Stay in Open state
-            }
+            },
             CircuitState::HalfOpen => {
                 data.half_open_total_count += 1;
                 // Any failure in HalfOpen trips back to Open
                 data.set_state(CircuitState::Open);
-            }
+            },
         }
     }
 

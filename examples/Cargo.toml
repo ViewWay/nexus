@@ -1,9 +1,9 @@
 [package]
 name = "nexus-examples"
-version.workspace = true
+version = { workspace = true }
 publish = false
-edition.workspace = true
-rust-version.workspace = true
+edition = { workspace = true }
+rust-version = { workspace = true }
 
 description = """
 Example applications for Nexus framework.
@@ -32,7 +32,7 @@ path = "src/json_api.rs"
 
 [[bin]]
 name = "ioc_container_example"
-path = "cache_example.rs"
+path = "ioc_container_example.rs"
 
 [[bin]]
 name = "config_example"
@@ -112,20 +112,20 @@ nexus-actuator = { path = "../crates/nexus-actuator" }
 tokio = { workspace = true, features = ["full"] }
 
 # Logging / 日志 (Spring Boot Logging)
-tracing.workspace = true
-tracing-subscriber.workspace = true
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 # Serialization / 序列化 (Spring Jackson)
-serde.workspace = true
-serde_json.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 # Utilities / 工具
-uuid.workspace = true
-chrono.workspace = true
-parking_lot = "0.12"
-env_logger = "0.11"
-ulid.workspace = true
-anyhow.workspace = true
-thiserror.workspace = true
-validator.workspace = true
-email_address.workspace = true
+uuid = { workspace = true }
+chrono = { workspace = true }
+parking_lot = { workspace = true }
+env_logger = { workspace = true }
+ulid = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+validator = { workspace = true }
+email_address = { workspace = true }

@@ -154,10 +154,7 @@ impl SimpleCacheManager {
 
     /// Get or create a cache
     /// 获取或创建缓存
-    pub async fn get_or_create_cache<K, V>(
-        &self,
-        name: &str,
-    ) -> Arc<MemoryCache<K, V>>
+    pub async fn get_or_create_cache<K, V>(&self, name: &str) -> Arc<MemoryCache<K, V>>
     where
         K: Hash + Eq + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
@@ -256,7 +253,8 @@ impl Default for CacheManagerBuilder {
 ///
 /// Equivalent to Spring's auto-configured CacheManager.
 /// 等价于Spring的自动配置的CacheManager。
-static GLOBAL_MANAGER: tokio::sync::OnceCell<SimpleCacheManager> = tokio::sync::OnceCell::const_new();
+static GLOBAL_MANAGER: tokio::sync::OnceCell<SimpleCacheManager> =
+    tokio::sync::OnceCell::const_new();
 
 /// Initialize the global cache manager
 /// 初始化全局缓存管理器

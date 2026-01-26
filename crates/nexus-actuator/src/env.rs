@@ -162,10 +162,7 @@ impl EnvironmentCollector {
         for (name, props) in &self.custom_sources {
             let mut properties = HashMap::new();
             for (key, value) in props {
-                properties.insert(
-                    key.clone(),
-                    PropertyValue::new(value).with_origin("custom"),
-                );
+                properties.insert(key.clone(), PropertyValue::new(value).with_origin("custom"));
             }
             sources.push(PropertySource {
                 name: name.clone(),
@@ -220,7 +217,8 @@ impl EnvironmentCollector {
             // OS info
             properties.insert("os.name".to_string(), PropertyValue::new(std::env::consts::OS));
             properties.insert("os.arch".to_string(), PropertyValue::new(std::env::consts::ARCH));
-            properties.insert("os.family".to_string(), PropertyValue::new(std::env::consts::FAMILY));
+            properties
+                .insert("os.family".to_string(), PropertyValue::new(std::env::consts::FAMILY));
 
             for (key, value) in properties {
                 sources.push(PropertySource {
@@ -311,8 +309,7 @@ mod tests {
 
     #[test]
     fn test_environment_new() {
-        let env = Environment::new()
-            .with_profiles(vec!["dev".to_string(), "test".to_string()]);
+        let env = Environment::new().with_profiles(vec!["dev".to_string(), "test".to_string()]);
 
         assert_eq!(env.profiles.len(), 2);
         assert_eq!(env.profiles[0], "dev");
@@ -351,10 +348,7 @@ mod tests {
             .with_system_env(false)
             .with_custom_source("custom", custom_source);
 
-        assert_eq!(
-            collector.get_property("custom.key"),
-            Some("custom.value".to_string())
-        );
+        assert_eq!(collector.get_property("custom.key"), Some("custom.value".to_string()));
         assert_eq!(collector.get_property("nonexistent"), None);
     }
 }

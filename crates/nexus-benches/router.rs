@@ -15,9 +15,9 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
+use nexus_http::{Body, Method, Request, Response, StatusCode};
 use nexus_router::Router;
-use nexus_http::{Request, Method, StatusCode, Body, Response};
 use std::time::Duration;
 
 /// Simple handler that returns OK / 返回OK的简单处理程序
@@ -138,7 +138,4 @@ criterion_group! {
         bench_response_creation,
 }
 
-criterion_main!(
-    router_building,
-    router_http,
-);
+criterion_main!(router_building, router_http,);

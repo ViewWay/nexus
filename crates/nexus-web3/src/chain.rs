@@ -84,7 +84,8 @@ impl FromStr for Eip155Chain {
     type Err = ChainError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let id = s.parse::<u64>()
+        let id = s
+            .parse::<u64>()
             .map_err(|_| ChainError::InvalidChainId(s.to_string()))?;
         Ok(Self(id))
     }
@@ -362,7 +363,12 @@ impl ChainConfig {
 
     /// Set native currency
     /// 设置原生货币
-    pub fn with_native_currency(mut self, symbol: impl Into<String>, decimals: u8, name: impl Into<String>) -> Self {
+    pub fn with_native_currency(
+        mut self,
+        symbol: impl Into<String>,
+        decimals: u8,
+        name: impl Into<String>,
+    ) -> Self {
         self.native_currency = Currency {
             symbol: symbol.into(),
             decimals,

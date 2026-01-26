@@ -34,6 +34,9 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+// Allow unsafe operations in unsafe functions for Rust 2024 edition compatibility
+// 允许unsafe函数中的unsafe操作以兼容Rust 2024版本
+#![expect(unsafe_op_in_unsafe_fn)]
 
 // Public modules / 公共模块
 pub mod channel;
@@ -46,13 +49,15 @@ pub mod task;
 pub mod time;
 
 // Re-exports / 重新导出
-pub use channel::{bounded, unbounded, Receiver, Sender, RecvError, SendError};
+pub use channel::{Receiver, RecvError, SendError, Sender, bounded, unbounded};
 pub use driver::{Driver, DriverConfig, DriverConfigBuilder, DriverFactory, DriverType};
 pub use runtime::{Runtime, RuntimeBuilder, RuntimeConfig};
 pub use scheduler::{
-    gen_task_id, Scheduler, SchedulerConfig, SchedulerHandle,
-    WorkStealingScheduler, WorkStealingConfig, WorkStealingHandle,
+    Scheduler, SchedulerConfig, SchedulerHandle, WorkStealingConfig, WorkStealingHandle,
+    WorkStealingScheduler, gen_task_id,
 };
-pub use select::{select_multiple, select_two, SelectMultiple, SelectMultipleOutput, SelectTwo, SelectTwoOutput};
-pub use task::{spawn, JoinHandle, JoinError};
-pub use time::{sleep, sleep_until, Duration, Instant};
+pub use select::{
+    SelectMultiple, SelectMultipleOutput, SelectTwo, SelectTwoOutput, select_multiple, select_two,
+};
+pub use task::{JoinError, JoinHandle, spawn};
+pub use time::{Duration, Instant, sleep, sleep_until};

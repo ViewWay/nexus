@@ -35,9 +35,9 @@ pub struct QueryWrapper {
     /// WHERE 条件
     pub conditions: Vec<Condition>,
 
-    /// ORDER BY clauses
-    /// ORDER BY 子句
-    pub orders: Vec<Order>,
+    /// ORDER BY clauses (internal QueryOrder)
+    /// ORDER BY 子句（内部 QueryOrder）
+    pub orders: Vec<QueryOrder>,
 
     /// LIMIT clause
     /// LIMIT 子句
@@ -230,28 +230,30 @@ impl QueryWrapper {
     /// Add a nested AND condition
     /// 添加嵌套 AND 条件
     pub fn and(mut self, wrapper: QueryWrapper) -> Self {
-        self.conditions.push(Condition::And(Box::new(wrapper.conditions)));
+        self.conditions
+            .push(Condition::And(Box::new(wrapper.conditions)));
         self
     }
 
     /// Add a nested OR condition
     /// 添加嵌套 OR 条件
     pub fn or(mut self, wrapper: QueryWrapper) -> Self {
-        self.conditions.push(Condition::Or(Box::new(wrapper.conditions)));
+        self.conditions
+            .push(Condition::Or(Box::new(wrapper.conditions)));
         self
     }
 
     /// Add ORDER BY ASC
     /// 添加升序排序
     pub fn order_by_asc(mut self, field: &str) -> Self {
-        self.orders.push(Order::Asc(field.to_string()));
+        self.orders.push(QueryOrder::Asc(field.to_string()));
         self
     }
 
     /// Add ORDER BY DESC
     /// 添加降序排序
     pub fn order_by_desc(mut self, field: &str) -> Self {
-        self.orders.push(Order::Desc(field.to_string()));
+        self.orders.push(QueryOrder::Desc(field.to_string()));
         self
     }
 
@@ -439,9 +441,17 @@ pub enum Condition {
     /// NOT IN: field NOT IN (values...)
     NotIn { field: String, values: Vec<Value> },
     /// BETWEEN: field BETWEEN low AND high
-    Between { field: String, low: Value, high: Value },
+    Between {
+        field: String,
+        low: Value,
+        high: Value,
+    },
     /// NOT BETWEEN: field NOT BETWEEN low AND high
-    NotBetween { field: String, low: Value, high: Value },
+    NotBetween {
+        field: String,
+        low: Value,
+        high: Value,
+    },
     /// IS NULL: field IS NULL
     IsNull { field: String },
     /// IS NOT NULL: field IS NOT NULL
@@ -468,27 +478,27 @@ impl Condition {
             Self::In { field, values } => {
                 let vals: Vec<String> = values.iter().map(|v| v.to_sql()).collect();
                 format!("{} IN ({})", field, vals.join(", "))
-            }
+            },
             Self::NotIn { field, values } => {
                 let vals: Vec<String> = values.iter().map(|v| v.to_sql()).collect();
                 format!("{} NOT IN ({})", field, vals.join(", "))
-            }
+            },
             Self::Between { field, low, high } => {
                 format!("{} BETWEEN {} AND {}", field, low.to_sql(), high.to_sql())
-            }
+            },
             Self::NotBetween { field, low, high } => {
                 format!("{} NOT BETWEEN {} AND {}", field, low.to_sql(), high.to_sql())
-            }
+            },
             Self::IsNull { field } => format!("{} IS NULL", field),
             Self::IsNotNull { field } => format!("{} IS NOT NULL", field),
             Self::And(conditions) => {
                 let conds: Vec<String> = conditions.iter().map(|c| c.to_sql()).collect();
                 format!("({})", conds.join(" AND "))
-            }
+            },
             Self::Or(conditions) => {
                 let conds: Vec<String> = conditions.iter().map(|c| c.to_sql()).collect();
                 format!("({})", conds.join(" OR "))
-            }
+            },
         }
     }
 }
@@ -496,11 +506,28 @@ impl Condition {
 /// Order clause for QueryWrapper
 /// QueryWrapper 的 ORDER BY 子句
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Order {
+pub enum QueryOrder {
     /// Ascending order
     Asc(String),
     /// Descending order
     Desc(String),
+}
+
+impl QueryOrder {
+    /// Convert to sort::Order
+    /// 转换为 sort::Order
+    pub fn to_order(&self) -> super::Order {
+        match self {
+            Self::Asc(field) => super::Order {
+                property: field.clone(),
+                direction: super::Direction::ASC,
+            },
+            Self::Desc(field) => super::Order {
+                property: field.clone(),
+                direction: super::Direction::DESC,
+            },
+        }
+    }
 }
 
 /// Query value
@@ -694,9 +721,7 @@ impl Specification {
     /// Create a new specification
     /// 创建新的规范
     pub fn new() -> Self {
-        Self {
-            predicate: None,
-        }
+        Self { predicate: None }
     }
 
     /// Create an AND specification
@@ -845,7 +870,7 @@ mod tests {
 
     #[test]
     fn test_query_wrapper_eq() {
-        let qw = QueryWrapper::new().eq("status", "active");
+        let qw = QueryWrapper::new().eq("status", Value::String("active".to_string()));
         assert!(qw.has_conditions());
         assert_eq!(qw.conditions.len(), 1);
     }
@@ -853,8 +878,8 @@ mod tests {
     #[test]
     fn test_query_wrapper_chain() {
         let qw = QueryWrapper::new()
-            .eq("status", "active")
-            .ge("age", 18)
+            .eq("status", Value::String("active".to_string()))
+            .ge("age", Value::I32(18))
             .like("name", "Alice");
         assert_eq!(qw.conditions.len(), 3);
     }
@@ -882,9 +907,7 @@ mod tests {
 
     #[test]
     fn test_update_wrapper() {
-        let uw = UpdateWrapper::new()
-            .set("name", "Alice")
-            .set("age", 25);
+        let uw = UpdateWrapper::new().set("name", "Alice").set("age", 25);
         assert!(uw.has_sets());
         assert_eq!(uw.sets.len(), 2);
     }

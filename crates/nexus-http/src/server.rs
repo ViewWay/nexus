@@ -9,7 +9,11 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use super::{error::{Error, Result}, proto, Response, HttpService};
+use super::{
+    HttpService, Response,
+    error::{Error, Result},
+    proto,
+};
 use nexus_runtime::io::{TcpListener, TcpStream};
 use nexus_runtime::task::spawn;
 use std::net::SocketAddr;
@@ -132,10 +136,10 @@ impl Server {
                 Ok((stream, peer_addr)) => {
                     let service = service.clone();
                     spawn(handle_connection(stream, peer_addr, service, config.clone()));
-                }
+                },
                 Err(e) => {
                     tracing::error!("Error accepting connection: {}", e);
-                }
+                },
             }
         }
     }
@@ -182,7 +186,7 @@ async fn handle_connection<S>(
                 // Connection closed by peer
                 tracing::debug!("Connection closed by {}", peer_addr);
                 break;
-            }
+            },
             Ok(n) => {
                 // Feed data to parser
                 if let Err(e) = parser.feed(&read_buf[..n]) {
@@ -212,7 +216,7 @@ async fn handle_connection<S>(
                                         .status(status)
                                         .body(crate::Body::from(e.to_string()))
                                         .unwrap()
-                                }
+                                },
                             };
 
                             // Encode response
@@ -222,34 +226,37 @@ async fn handle_connection<S>(
                                         tracing::error!("Write error to {}: {}", peer_addr, e);
                                         break;
                                     }
-                                }
+                                },
                                 Err(e) => {
                                     tracing::error!("Encode error from {}: {}", peer_addr, e);
                                     break;
-                                }
+                                },
                             }
 
                             // Check if we should keep the connection alive
                             if !encoder.context().keep_alive() {
-                                tracing::debug!("Closing connection from {} (no keep-alive)", peer_addr);
+                                tracing::debug!(
+                                    "Closing connection from {} (no keep-alive)",
+                                    peer_addr
+                                );
                                 return;
                             }
-                        }
+                        },
                         Ok(None) => {
                             // Need more data
                             break;
-                        }
+                        },
                         Err(e) => {
                             tracing::error!("Parse error from {}: {}", peer_addr, e);
                             break;
-                        }
+                        },
                     }
                 }
-            }
+            },
             Err(e) => {
                 tracing::error!("Read error from {}: {}", peer_addr, e);
                 break;
-            }
+            },
         }
     }
 }
@@ -301,7 +308,9 @@ impl ServerBuilder {
     /// 构建服务器
     pub fn build(self) -> Server {
         Server {
-            addr: self.addr.unwrap_or_else(|| SocketAddr::from(([127, 0, 0, 1], 8080))),
+            addr: self
+                .addr
+                .unwrap_or_else(|| SocketAddr::from(([127, 0, 0, 1], 8080))),
             config: self.config,
         }
     }

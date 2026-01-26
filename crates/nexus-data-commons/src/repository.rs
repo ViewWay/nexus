@@ -9,10 +9,10 @@
 //! 本模块定义数据访问的核心 repository trait。
 //! 这些 trait 镜像 Spring Data 的 repository 抽象。
 
+use crate::{Page, PageRequest, Sort};
 use async_trait::async_trait;
 use std::any::Any;
 use std::fmt::Debug;
-use crate::{PageRequest, Sort, Page};
 
 /// Core repository trait
 /// 核心 Repository trait
@@ -149,7 +149,9 @@ pub trait CrudRepository<T: Send + 'static, ID: Send + Sync + 'static>: Reposito
 /// let page = repo.find_all_pageable(PageRequest::new(0, 20)).await?;
 /// let sorted = repo.find_all_sorted(Sort::by(&["name"])).await?;
 /// ```
-pub trait PagingAndSortingRepository<T: Send + 'static, ID: Send + Sync + 'static>: CrudRepository<T, ID> {
+pub trait PagingAndSortingRepository<T: Send + 'static, ID: Send + Sync + 'static>:
+    CrudRepository<T, ID>
+{
     /// Find all entities with pagination
     /// 分页查找所有实体
     async fn find_all_pageable(
@@ -172,7 +174,8 @@ pub trait PagingAndSortingRepository<T: Send + 'static, ID: Send + Sync + 'stati
     {
         // Default implementation uses only pagination
         // 默认实现仅使用分页
-        self.find_all_pageable(pageable).await
+        self.find_all_pageable(pageable)
+            .await
             .map_err(|e| Self::Error::from(e.into()))
     }
 }

@@ -192,11 +192,11 @@ impl DriverFactory {
             #[cfg(target_os = "linux")]
             DriverType::Epoll => {
                 Ok(Arc::new(crate::driver::epoll::EpollDriver::with_config(config)?))
-            }
+            },
             #[cfg(target_os = "linux")]
             DriverType::IOUring => {
                 Ok(Arc::new(crate::driver::iouring::IoUringDriver::with_config(config)?))
-            }
+            },
             #[cfg(any(
                 target_os = "macos",
                 target_os = "freebsd",
@@ -206,21 +206,17 @@ impl DriverFactory {
             ))]
             DriverType::Kqueue => {
                 Ok(Arc::new(crate::driver::kqueue::KqueueDriver::with_config(config)?))
-            }
+            },
             #[cfg(not(target_os = "linux"))]
-            DriverType::Epoll => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Unsupported,
-                    "epoll driver is only available on Linux",
-                ))
-            }
+            DriverType::Epoll => Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "epoll driver is only available on Linux",
+            )),
             #[cfg(not(target_os = "linux"))]
-            DriverType::IOUring => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Unsupported,
-                    "io-uring driver is only available on Linux",
-                ))
-            }
+            DriverType::IOUring => Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "io-uring driver is only available on Linux",
+            )),
             #[cfg(not(any(
                 target_os = "macos",
                 target_os = "freebsd",
@@ -228,12 +224,10 @@ impl DriverFactory {
                 target_os = "openbsd",
                 target_os = "dragonfly"
             )))]
-            DriverType::Kqueue => {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::Unsupported,
-                    "kqueue driver is only available on macOS/BSD",
-                ))
-            }
+            DriverType::Kqueue => Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "kqueue driver is only available on macOS/BSD",
+            )),
             DriverType::Auto => unreachable!(),
         }
     }
@@ -303,8 +297,7 @@ impl DriverFactory {
 
             // Parse kernel version
             // 解析内核版本
-            let release = std::ffi::CStr::from_ptr(uname.release.as_ptr())
-                .to_string_lossy();
+            let release = std::ffi::CStr::from_ptr(uname.release.as_ptr()).to_string_lossy();
 
             if let Some((major, rest)) = release.split_once('.') {
                 if let Some((minor, _)) = rest.split_once('.') {
@@ -342,9 +335,7 @@ mod tests {
 
     #[test]
     fn test_config_rounding() {
-        let config = DriverConfigBuilder::new()
-            .entries(100)
-            .build();
+        let config = DriverConfigBuilder::new().entries(100).build();
 
         // 100 rounds up to 128 (next power of 2)
         // 100向上舍入到128（下一个2的幂）

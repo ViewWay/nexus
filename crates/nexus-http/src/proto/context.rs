@@ -1,7 +1,7 @@
 //! HTTP connection context
 //! HTTP 连接上下文
 
-use super::{MAX_HEADER_SIZE, MAX_BUFFER_SIZE};
+use super::{MAX_BUFFER_SIZE, MAX_HEADER_SIZE};
 
 /// HTTP version
 /// HTTP 版本

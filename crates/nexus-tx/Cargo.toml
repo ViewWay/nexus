@@ -20,6 +20,13 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[features]
+default = []
+sqlx = ["dep:sqlx"]
+sea-orm = ["dep:sea-orm"]
+postgres = ["dep:tokio-postgres"]
+all = ["sqlx", "sea-orm", "postgres"]
+
 [lints]
 workspace = true
 
@@ -55,10 +62,3 @@ once_cell = { workspace = true }
 [dev-dependencies]
 # Testing / 测试
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-
-[features]
-default = []
-sqlx = ["dep:sqlx"]
-sea-orm = ["dep:sea-orm"]
-postgres = ["dep:tokio-postgres"]
-all = ["sqlx", "sea-orm", "postgres"]

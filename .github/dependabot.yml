@@ -25,6 +25,7 @@ updates:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
       include: "scope"
+    versioning-strategy: increase
     allow:
       # Allow updates for all dependency types
       # 允许所有依赖类型的更新
@@ -39,6 +40,19 @@ updates:
         exclude-patterns:
           - "*-sys"
           - "*-macros"
+        update-types:
+          - "patch"
+          - "minor"
+      # Group major version updates separately
+      # 将主版本更新单独分组
+      major-updates:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "*-sys"
+          - "*-macros"
+        update-types:
+          - "major"
       # Group dev dependencies together
       # 将开发依赖分组
       dev-dependencies:

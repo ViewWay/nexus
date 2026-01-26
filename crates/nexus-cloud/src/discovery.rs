@@ -233,10 +233,7 @@ impl InMemoryServiceRegistry {
     /// 获取服务的所有实例
     pub async fn get_service_instances(&self, service_id: &str) -> Vec<ServiceInstance> {
         let services = self.services.read().await;
-        services
-            .get(service_id)
-            .cloned()
-            .unwrap_or_default()
+        services.get(service_id).cloned().unwrap_or_default()
     }
 
     /// Get all services

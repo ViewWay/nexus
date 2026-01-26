@@ -153,40 +153,40 @@ impl fmt::Display for Error {
         match self {
             Self::EntityNotFound { type_name, id } => {
                 write!(f, "Entity '{}' with id '{}' not found", type_name, id)
-            }
+            },
             Self::DuplicateKey { constraint, key } => {
                 write!(f, "Duplicate key '{}' for constraint '{}'", key, constraint)
-            }
+            },
             Self::DataIntegrityViolation(msg) => {
                 write!(f, "Data integrity violation: {}", msg)
-            }
+            },
             Self::Connection(msg) => {
                 write!(f, "Connection error: {}", msg)
-            }
+            },
             Self::Timeout(msg) => {
                 write!(f, "Timeout: {}", msg)
-            }
+            },
             Self::QuerySyntax(msg) => {
                 write!(f, "Query syntax error: {}", msg)
-            }
+            },
             Self::Transaction(msg) => {
                 write!(f, "Transaction error: {}", msg)
-            }
+            },
             Self::OptimisticLockingFailure { type_name, id } => {
                 write!(f, "Optimistic locking failure for '{}' with id '{}'", type_name, id)
-            }
+            },
             Self::InvalidDataAccess(msg) => {
                 write!(f, "Invalid data access: {}", msg)
-            }
+            },
             Self::Uncategorized(msg) => {
                 write!(f, "Data access exception: {}", msg)
-            }
+            },
             Self::Serialization(msg) => {
                 write!(f, "Serialization error: {}", msg)
-            }
+            },
             Self::Deserialization(msg) => {
                 write!(f, "Deserialization error: {}", msg)
-            }
+            },
         }
     }
 }

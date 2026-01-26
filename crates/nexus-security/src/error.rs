@@ -73,6 +73,16 @@ pub enum SecurityError {
     #[error("Expired token: {0}")]
     ExpiredToken(String),
 
+    /// Token error (alias for InvalidToken)
+    /// 令牌错误（InvalidToken的别名）
+    #[error("Token error: {0}")]
+    TokenError(String),
+
+    /// Token expired (alias for ExpiredToken)
+    /// 令牌已过期（ExpiredToken的别名）
+    #[error("Token expired: {0}")]
+    TokenExpired(String),
+
     /// CSRF error
     /// CSRF错误
     #[error("CSRF validation failed: {0}")]
@@ -124,10 +134,7 @@ impl AccessDeniedException {
     /// 使用权限不足创建
     pub fn insufficient_permissions(required: &str, has: &str) -> Self {
         Self {
-            message: format!(
-                "Insufficient permissions: required {}, but has {}",
-                required, has
-            ),
+            message: format!("Insufficient permissions: required {}, but has {}", required, has),
         }
     }
 }

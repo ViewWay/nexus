@@ -48,17 +48,17 @@ pub fn parse_request(data: &[u8], ctx: &ConnectionContext) -> Result<(Request, u
         httparse::Status::Complete(n) => n,
         httparse::Status::Partial => {
             return Err(Error::IncompleteRequest);
-        }
+        },
     };
 
     // Extract method and path
-    let method = req.method.ok_or_else(|| {
-        Error::InvalidRequest("Missing method".to_string())
-    })?;
+    let method = req
+        .method
+        .ok_or_else(|| Error::InvalidRequest("Missing method".to_string()))?;
 
-    let path = req.path.ok_or_else(|| {
-        Error::InvalidRequest("Missing path".to_string())
-    })?;
+    let path = req
+        .path
+        .ok_or_else(|| Error::InvalidRequest("Missing path".to_string()))?;
 
     // Parse version
     let version = match req.version {
@@ -69,9 +69,7 @@ pub fn parse_request(data: &[u8], ctx: &ConnectionContext) -> Result<(Request, u
     };
 
     // Build the http::Request
-    let mut http_builder = http::Request::builder()
-        .method(method)
-        .uri(path);
+    let mut http_builder = http::Request::builder().method(method).uri(path);
 
     // Add headers
     for header in req.headers.iter() {
@@ -108,9 +106,9 @@ pub fn parse_request(data: &[u8], ctx: &ConnectionContext) -> Result<(Request, u
                 http_builder = http_builder.header(name, value);
             }
 
-            let http_request = http_builder
-                .body(body)
-                .map_err(|e| Error::InvalidRequest(format!("Failed to build request with body: {}", e)))?;
+            let http_request = http_builder.body(body).map_err(|e| {
+                Error::InvalidRequest(format!("Failed to build request with body: {}", e))
+            })?;
 
             request = Request::new(http_request);
         }
@@ -119,7 +117,12 @@ pub fn parse_request(data: &[u8], ctx: &ConnectionContext) -> Result<(Request, u
     // Update context based on headers
     let mut updated_ctx = ctx.clone();
     updated_ctx.set_version(version);
-    updated_ctx.update_keep_alive_from_header(req.headers.iter().find(|h| h.name.eq_ignore_ascii_case("connection")).map(|h| std::str::from_utf8(h.value).unwrap_or("")));
+    updated_ctx.update_keep_alive_from_header(
+        req.headers
+            .iter()
+            .find(|h| h.name.eq_ignore_ascii_case("connection"))
+            .map(|h| std::str::from_utf8(h.value).unwrap_or("")),
+    );
     // Store context in request extensions if needed
 
     Ok((request, bytes_used))
@@ -173,7 +176,7 @@ impl RequestParser {
             Ok((req, used)) => {
                 self.buffer.advance(used);
                 Ok(Some((req, used)))
-            }
+            },
             Err(Error::IncompleteRequest) => Ok(None),
             Err(e) => Err(e),
         }

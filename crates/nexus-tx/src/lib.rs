@@ -53,7 +53,7 @@ pub use isolation::IsolationLevel;
 pub use manager::{TransactionManager, TransactionManagerBuilder};
 pub use propagation::Propagation;
 pub use request_ext::{
-    get_transaction_from_request, has_active_transaction_in_request, TransactionContextExt,
+    TransactionContextExt, get_transaction_from_request, has_active_transaction_in_request,
 };
 pub use status::TransactionStatus;
 pub use template::TransactionTemplate;

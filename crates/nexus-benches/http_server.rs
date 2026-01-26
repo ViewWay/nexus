@@ -15,8 +15,8 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use nexus_http::{Request, Response, StatusCode, Body, Method};
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
+use nexus_http::{Body, Method, Request, Response, StatusCode};
 use std::time::Duration;
 
 /// Benchmark: Simple GET request / 简单GET请求
@@ -30,7 +30,7 @@ fn bench_parse_simple_get(c: &mut Criterion) {
         b.iter(|| {
             let result = nexus_http::proto::parse_request(
                 black_box(raw_request),
-                &nexus_http::proto::ConnectionContext::new()
+                &nexus_http::proto::ConnectionContext::new(),
             );
             black_box(result)
         });
@@ -50,7 +50,7 @@ fn bench_parse_get_with_headers(c: &mut Criterion) {
         b.iter(|| {
             let result = nexus_http::proto::parse_request(
                 black_box(raw_request),
-                &nexus_http::proto::ConnectionContext::new()
+                &nexus_http::proto::ConnectionContext::new(),
             );
             black_box(result)
         });
@@ -69,13 +69,14 @@ fn bench_parse_post_json(c: &mut Criterion) {
          {}",
         body.len(),
         body
-    ).into_bytes();
+    )
+    .into_bytes();
 
     c.bench_function("parse_post_json", |b| {
         b.iter(|| {
             let result = nexus_http::proto::parse_request(
                 black_box(&raw_request),
-                &nexus_http::proto::ConnectionContext::new()
+                &nexus_http::proto::ConnectionContext::new(),
             );
             black_box(result)
         });
@@ -92,7 +93,10 @@ fn bench_encode_response(c: &mut Criterion) {
 
     c.bench_function("encode_response", |b| {
         b.iter(|| {
-            let encoded = nexus_http::proto::encode_response(&response, &nexus_http::proto::ConnectionContext::new());
+            let encoded = nexus_http::proto::encode_response(
+                &response,
+                &nexus_http::proto::ConnectionContext::new(),
+            );
             black_box(encoded)
         });
     });
@@ -109,7 +113,10 @@ fn bench_encode_response_large(c: &mut Criterion) {
 
     c.bench_function("encode_response_large", |b| {
         b.iter(|| {
-            let encoded = nexus_http::proto::encode_response(&response, &nexus_http::proto::ConnectionContext::new());
+            let encoded = nexus_http::proto::encode_response(
+                &response,
+                &nexus_http::proto::ConnectionContext::new(),
+            );
             black_box(encoded)
         });
     });
@@ -153,16 +160,16 @@ fn bench_throughput(c: &mut Criterion) {
              Content-Length: {}\r\n\
              \r\n\
              {}",
-            size,
-            body
-        ).into_bytes();
+            size, body
+        )
+        .into_bytes();
 
         group.throughput(Throughput::Bytes(*size as u64));
         group.bench_with_input(BenchmarkId::new("parse_post", size), size, |b, _| {
             b.iter(|| {
                 let result = nexus_http::proto::parse_request(
                     black_box(&raw_request),
-                    &nexus_http::proto::ConnectionContext::new()
+                    &nexus_http::proto::ConnectionContext::new(),
                 );
                 black_box(result)
             });
@@ -211,9 +218,4 @@ criterion_group! {
     targets = bench_throughput,
 }
 
-criterion_main!(
-    http_parsing,
-    http_encoding,
-    http_creation,
-    http_throughput,
-);
+criterion_main!(http_parsing, http_encoding, http_creation, http_throughput,);

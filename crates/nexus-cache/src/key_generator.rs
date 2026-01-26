@@ -50,7 +50,9 @@ macro_rules! impl_key_param {
     };
 }
 
-impl_key_param!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64, bool, String, &str);
+impl_key_param!(
+    i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64, bool, String, &str
+);
 
 impl<T> KeyParam for &'_ T
 where
@@ -327,10 +329,7 @@ mod tests {
 
     #[test]
     fn test_key_builder() {
-        let key = KeyBuilder::new()
-            .add("users")
-            .add("123")
-            .build();
+        let key = KeyBuilder::new().add("users").add("123").build();
 
         assert_eq!(key, "users:123");
     }

@@ -96,10 +96,7 @@ impl Propagation {
     /// Check if this creates a new transaction
     /// 检查是否创建新事务
     pub fn creates_new_transaction(&self) -> bool {
-        matches!(
-            self,
-            Propagation::Required | Propagation::RequiresNew | Propagation::Nested
-        )
+        matches!(self, Propagation::Required | Propagation::RequiresNew | Propagation::Nested)
     }
 
     /// Get description
@@ -107,7 +104,9 @@ impl Propagation {
     pub fn description(&self) -> &'static str {
         match self {
             Propagation::Required => "Support current transaction, create new if none",
-            Propagation::Supports => "Support current transaction, execute non-transactionally if none",
+            Propagation::Supports => {
+                "Support current transaction, execute non-transactionally if none"
+            },
             Propagation::Mandatory => "Support current transaction, error if none",
             Propagation::RequiresNew => "Always create new transaction",
             Propagation::NotSupported => "Execute non-transactionally, suspend current if exists",
@@ -160,14 +159,8 @@ mod tests {
 
     #[test]
     fn test_propagation_from_str() {
-        assert_eq!(
-            "REQUIRES_NEW".parse::<Propagation>().unwrap(),
-            Propagation::RequiresNew
-        );
-        assert_eq!(
-            "mandatory".parse::<Propagation>().unwrap(),
-            Propagation::Mandatory
-        );
+        assert_eq!("REQUIRES_NEW".parse::<Propagation>().unwrap(), Propagation::RequiresNew);
+        assert_eq!("mandatory".parse::<Propagation>().unwrap(), Propagation::Mandatory);
     }
 
     #[test]

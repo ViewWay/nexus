@@ -1,8 +1,8 @@
 //! Transaction status
 //! 事务状态
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Transaction status
 /// 事务状态

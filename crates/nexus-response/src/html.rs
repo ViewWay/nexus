@@ -34,9 +34,16 @@ pub struct Html<T>(pub T);
 
 impl<T: AsRef<str>> IntoResponse for Html<T> {
     fn into_response(self) -> Response {
+        // Convert the inner value to a string for the response body
+        // 将内部值转换为字符串用于响应体
+        //
+        // We need to convert to an owned string because the response builder
+        // requires 'static lifetime for the body content.
+        // 我们需要转换为拥有的字符串，因为响应构建器要求主体内容具有 'static 生命周期。
+        let body_str = self.0.as_ref();
         Response::builder()
-            .header("content-type", "text/html; charset=utf-8")
-            .body(self.0.as_ref())
+            .header_static("content-type", "text/html; charset=utf-8")
+            .body(body_str.to_string())
             .unwrap()
     }
 }
@@ -72,9 +79,6 @@ mod tests {
 
         assert_eq!(response.status(), http::StatusCode::OK);
         assert_eq!(response.body(), "<h1>Hello</h1>");
-        assert_eq!(
-            response.headers().get("content-type").unwrap(),
-            "text/html; charset=utf-8"
-        );
+        assert_eq!(response.headers().get("content-type").unwrap(), "text/html; charset=utf-8");
     }
 }

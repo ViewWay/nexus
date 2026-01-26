@@ -33,13 +33,13 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::marker::PhantomData;
-use serde::{Deserialize, Serialize};
 
-use crate::wallet::Address;
-use crate::tx::{TxHash, TransactionBuilder, TxType};
 use crate::chain::BlockNumber;
+use crate::tx::{TransactionBuilder, TxHash, TxType};
+use crate::wallet::Address;
 
 /// Contract error
 /// 合约错误
@@ -243,7 +243,8 @@ impl<'a> Contract<'a> {
                 } else {
                     param
                 };
-                full_call.push_str(&format!("{:064x}", u64::from_str_radix(value, 16).unwrap_or(0)));
+                full_call
+                    .push_str(&format!("{:064x}", u64::from_str_radix(value, 16).unwrap_or(0)));
             }
         }
 
@@ -357,9 +358,9 @@ impl<'a, 'b> ContractCall<'a, 'b> {
     /// Execute the call (read-only)
     /// 执行调用（只读）
     pub async fn call(self) -> Result<Vec<u8>, ContractError> {
-        let selector = self.selector.ok_or_else(|| {
-            ContractError::CallError("Function selector not set".to_string())
-        })?;
+        let selector = self
+            .selector
+            .ok_or_else(|| ContractError::CallError("Function selector not set".to_string()))?;
 
         self.contract._call(&selector, &self.params).await
     }
@@ -409,27 +410,20 @@ pub struct ERC20;
 impl ERC20 {
     /// Function selector for balanceOf
     /// balanceOf的函数选择器
-    pub const BALANCE_OF: FunctionSelector = FunctionSelector::from_bytes([
-        0x70, 0xa0, 0x82, 0x31,
-    ]);
+    pub const BALANCE_OF: FunctionSelector = FunctionSelector::from_bytes([0x70, 0xa0, 0x82, 0x31]);
 
     /// Function selector for transfer
     /// transfer的函数选择器
-    pub const TRANSFER: FunctionSelector = FunctionSelector::from_bytes([
-        0xa9, 0x05, 0x9c, 0xbb,
-    ]);
+    pub const TRANSFER: FunctionSelector = FunctionSelector::from_bytes([0xa9, 0x05, 0x9c, 0xbb]);
 
     /// Function selector for approve
     /// approve的函数选择器
-    pub const APPROVE: FunctionSelector = FunctionSelector::from_bytes([
-        0x09, 0x5e, 0xa7, 0xb3,
-    ]);
+    pub const APPROVE: FunctionSelector = FunctionSelector::from_bytes([0x09, 0x5e, 0xa7, 0xb3]);
 
     /// Function selector for totalSupply
     /// totalSupply的函数选择器
-    pub const TOTAL_SUPPLY: FunctionSelector = FunctionSelector::from_bytes([
-        0x18, 0x16, 0x0d, 0xdd,
-    ]);
+    pub const TOTAL_SUPPLY: FunctionSelector =
+        FunctionSelector::from_bytes([0x18, 0x16, 0x0d, 0xdd]);
 }
 
 /// ERC721 standard interface
@@ -445,21 +439,17 @@ pub struct ERC721;
 impl ERC721 {
     /// Function selector for ownerOf
     /// ownerOf的函数选择器
-    pub const OWNER_OF: FunctionSelector = FunctionSelector::from_bytes([
-        0x63, 0x52, 0x21, 0x1e,
-    ]);
+    pub const OWNER_OF: FunctionSelector = FunctionSelector::from_bytes([0x63, 0x52, 0x21, 0x1e]);
 
     /// Function selector for transferFrom
     /// transferFrom的函数选择器
-    pub const TRANSFER_FROM: FunctionSelector = FunctionSelector::from_bytes([
-        0x23, 0xb8, 0x72, 0xdd,
-    ]);
+    pub const TRANSFER_FROM: FunctionSelector =
+        FunctionSelector::from_bytes([0x23, 0xb8, 0x72, 0xdd]);
 
     /// Function selector for safeTransferFrom
     /// safeTransferFrom的函数选择器
-    pub const SAFE_TRANSFER_FROM: FunctionSelector = FunctionSelector::from_bytes([
-        0x4a, 0x39, 0xdc, 0x06,
-    ]);
+    pub const SAFE_TRANSFER_FROM: FunctionSelector =
+        FunctionSelector::from_bytes([0x4a, 0x39, 0xdc, 0x06]);
 }
 
 #[cfg(test)]
