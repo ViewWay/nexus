@@ -638,9 +638,19 @@ impl std::fmt::Display for Http2Error {
             Self::ProtocolError(msg) => write!(f, "Protocol error: {}", msg),
             Self::FlowControlError(msg) => write!(f, "Flow control error: {}", msg),
             Self::SettingsError(msg) => write!(f, "Settings error: {}", msg),
-            Self::StreamError { stream_id, error_code, message } => {
-                write!(f, "Stream {} error ({}): {}", stream_id.0, error_code.description(), message)
-            }
+            Self::StreamError {
+                stream_id,
+                error_code,
+                message,
+            } => {
+                write!(
+                    f,
+                    "Stream {} error ({}): {}",
+                    stream_id.0,
+                    error_code.description(),
+                    message
+                )
+            },
             Self::IoError(msg) => write!(f, "IO error: {}", msg),
         }
     }

@@ -10,12 +10,12 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-pub mod response;
-pub mod json;
 pub mod html;
+pub mod json;
+pub mod response;
 pub mod result;
 
-pub use response::{IntoResponse, Response};
-pub use json::Json;
 pub use html::Html;
-pub use result::{Result, ResultCode, PageResult};
+pub use json::Json;
+pub use response::{IntoResponse, Response};
+pub use result::{PageResult, Result, ResultCode};

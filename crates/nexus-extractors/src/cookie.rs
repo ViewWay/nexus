@@ -17,7 +17,7 @@
 //! }
 //! ```
 
-use crate::{ExtractorError, FromRequest, ExtractorFuture, Request};
+use crate::{ExtractorError, ExtractorFuture, FromRequest, Request};
 use std::collections::HashMap;
 
 /// Cookie extractor
@@ -89,7 +89,8 @@ impl FromRequest for Cookie<String> {
 
         Box::pin(async move {
             cookies
-                .values().next()
+                .values()
+                .next()
                 .map(|v| Cookie(v.clone()))
                 .ok_or_else(|| ExtractorError::Missing("cookie".to_string()))
         })
@@ -152,9 +153,7 @@ impl FromRequest for CookieOption<String> {
     fn from_request(req: &Request) -> ExtractorFuture<Self> {
         let cookies = parse_cookies(req);
 
-        Box::pin(async move {
-            Ok(CookieOption(cookies.values().next().cloned()))
-        })
+        Box::pin(async move { Ok(CookieOption(cookies.values().next().cloned())) })
     }
 }
 

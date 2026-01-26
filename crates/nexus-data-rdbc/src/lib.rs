@@ -55,57 +55,34 @@
 #![warn(unreachable_pub)]
 
 mod connection;
-mod transaction;
-mod row;
+mod error;
 mod executor;
 mod mapper;
-mod error;
 mod query_runtime;
+mod row;
+mod transaction;
 
 pub use connection::{Connection, ConnectionPool, PoolConfig};
-pub use transaction::{Transaction, TransactionManager};
-pub use row::{Row, RowMapper};
-pub use executor::{Executor, QueryExecutor};
-pub use mapper::{R2dbcRepository, R2dbcCrudRepository, BaseMapper};
 pub use error::{R2dbcError, R2dbcResult};
-pub use query_runtime::{QueryMetadata, ParamStyle, QueryType, AnnotatedQueryExecutor};
+pub use executor::{Executor, QueryExecutor};
+pub use mapper::{BaseMapper, R2dbcCrudRepository, R2dbcRepository};
+pub use query_runtime::{AnnotatedQueryExecutor, ParamStyle, QueryMetadata, QueryType};
+pub use row::{Row, RowMapper};
+pub use transaction::{Transaction, TransactionManager};
 
 // Re-exports from nexus-data-commons
 pub use nexus_data_commons::{
-    Error,
-    Result,
-    Repository,
-    CrudRepository,
-    PagingAndSortingRepository,
-    Page,
-    PageRequest,
-    Sort,
-    Order,
-    Direction,
-    QueryWrapper,
-    UpdateWrapper,
-    AggregateRoot,
-    Identifier,
+    AggregateRoot, CrudRepository, Direction, Error, Identifier, Order, Page, PageRequest,
+    PagingAndSortingRepository, QueryWrapper, Repository, Result, Sort, UpdateWrapper,
 };
 
 /// Core re-exports
 /// 核心重新导出
 pub mod prelude {
     pub use crate::{
-        Connection,
-        ConnectionPool,
-        PoolConfig,
-        Transaction,
+        BaseMapper, Connection, ConnectionPool, Executor, PoolConfig, QueryExecutor,
+        R2dbcCrudRepository, R2dbcError, R2dbcRepository, R2dbcResult, Row, RowMapper, Transaction,
         TransactionManager,
-        Row,
-        RowMapper,
-        Executor,
-        QueryExecutor,
-        R2dbcRepository,
-        R2dbcCrudRepository,
-        BaseMapper,
-        R2dbcError,
-        R2dbcResult,
     };
 
     pub use nexus_data_commons::prelude::*;
@@ -194,7 +171,10 @@ impl DatabaseClient {
     /// 创建新的数据库客户端
     pub fn new(pool: ConnectionPool) -> Self {
         let database_type = pool.database_type();
-        Self { pool, database_type }
+        Self {
+            pool,
+            database_type,
+        }
     }
 
     /// Get the underlying connection pool
@@ -217,46 +197,40 @@ impl DatabaseClient {
 
     /// Execute a query and return the first row
     /// 执行查询并返回第一行
-    pub async fn query_one(
-        &self,
-        sql: &str,
-    ) -> R2dbcResult<Option<Row>> {
-        self.pool.fetch_one(sql).await.map_err(|e| R2dbcError::Unknown(e.to_string()))
+    pub async fn query_one(&self, sql: &str) -> R2dbcResult<Option<Row>> {
+        self.pool
+            .fetch_one(sql)
+            .await
+            .map_err(|e| R2dbcError::Unknown(e.to_string()))
     }
 
     /// Execute a query and return all rows
     /// 执行查询并返回所有行
-    pub async fn query(
-        &self,
-        sql: &str,
-    ) -> R2dbcResult<Vec<Row>> {
-        self.pool.fetch_all(sql).await.map_err(|e| R2dbcError::Unknown(e.to_string()))
+    pub async fn query(&self, sql: &str) -> R2dbcResult<Vec<Row>> {
+        self.pool
+            .fetch_all(sql)
+            .await
+            .map_err(|e| R2dbcError::Unknown(e.to_string()))
     }
 
     /// Execute a statement and return the number of affected rows
     /// 执行语句并返回受影响的行数
-    pub async fn execute(
-        &self,
-        sql: &str,
-    ) -> R2dbcResult<u64> {
-        self.pool.execute(sql).await.map_err(|e| R2dbcError::Unknown(e.to_string()))
+    pub async fn execute(&self, sql: &str) -> R2dbcResult<u64> {
+        self.pool
+            .execute(sql)
+            .await
+            .map_err(|e| R2dbcError::Unknown(e.to_string()))
     }
 
     /// Fetch a single row (alias for query_one)
     /// 获取单行（query_one 的别名）
-    pub async fn fetch_one(
-        &self,
-        sql: &str,
-    ) -> R2dbcResult<Option<Row>> {
+    pub async fn fetch_one(&self, sql: &str) -> R2dbcResult<Option<Row>> {
         self.query_one(sql).await
     }
 
     /// Fetch all rows (alias for query)
     /// 获取所有行（query 的别名）
-    pub async fn fetch_all(
-        &self,
-        sql: &str,
-    ) -> R2dbcResult<Vec<Row>> {
+    pub async fn fetch_all(&self, sql: &str) -> R2dbcResult<Vec<Row>> {
         self.query(sql).await
     }
 

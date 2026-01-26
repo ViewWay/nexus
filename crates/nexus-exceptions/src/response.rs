@@ -166,10 +166,8 @@ impl ErrorResponse {
                 let status = StatusCode::from_u16(body.status);
                 Response::new(status).with_body(nexus_http::Body::from(bytes))
             },
-            Err(_) => {
-                Response::internal_server_error()
-                    .with_body(nexus_http::Body::from("{\"error\":\"SERIALIZATION_ERROR\"}"))
-            },
+            Err(_) => Response::internal_server_error()
+                .with_body(nexus_http::Body::from("{\"error\":\"SERIALIZATION_ERROR\"}")),
         }
     }
 }

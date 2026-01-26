@@ -161,10 +161,8 @@ impl Default for TaskScheduler {
 /// @Scheduled(fixedRate = 5000)
 /// public void task() { }
 /// ```
-pub async fn schedule_fixed_rate<F>(
-    interval_ms: u64,
-    mut f: F,
-) where
+pub async fn schedule_fixed_rate<F>(interval_ms: u64, mut f: F)
+where
     F: FnMut() + Send + 'static,
 {
     let mut timer = interval(Duration::from_millis(interval_ms));
@@ -183,10 +181,8 @@ pub async fn schedule_fixed_rate<F>(
 /// @Scheduled(fixedDelay = 5000)
 /// public void task() { }
 /// ```
-pub async fn schedule_fixed_delay<F>(
-    delay_ms: u64,
-    mut f: F,
-) where
+pub async fn schedule_fixed_delay<F>(delay_ms: u64, mut f: F)
+where
     F: FnMut() + Send + 'static,
 {
     loop {

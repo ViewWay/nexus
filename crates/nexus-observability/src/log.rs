@@ -42,18 +42,16 @@
 
 use std::sync::OnceLock;
 use tracing::Level;
+use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::{
-    fmt::{
-        format::FmtSpan, self
-    },
+    EnvFilter, Registry,
+    fmt::{self, format::FmtSpan},
     layer::SubscriberExt,
     util::SubscriberInitExt,
-    EnvFilter, Registry,
 };
-use tracing_appender::rolling::{RollingFileAppender, Rotation};
 
 #[cfg(feature = "nexus-format")]
-use crate::nexus_format::{NexusFormatter, Banner};
+use crate::nexus_format::{Banner, NexusFormatter};
 
 /// Spring Boot log levels
 /// Spring Boot 日志级别
@@ -219,7 +217,8 @@ impl Default for LoggerConfig {
 
         let rotation = match std::env::var("NEXUS_LOG_ROTATION")
             .unwrap_or_default()
-            .to_lowercase().as_str()
+            .to_lowercase()
+            .as_str()
         {
             "daily" => LogRotation::Daily,
             "hourly" => LogRotation::Hourly,
@@ -354,7 +353,7 @@ impl Logger {
                             .try_init()?;
                     }
                 }
-            }
+            },
             LogFormat::Compact => {
                 let mut fmt_layer = fmt::layer()
                     .with_file(config.with_file)
@@ -367,7 +366,7 @@ impl Logger {
                     let file_appender = create_file_appender(path, config.rotation)?;
 
                     let file_layer = fmt::layer()
-                                                .with_file(config.with_file)
+                        .with_file(config.with_file)
                         .with_line_number(config.with_file)
                         .with_target(config.with_target)
                         .with_writer(file_appender)
@@ -384,7 +383,7 @@ impl Logger {
                         .with(fmt_layer)
                         .try_init()?;
                 }
-            }
+            },
             LogFormat::Json => {
                 let mut fmt_layer = fmt::layer()
                     .json()
@@ -399,7 +398,7 @@ impl Logger {
 
                     let file_layer = fmt::layer()
                         .json()
-                                                .with_file(config.with_file)
+                        .with_file(config.with_file)
                         .with_line_number(config.with_file)
                         .with_target(config.with_target)
                         .with_writer(file_appender);
@@ -415,7 +414,7 @@ impl Logger {
                         .with(fmt_layer)
                         .try_init()?;
                 }
-            }
+            },
         }
 
         Ok(())
@@ -487,7 +486,11 @@ fn create_env_filter(default_level: LogLevel) -> EnvFilter {
             let target = parts[0];
             let level = parts[1];
             if let Some(lvl) = LogLevel::from_str(level).and_then(|l| l.to_tracing_level()) {
-                base_filter.add_directive(format!("{}={}", target, lvl).parse().unwrap_or_else(|_| lvl.into()))
+                base_filter.add_directive(
+                    format!("{}={}", target, lvl)
+                        .parse()
+                        .unwrap_or_else(|_| lvl.into()),
+                )
             } else {
                 base_filter
             }

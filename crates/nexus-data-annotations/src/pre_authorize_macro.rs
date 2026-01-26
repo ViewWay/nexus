@@ -4,10 +4,10 @@
 //! 提供方法级权限检查注解
 //! Provides method-level permission checking annotation
 
-use proc_macro::TokenStream;
-use syn::{parse_macro_input, AttributeArgs, ItemFn};
-use quote::quote;
 use darling::{FromDeriveInput, FromMeta};
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{AttributeArgs, ItemFn, parse_macro_input};
 
 /// @PreAuthorize 属性
 /// @PreAuthorize Attributes
@@ -43,10 +43,7 @@ pub struct PreAuthorizeAttrs {
 ///     }
 /// }
 /// ```
-pub fn pre_authorize_macro_impl(
-    attr: TokenStream,
-    item: TokenStream,
-) -> TokenStream {
+pub fn pre_authorize_macro_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     let attrs = parse_macro_input!(attr with AttributeArgs);
 
@@ -103,7 +100,6 @@ pub fn pre_authorize_macro_impl(
 
 /// 将 @PreAuthorize 添加到 transactional_macro 模块
 /// Add @PreAuthorize to transactional_macro module
-
 pub use darling::FromDeriveInput;
 
 /// 实现 PreAuthorize 注解的函数

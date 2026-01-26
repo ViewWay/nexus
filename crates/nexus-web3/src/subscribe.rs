@@ -37,10 +37,10 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
+use futures::stream::{Stream, StreamExt};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
-use futures_util::stream::{Stream, StreamExt};
 
 use crate::chain::Block;
 use crate::tx::TxHash;
@@ -288,8 +288,7 @@ impl PendingTransaction {
     /// Parse as TxHash
     /// 解析为TxHash
     pub fn as_tx_hash(&self) -> Result<TxHash, WsError> {
-        TxHash::from_hex(&self.hash)
-            .map_err(|e| WsError::ParseError(e.to_string()))
+        TxHash::from_hex(&self.hash).map_err(|e| WsError::ParseError(e.to_string()))
     }
 }
 
@@ -368,7 +367,8 @@ pub struct WsClient {
     request_id: Arc<std::sync::atomic::AtomicU64>,
 
     /// Active subscriptions
-    subscriptions: Arc<tokio::sync::RwLock<std::collections::HashMap<SubscriptionId, SubscriptionType>>>,
+    subscriptions:
+        Arc<tokio::sync::RwLock<std::collections::HashMap<SubscriptionId, SubscriptionType>>>,
 
     /// Notification channel sender
     notify_tx: Arc<tokio::sync::mpsc::UnboundedSender<SubscriptionNotification>>,
@@ -447,7 +447,9 @@ impl WsClient {
     pub async fn subscribe_pending_transactions(
         &self,
     ) -> Result<impl Stream<Item = PendingTransaction> + Send + Unpin + '_, WsError> {
-        let sub_id = self.subscribe(SubscriptionType::PendingTransactions, None).await?;
+        let sub_id = self
+            .subscribe(SubscriptionType::PendingTransactions, None)
+            .await?;
 
         let receiver = PendingTxReceiver {
             sub_id,
@@ -463,10 +465,12 @@ impl WsClient {
         &self,
         filter: LogFilter,
     ) -> Result<impl Stream<Item = LogNotification> + Send + Unpin + '_, WsError> {
-        let filter_json = serde_json::to_value(filter)
-            .map_err(|e| WsError::ParseError(e.to_string()))?;
+        let filter_json =
+            serde_json::to_value(filter).map_err(|e| WsError::ParseError(e.to_string()))?;
 
-        let sub_id = self.subscribe(SubscriptionType::Logs, Some(filter_json)).await?;
+        let sub_id = self
+            .subscribe(SubscriptionType::Logs, Some(filter_json))
+            .await?;
 
         let receiver = LogReceiver {
             sub_id,
@@ -490,7 +494,11 @@ impl WsClient {
         // 4. Store the subscription
 
         // For now, return a placeholder subscription ID
-        let id = format!("0x{:x}", self.request_id.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
+        let id = format!(
+            "0x{:x}",
+            self.request_id
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+        );
 
         {
             let mut subs = self.subscriptions.write().await;
@@ -522,9 +530,7 @@ impl WsClient {
     /// 获取活动订阅
     pub async fn active_subscriptions(&self) -> Vec<(SubscriptionId, SubscriptionType)> {
         let subs = self.subscriptions.read().await;
-        subs.iter()
-            .map(|(id, ty)| (id.clone(), *ty))
-            .collect()
+        subs.iter().map(|(id, ty)| (id.clone(), *ty)).collect()
     }
 
     /// Check if subscribed to a specific type
@@ -655,7 +661,10 @@ impl SubscriptionManager {
             return Err(WsError::AlreadySubscribed);
         }
 
-        let sub_id = self.client.subscribe(SubscriptionType::NewHeads, None).await?;
+        let sub_id = self
+            .client
+            .subscribe(SubscriptionType::NewHeads, None)
+            .await?;
 
         let mut ids = self.sub_ids.write().await;
         ids.insert(SubscriptionType::NewHeads, sub_id.clone());
@@ -670,10 +679,13 @@ impl SubscriptionManager {
             return Err(WsError::AlreadySubscribed);
         }
 
-        let filter_json = serde_json::to_value(filter)
-            .map_err(|e| WsError::ParseError(e.to_string()))?;
+        let filter_json =
+            serde_json::to_value(filter).map_err(|e| WsError::ParseError(e.to_string()))?;
 
-        let sub_id = self.client.subscribe(SubscriptionType::Logs, Some(filter_json)).await?;
+        let sub_id = self
+            .client
+            .subscribe(SubscriptionType::Logs, Some(filter_json))
+            .await?;
 
         let mut ids = self.sub_ids.write().await;
         ids.insert(SubscriptionType::Logs, sub_id.clone());
@@ -735,9 +747,7 @@ mod tests {
     #[test]
     fn test_log_filter_builder() {
         let addr = Address::zero();
-        let filter = LogFilter::new()
-            .address(&addr)
-            .topic("0x1234".to_string());
+        let filter = LogFilter::new().address(&addr).topic("0x1234".to_string());
 
         assert!(filter.address.is_some());
         assert!(filter.topics.is_some());
@@ -782,7 +792,7 @@ mod tests {
         let header = NewBlockHeader {
             hash: "0x123".to_string(),
             parent_hash: "0x456".to_string(),
-            number: "0xa".to_string(), // 10 in hex
+            number: "0xa".to_string(),     // 10 in hex
             timestamp: "0x64".to_string(), // 100 in hex
             gas_limit: "0x0".to_string(),
             gas_used: "0x0".to_string(),

@@ -2,12 +2,12 @@
 //! 缓存条件评估的测试
 
 use nexus_cache::{
-    Cache, CacheBuilder, evaluate_cache_condition,
-    CacheableOptions, CachePutOptions, CacheEvictOptions
+    Cache, CacheBuilder, CacheEvictOptions, CachePutOptions, CacheableOptions,
+    evaluate_cache_condition,
 };
+use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde_json::Value as JsonValue;
 
 // ========================================================================
 // Test Cacheable with Conditions / 测试带条件的 Cacheable
@@ -105,7 +105,11 @@ fn test_unless_result_null() {
 
     // Unless: don't cache if result is null
     assert!(evaluate_cache_condition("#result == null", &args, Some(&JsonValue::Null)));
-    assert!(!evaluate_cache_condition("#result == null", &args, Some(&JsonValue::String("test".to_string()))));
+    assert!(!evaluate_cache_condition(
+        "#result == null",
+        &args,
+        Some(&JsonValue::String("test".to_string()))
+    ));
 }
 
 #[test]
@@ -113,8 +117,16 @@ fn test_unless_result_empty() {
     let args = HashMap::new();
 
     // Unless: don't cache if result is empty string
-    assert!(evaluate_cache_condition("#result.isEmpty()", &args, Some(&JsonValue::String("".to_string()))));
-    assert!(!evaluate_cache_condition("#result.isEmpty()", &args, Some(&JsonValue::String("test".to_string()))));
+    assert!(evaluate_cache_condition(
+        "#result.isEmpty()",
+        &args,
+        Some(&JsonValue::String("".to_string()))
+    ));
+    assert!(!evaluate_cache_condition(
+        "#result.isEmpty()",
+        &args,
+        Some(&JsonValue::String("test".to_string()))
+    ));
 }
 
 #[test]
@@ -169,22 +181,18 @@ fn test_nested_conditions() {
     args.insert("premium".to_string(), JsonValue::Bool(true));
 
     // Complex nested condition
-    assert!(
-        evaluate_cache_condition(
-            "#active and (#premium or #verified) and #age > 18",
-            &args,
-            None
-        )
-    );
+    assert!(evaluate_cache_condition(
+        "#active and (#premium or #verified) and #age > 18",
+        &args,
+        None
+    ));
 
     // Another complex condition
-    assert!(
-        evaluate_cache_condition(
-            "(#age >= 18 and #active) or (#premium and !#verified)",
-            &args,
-            None
-        )
-    );
+    assert!(evaluate_cache_condition(
+        "(#age >= 18 and #active) or (#premium and !#verified)",
+        &args,
+        None
+    ));
 }
 
 #[test]
@@ -254,7 +262,10 @@ fn test_condition_with_negative_numbers() {
 #[test]
 fn test_condition_with_floating_point() {
     let mut args = HashMap::new();
-    args.insert("price".to_string(), JsonValue::Number(serde_json::Number::from_f64(99.99).unwrap()));
+    args.insert(
+        "price".to_string(),
+        JsonValue::Number(serde_json::Number::from_f64(99.99).unwrap()),
+    );
 
     assert!(evaluate_cache_condition("#price > 50", &args, None));
     assert!(evaluate_cache_condition("#price < 100", &args, None));
@@ -282,11 +293,7 @@ fn test_multiple_or_conditions() {
     args.insert("moderator".to_string(), JsonValue::Bool(false));
 
     assert!(
-        evaluate_cache_condition(
-            "#role == 'ADMIN' or #admin or #moderator",
-            &args,
-            None
-        ) == false
+        evaluate_cache_condition("#role == 'ADMIN' or #admin or #moderator", &args, None) == false
     );
 }
 
@@ -299,23 +306,19 @@ fn test_multiple_and_conditions() {
     args.insert("premium".to_string(), JsonValue::Bool(true));
 
     // All conditions must be true
-    assert!(
-        evaluate_cache_condition(
-            "#age > 18 and #active and #verified and #premium",
-            &args,
-            None
-        )
-    );
+    assert!(evaluate_cache_condition(
+        "#age > 18 and #active and #verified and #premium",
+        &args,
+        None
+    ));
 
     // One false makes the whole expression false
     args.insert("premium".to_string(), JsonValue::Bool(false));
-    assert!(
-        !evaluate_cache_condition(
-            "#age > 18 and #active and #verified and #premium",
-            &args,
-            None
-        )
-    );
+    assert!(!evaluate_cache_condition(
+        "#age > 18 and #active and #verified and #premium",
+        &args,
+        None
+    ));
 }
 
 #[test]

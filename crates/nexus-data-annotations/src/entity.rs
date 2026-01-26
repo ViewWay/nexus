@@ -1,11 +1,11 @@
 //! Entity annotation macro
 //! @Entity 派生宏实现
 
+use darling::FromDeriveInput;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Data, DataStruct, Fields};
-use darling::{FromDeriveInput};
 use syn::{Attribute, Meta};
+use syn::{Data, DataStruct, DeriveInput, Fields, parse_macro_input};
 
 /// Represents attributes on struct or fields
 /// 表示结构体或字段上的属性

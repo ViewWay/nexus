@@ -3,8 +3,8 @@
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, Signature, ReturnType, LitStr};
-use syn::{parse::Parse, ParseStream, Result as SynResult};
+use syn::{ItemFn, LitStr, ReturnType, Signature, parse_macro_input};
+use syn::{ParseStream, Result as SynResult, parse::Parse};
 
 /// Parses arguments from @Query annotation
 /// 解析 @Query 注解的参数

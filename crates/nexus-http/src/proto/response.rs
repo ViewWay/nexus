@@ -40,14 +40,9 @@ pub fn encode_response(response: &Response, ctx: &ConnectionContext) -> Result<B
     // Status line: HTTP/1.1 200 OK
     let status = response.status();
     let reason = status.canonical_reason().unwrap_or("Unknown");
-    writeln!(
-        buffer,
-        "{} {} {}\r",
-        ctx.version().as_str(),
-        status.as_u16(),
-        reason
-    )
-    .map_err(|e| crate::Error::InvalidResponse(format!("Failed to write status line: {}", e)))?;
+    writeln!(buffer, "{} {} {}\r", ctx.version().as_str(), status.as_u16(), reason).map_err(
+        |e| crate::Error::InvalidResponse(format!("Failed to write status line: {}", e)),
+    )?;
 
     // Add default headers
     let mut has_content_length = false;
@@ -70,9 +65,8 @@ pub fn encode_response(response: &Response, ctx: &ConnectionContext) -> Result<B
             has_connection = true;
         }
 
-        writeln!(buffer, "{}: {}\r", name_str, value_str).map_err(|_| {
-            crate::Error::InvalidResponse("Failed to write header".to_string())
-        })?;
+        writeln!(buffer, "{}: {}\r", name_str, value_str)
+            .map_err(|_| crate::Error::InvalidResponse("Failed to write header".to_string()))?;
     }
 
     // Add Content-Length if not present and we have a body

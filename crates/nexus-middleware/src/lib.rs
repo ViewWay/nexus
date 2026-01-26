@@ -18,17 +18,18 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-pub mod middleware;
-pub mod cors;
 pub mod compression;
-pub mod timeout;
+pub mod cors;
+// TODO: Fix jwt_auth to match current Middleware trait signature
+// pub mod jwt_auth;
 pub mod logger;
+pub mod middleware;
 pub mod static_files;
-pub mod jwt_auth;
+pub mod timeout;
 
 // Re-export core types from nexus-http and nexus-router
 // 从nexus-http和nexus-router重新导出核心类型
-pub use nexus_http::{Request, Response, Error};
+pub use nexus_http::{Error, Request, Response};
 pub use nexus_router::{Middleware, Next};
 
 // Re-export result type
@@ -37,10 +38,11 @@ pub type Result<T> = nexus_http::Result<T>;
 
 // Re-export middleware types
 // 重新导出中间件类型
-pub use middleware::MiddlewareStack;
-pub use cors::{CorsMiddleware, CorsConfig};
 pub use compression::CompressionMiddleware;
-pub use timeout::TimeoutMiddleware;
+pub use cors::{CorsConfig, CorsMiddleware};
+// TODO: Fix jwt_auth to match current Middleware trait signature
+// pub use jwt_auth::{JwtAuthenticationMiddleware, JwtRequestExt};
 pub use logger::LoggerMiddleware;
+pub use middleware::MiddlewareStack;
 pub use static_files::StaticFiles;
-pub use jwt_auth::{JwtAuthenticationMiddleware, JwtRequestExt};
+pub use timeout::TimeoutMiddleware;

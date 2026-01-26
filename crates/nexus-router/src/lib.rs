@@ -36,15 +36,15 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-pub mod router;
 pub mod params;
 pub mod route;
+pub mod router;
 pub mod trie;
 
-pub use router::{Handler, Router, Next, Stateful, Middleware};
 pub use params::Path;
+pub use route::{AsyncHandlerFn, BoxedAsyncHandler, Handler as RouteHandler, Route};
+pub use router::{Handler, Middleware, Next, Router, Stateful};
 pub use trie::TrieRouter;
-pub use route::{Handler as RouteHandler, AsyncHandlerFn, BoxedAsyncHandler, Route};
 
 // Re-export from nexus-http
 pub use nexus_http::Method;

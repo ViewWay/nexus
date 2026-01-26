@@ -6,7 +6,7 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, Expr};
+use syn::{Expr, ItemFn, parse_macro_input};
 
 /// #[transactional] macro implementation
 /// #[transactional]宏实现
@@ -182,27 +182,29 @@ fn parse_transactional_options_attr(attr: TokenStream) -> TransactionalOptionsPa
                         _ => quote! {},
                     };
                     options.propagation = Some(syn::parse2(prop_expr).unwrap());
-                }
+                },
                 "isolation" => {
                     let iso_expr = match value {
-                        "READ_UNCOMMITTED" => quote! { .isolation(IsolationLevel::ReadUncommitted) },
+                        "READ_UNCOMMITTED" => {
+                            quote! { .isolation(IsolationLevel::ReadUncommitted) }
+                        },
                         "READ_COMMITTED" => quote! { .isolation(IsolationLevel::ReadCommitted) },
                         "REPEATABLE_READ" => quote! { .isolation(IsolationLevel::RepeatableRead) },
                         "SERIALIZABLE" => quote! { .isolation(IsolationLevel::Serializable) },
                         _ => quote! {},
                     };
                     options.isolation = Some(syn::parse2(iso_expr).unwrap());
-                }
+                },
                 "timeout" | "timeout_secs" => {
                     if let Ok(timeout_val) = value.parse::<u64>() {
                         let timeout_expr = quote! { .timeout_secs(#timeout_val) };
                         options.timeout_secs = Some(syn::parse2(timeout_expr).unwrap());
                     }
-                }
+                },
                 "read_only" => {
                     options.read_only = value == "true" || value == "1";
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }

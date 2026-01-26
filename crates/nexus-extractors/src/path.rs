@@ -22,7 +22,7 @@
 //! }
 //! ```
 
-use crate::{ExtractorError, FromRequest, ExtractorFuture, Request};
+use crate::{ExtractorError, ExtractorFuture, FromRequest, Request};
 use std::str::FromStr;
 
 /// Path parameter extractor
@@ -125,9 +125,7 @@ where
 
         Box::pin(async move {
             if var_names.len() < 2 {
-                return Err(ExtractorError::Missing(
-                    "expected 2 path parameters".to_string(),
-                ));
+                return Err(ExtractorError::Missing("expected 2 path parameters".to_string()));
             }
 
             let v1 = T1::from_str(path_vars.get(&var_names[0]).unwrap())
@@ -156,9 +154,7 @@ where
 
         Box::pin(async move {
             if var_names.len() < 3 {
-                return Err(ExtractorError::Missing(
-                    "expected 3 path parameters".to_string(),
-                ));
+                return Err(ExtractorError::Missing("expected 3 path parameters".to_string()));
             }
 
             let v1 = T1::from_str(path_vars.get(&var_names[0]).unwrap())

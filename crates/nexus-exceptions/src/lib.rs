@@ -33,14 +33,14 @@
 #![warn(unreachable_pub)]
 
 pub mod advice;
+pub mod error_body;
 pub mod handler;
 pub mod response;
-pub mod error_body;
 
 pub use advice::ControllerAdvice;
+pub use error_body::ErrorBody;
 pub use handler::{ExceptionHandler, HandlerResult};
 pub use response::ErrorResponse;
-pub use error_body::ErrorBody;
 
 /// Version of the exceptions module
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -48,5 +48,5 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Re-exports of commonly used types
 /// 常用类型的重新导出
 pub mod prelude {
-    pub use super::{ControllerAdvice, ExceptionHandler, ErrorResponse, ErrorBody};
+    pub use super::{ControllerAdvice, ErrorBody, ErrorResponse, ExceptionHandler};
 }

@@ -371,7 +371,7 @@ pub trait EntityWithLifecycle {
             LifecycleEvent::AfterUpdate => self.after_update(),
             LifecycleEvent::BeforeDelete => self.before_delete(),
             LifecycleEvent::AfterDelete => self.after_delete(),
-            LifecycleEvent::BeforeLoad => {}
+            LifecycleEvent::BeforeLoad => {},
             LifecycleEvent::AfterLoad => self.after_load(),
         }
     }

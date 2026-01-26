@@ -9,7 +9,7 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use super::{Method};
+use super::Method;
 use nexus_http::{Body, Request, Response, Result, StatusCode};
 use std::collections::HashMap;
 use std::future::Future;
@@ -86,9 +86,7 @@ impl<S> Clone for Route<S> {
 /// Handler function type
 /// 处理函数类型
 pub type HandlerFn<S> = Arc<
-    dyn Fn(Request, Arc<S>) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>>
-        + Send
-        + Sync,
+    dyn Fn(Request, Arc<S>) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>> + Send + Sync,
 >;
 
 /// Handler enum that can be either a function or a static response
@@ -238,7 +236,11 @@ impl<S> Router<S> {
 
     /// Match a route for the given method and path
     /// 匹配给定方法和路径的路由
-    fn match_route(&self, method: &Method, path: &str) -> Option<(Route<S>, HashMap<String, String>)> {
+    fn match_route(
+        &self,
+        method: &Method,
+        path: &str,
+    ) -> Option<(Route<S>, HashMap<String, String>)> {
         let routes = match method {
             Method::GET => &self.get_routes,
             Method::POST => &self.post_routes,
@@ -358,9 +360,7 @@ impl<S> Next<S> {
             + Sync
             + 'static,
     {
-        Self {
-            inner: Arc::new(f),
-        }
+        Self { inner: Arc::new(f) }
     }
 
     /// Create a new Next from an Arc'd function
@@ -397,7 +397,7 @@ where
                         .status(StatusCode::NOT_FOUND)
                         .body(Body::from("Not Found"))
                         .unwrap());
-                }
+                },
             };
 
             // Set path parameters on request
@@ -410,24 +410,25 @@ where
             // 构建最终处理函数
             let route_handler = route.handler.clone();
             let route_state = state.clone();
-            let handler_fn: HandlerFn<S> = Arc::new(move |req: Request, _st: Arc<S>| {
-                match route_handler.clone() {
+            let handler_fn: HandlerFn<S> =
+                Arc::new(move |req: Request, _st: Arc<S>| match route_handler.clone() {
                     Handler::Static(s) => Box::pin(async move {
                         Ok(Response::builder()
                             .status(StatusCode::OK)
                             .header("content-type", "text/plain")
                             .body(Body::from(s))
                             .unwrap())
-                    }) as Pin<Box<dyn Future<Output = Result<Response>> + Send>>,
+                    })
+                        as Pin<Box<dyn Future<Output = Result<Response>> + Send>>,
                     Handler::Bytes(b) => Box::pin(async move {
                         Ok(Response::builder()
                             .status(StatusCode::OK)
                             .body(Body::from(Vec::from(b)))
                             .unwrap())
-                    }) as Pin<Box<dyn Future<Output = Result<Response>> + Send>>,
+                    })
+                        as Pin<Box<dyn Future<Output = Result<Response>> + Send>>,
                     Handler::Fn(h) => h(req, route_state.clone()),
-                }
-            });
+                });
 
             // Build and execute middleware chain
             // 构建并执行中间件链
@@ -445,9 +446,8 @@ where
                 for mw in middleware.iter().rev() {
                     let mw = mw.clone();
                     let inner = next.clone();
-                    next = Next::new(move |req: Request, st: Arc<S>| {
-                        mw.call(req, st, inner.clone())
-                    });
+                    next =
+                        Next::new(move |req: Request, st: Arc<S>| mw.call(req, st, inner.clone()));
                 }
 
                 // Execute the chain
@@ -551,7 +551,10 @@ mod tests {
     #[test]
     fn test_extract_param_names() {
         assert_eq!(extract_param_names("/users/:id"), vec!["id"]);
-        assert_eq!(extract_param_names("/users/:user_id/posts/:post_id"), vec!["user_id", "post_id"]);
+        assert_eq!(
+            extract_param_names("/users/:user_id/posts/:post_id"),
+            vec!["user_id", "post_id"]
+        );
         assert_eq!(extract_param_names("/users"), vec![""]);
     }
 

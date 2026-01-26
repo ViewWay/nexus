@@ -9,7 +9,7 @@
 //! 运行: cargo run --bin spring_boot_logging_demo
 
 use nexus_http::{Body, Response, Server, StatusCode};
-use nexus_observability::log::{Logger, LoggerConfig, LogLevel, LogFormat};
+use nexus_observability::log::{LogFormat, LogLevel, Logger, LoggerConfig};
 use nexus_runtime::task::block_on;
 
 #[cfg(feature = "nexus-format")]
@@ -61,25 +61,21 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         #[cfg(feature = "nexus-format")]
         {
             let startup = StartupLogger::new();
-            let server = Server::bind("127.0.0.1:8080")
-                .run(handle_request)
-                .await?;
-            
+            let server = Server::bind("127.0.0.1:8080").run(handle_request).await?;
+
             // Log server started
             // 记录服务器已启动
             startup.log_server_started(8080, startup.elapsed_ms());
-            
+
             // Keep server running
             // 保持服务器运行
             std::future::pending::<()>().await;
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         }
-        
+
         #[cfg(not(feature = "nexus-format"))]
         {
-            let _server = Server::bind("127.0.0.1:8080")
-                .run(handle_request)
-                .await?;
+            let _server = Server::bind("127.0.0.1:8080").run(handle_request).await?;
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         }
     })
@@ -110,7 +106,7 @@ async fn handle_request(req: nexus_http::Request) -> Result<Response, nexus_http
                 .header("content-type", "text/plain")
                 .body(Body::from("Hello, Nexus!"))
                 .unwrap())
-        }
+        },
 
         "/api/hello" => {
             tracing::debug!(target: "nexus.http", "Handling API hello");
@@ -119,7 +115,7 @@ async fn handle_request(req: nexus_http::Request) -> Result<Response, nexus_http
                 .header("content-type", "application/json")
                 .body(Body::from(r#"{"message": "Hello from Nexus!"}"#))
                 .unwrap())
-        }
+        },
 
         _ => {
             tracing::warn!(target: "nexus.http", "Path not found: {}", path);
@@ -127,6 +123,6 @@ async fn handle_request(req: nexus_http::Request) -> Result<Response, nexus_http
                 .status(StatusCode::NOT_FOUND)
                 .body(Body::from("Not Found"))
                 .unwrap())
-        }
+        },
     }
 }

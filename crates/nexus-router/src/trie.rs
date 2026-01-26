@@ -9,7 +9,7 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use super::{route::Handler, Method};
+use super::{Method, route::Handler};
 use nexus_http::{Body, Request, Response, Result, StatusCode};
 use std::collections::HashMap;
 
@@ -90,8 +90,16 @@ impl TrieRouter {
             .collect();
 
         router
-            .insert(path, MethodRoute { handler, param_names })
-            .map_err(|e| nexus_http::Error::InvalidRequest(format!("Invalid route pattern: {}", e)))?;
+            .insert(
+                path,
+                MethodRoute {
+                    handler,
+                    param_names,
+                },
+            )
+            .map_err(|e| {
+                nexus_http::Error::InvalidRequest(format!("Invalid route pattern: {}", e))
+            })?;
 
         Ok(())
     }
@@ -103,7 +111,11 @@ impl TrieRouter {
     ///
     /// * `Some((handler, params))` - Found matching route with path parameters
     /// * `None` - No matching route found
-    pub fn match_request(&self, method: &Method, path: &str) -> Option<(Handler, HashMap<String, String>)> {
+    pub fn match_request(
+        &self,
+        method: &Method,
+        path: &str,
+    ) -> Option<(Handler, HashMap<String, String>)> {
         let router = self.router_for_method(method)?;
         let matched = router.at(path).ok()?;
 
@@ -189,7 +201,7 @@ impl nexus_http::HttpService for TrieRouter {
                     // Call the handler with the request and path parameters
                     // 使用请求和路径参数调用处理程序
                     handler.call(req, params).await
-                }
+                },
                 None => Ok(Response::builder()
                     .status(StatusCode::NOT_FOUND)
                     .header("content-type", "text/plain; charset=utf-8")
@@ -231,7 +243,9 @@ mod tests {
     fn test_multiple_params() {
         let mut router = TrieRouter::new();
         let handler = Handler::Static("Post");
-        router.insert("/users/:user_id/posts/:post_id", Method::GET, handler).unwrap();
+        router
+            .insert("/users/:user_id/posts/:post_id", Method::GET, handler)
+            .unwrap();
 
         let result = router.match_request(&Method::GET, "/users/42/posts/99");
         assert!(result.is_some());
@@ -247,8 +261,12 @@ mod tests {
         let get_handler = Handler::Static("GET");
         let post_handler = Handler::Static("POST");
 
-        router.insert("/resource", Method::GET, get_handler).unwrap();
-        router.insert("/resource", Method::POST, post_handler).unwrap();
+        router
+            .insert("/resource", Method::GET, get_handler)
+            .unwrap();
+        router
+            .insert("/resource", Method::POST, post_handler)
+            .unwrap();
 
         assert!(router.match_request(&Method::GET, "/resource").is_some());
         assert!(router.match_request(&Method::POST, "/resource").is_some());

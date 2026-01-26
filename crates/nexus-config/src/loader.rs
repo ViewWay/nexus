@@ -420,7 +420,8 @@ impl Watcher {
             ));
         }
 
-        self.running.store(true, std::sync::atomic::Ordering::SeqCst);
+        self.running
+            .store(true, std::sync::atomic::Ordering::SeqCst);
 
         let config = self.config.clone();
         let watched_files = self.watched_files.clone();

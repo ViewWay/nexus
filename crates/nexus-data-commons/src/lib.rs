@@ -56,42 +56,29 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-mod error;
-mod repository;
-mod page;
-mod sort;
-mod query;
 mod entity;
+mod error;
+mod page;
+mod query;
+mod repository;
+mod sort;
 
-pub use error::{Error, Result};
-pub use repository::{Repository, CrudRepository, PagingAndSortingRepository, Identifier};
-pub use page::{Page, PageRequest, Slice, List};
-pub use sort::{Sort, Order, Direction};
-pub use query::{
-    QueryWrapper, UpdateWrapper, LambdaQueryWrapper, Predicate, Specification,
-    Condition, Value, ToValue, ToValueMap, QueryOrder,
-};
 pub use entity::{AggregateRoot, Auditable, LifecycleEvent};
+pub use error::{Error, Result};
+pub use page::{List, Page, PageRequest, Slice};
+pub use query::{
+    Condition, LambdaQueryWrapper, Predicate, QueryOrder, QueryWrapper, Specification, ToValue,
+    ToValueMap, UpdateWrapper, Value,
+};
+pub use repository::{CrudRepository, Identifier, PagingAndSortingRepository, Repository};
+pub use sort::{Direction, Order, Sort};
 
 /// Core re-exports
 /// 核心重新导出
 pub mod prelude {
     pub use crate::{
-        Repository,
-        CrudRepository,
-        PagingAndSortingRepository,
-        Page,
-        PageRequest,
-        Sort,
-        Order,
-        Direction,
-        QueryWrapper,
-        UpdateWrapper,
-        Predicate,
-        Specification,
-        Error,
-        Result,
-        AggregateRoot,
-        Auditable,
+        AggregateRoot, Auditable, CrudRepository, Direction, Error, Order, Page, PageRequest,
+        PagingAndSortingRepository, Predicate, QueryWrapper, Repository, Result, Sort,
+        Specification, UpdateWrapper,
     };
 }

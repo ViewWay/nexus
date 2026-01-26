@@ -69,13 +69,13 @@ impl fmt::Display for MultipartError {
             Self::FieldNotFound(name) => write!(f, "Field not found: {}", name),
             Self::FileTooLarge { size, max } => {
                 write!(f, "File too large: size={} (max: {})", size, max)
-            }
+            },
             Self::InvalidType { found, allowed } => {
                 write!(f, "Invalid file type: found='{}', allowed=[{}]", found, allowed)
-            }
+            },
             Self::InvalidExtension { found, allowed } => {
                 write!(f, "Invalid file extension: found='{}', allowed=[{}]", found, allowed)
-            }
+            },
             Self::Io(err) => write!(f, "IO error: {}", err),
             Self::Decode(msg) => write!(f, "Decode error: {}", msg),
             Self::UnknownField(name) => write!(f, "Unknown field: {}", name),
@@ -97,10 +97,10 @@ impl From<multer::Error> for MultipartError {
         match err {
             multer::Error::UnknownField { field_name } => {
                 Self::UnknownField(field_name.unwrap_or_else(|| "unknown".to_string()))
-            }
+            },
             multer::Error::IncompleteFieldData { .. } => {
                 Self::InvalidRequest("Incomplete field data".to_string())
-            }
+            },
             _ => Self::InvalidRequest(err.to_string()),
         }
     }

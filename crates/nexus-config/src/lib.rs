@@ -58,8 +58,8 @@ pub use value::{Value, ValueExtractor};
 /// 常用类型的重新导出
 pub mod prelude {
     pub use super::{
-        Config, ConfigBuilder, Environment, Profile, PropertySource,
-        PropertiesConfig, Value, ValueExtractor,
+        Config, ConfigBuilder, Environment, Profile, PropertiesConfig, PropertySource, Value,
+        ValueExtractor,
     };
 }
 

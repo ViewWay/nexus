@@ -17,8 +17,8 @@
 
 use std::future::Future;
 use std::panic;
-use std::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
 use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
 
 use crate::scheduler::{RawTask, SchedulerHandle};
@@ -64,10 +64,7 @@ impl TaskState {
     /// Check if task is finished
     /// 检查任务是否已完成
     fn is_finished(self) -> bool {
-        matches!(
-            self,
-            Self::Completed | Self::Cancelled | Self::Panicked
-        )
+        matches!(self, Self::Completed | Self::Cancelled | Self::Panicked)
     }
 }
 
@@ -93,8 +90,8 @@ struct TaskInner<T> {
 /// 用于可选任务输出的线程安全单元
 mod lock {
     use std::mem::MaybeUninit;
-    use std::sync::atomic::{AtomicU8, Ordering};
     use std::sync::Mutex;
+    use std::sync::atomic::{AtomicU8, Ordering};
 
     pub(super) struct OptionalCell<T> {
         inner: Mutex<MaybeUninit<T>>,
@@ -161,11 +158,7 @@ impl<T> Task<T> {
     /// Create a new task
     /// 创建新任务
     #[allow(dead_code)]
-    fn new<F>(
-        _future: F,
-        id: TaskId,
-        scheduler: SchedulerHandle,
-    ) -> (Self, RawTask)
+    fn new<F>(_future: F, id: TaskId, scheduler: SchedulerHandle) -> (Self, RawTask)
     where
         F: Future<Output = T> + Send + 'static,
         T: Send + 'static,
@@ -227,12 +220,7 @@ fn task_waker(inner: &Arc<TaskInner<()>>) -> Waker {
     let cloned = inner.clone();
     let data = Arc::into_raw(cloned) as *const ();
 
-    unsafe {
-        Waker::from_raw(RawWaker::new(
-            data,
-            &RAW_WAKER_VTABLE,
-        ))
-    }
+    unsafe { Waker::from_raw(RawWaker::new(data, &RAW_WAKER_VTABLE)) }
 }
 
 /// VTable for the task waker
@@ -241,12 +229,8 @@ fn task_waker(inner: &Arc<TaskInner<()>>) -> Waker {
 /// Provides functions for cloning, waking, and dropping the waker.
 /// 提供克隆、唤醒和删除waker的函数。
 #[allow(dead_code)]
-static RAW_WAKER_VTABLE: RawWakerVTable = RawWakerVTable::new(
-    raw_waker_clone,
-    raw_waker_wake,
-    raw_waker_wake_by_ref,
-    raw_waker_drop,
-);
+static RAW_WAKER_VTABLE: RawWakerVTable =
+    RawWakerVTable::new(raw_waker_clone, raw_waker_wake, raw_waker_wake_by_ref, raw_waker_drop);
 
 #[allow(dead_code)]
 unsafe fn raw_waker_clone(data: *const ()) -> RawWaker {
@@ -358,10 +342,7 @@ impl<T> WaitForTask<T> {
 impl<T> Future for WaitForTask<T> {
     type Output = Result<T, JoinError>;
 
-    fn poll(
-        mut self: Pin<&mut Self>,
-        _cx: &mut Context<'_>,
-    ) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
         let inner = self.inner.as_ref().unwrap();
 
         // Check current state
@@ -381,20 +362,20 @@ impl<T> Future for WaitForTask<T> {
                     // 不应该发生
                     Poll::Ready(Err(JoinError::TaskCancelled))
                 }
-            }
+            },
             Some(TaskState::Cancelled) => {
                 self.inner = None;
                 Poll::Ready(Err(JoinError::TaskCancelled))
-            }
+            },
             Some(TaskState::Panicked) => {
                 self.inner = None;
                 Poll::Ready(Err(JoinError::TaskPanic))
-            }
+            },
             Some(TaskState::Running) | Some(TaskState::Waiting) => {
                 // Task still running, park this future
                 // 任务仍在运行，暂停此future
                 Poll::Pending
-            }
+            },
             None => Poll::Ready(Err(JoinError::TaskCancelled)),
         }
     }
@@ -504,14 +485,16 @@ where
                     // For Phase 2, just yield briefly
                     // Phase 2暂时只需要短暂yield
                     thread::sleep(std::time::Duration::from_millis(1));
-                }
+                },
             }
         };
 
         // Store the result
         // 存储结果
         inner_clone.output.set(result);
-        inner_clone.state.store(TaskState::Completed as u8, Ordering::Release);
+        inner_clone
+            .state
+            .store(TaskState::Completed as u8, Ordering::Release);
     });
 
     JoinHandle { inner }
@@ -540,9 +523,9 @@ where
     F: Future<Output = T> + Send + 'static,
     T: Send + 'static,
 {
+    use std::pin::Pin;
     use std::sync::mpsc;
     use std::task::{Context, Poll, Waker};
-    use std::pin::Pin;
 
     // Channel to communicate the result
     // 通道用于通信结果
@@ -551,10 +534,7 @@ where
     // Create a no-op waker (we poll in a tight loop)
     // 创建一个无操作的waker（我们在紧密循环中轮询）
     let waker = unsafe {
-        Waker::from_raw(std::task::RawWaker::new(
-            std::ptr::null(),
-            &NOOP_RAW_WAKER_VTABLE,
-        ))
+        Waker::from_raw(std::task::RawWaker::new(std::ptr::null(), &NOOP_RAW_WAKER_VTABLE))
     };
 
     // Spawn a thread to run the future
@@ -572,33 +552,32 @@ where
                     // 发送结果（忽略发送错误 - 接收器可能已被删除）
                     let _ = sender.send(result);
                     break;
-                }
+                },
                 Poll::Pending => {
                     // Continue polling (busy wait for simplicity)
                     // 继续轮询（为简单起见使用忙等待）
                     std::hint::spin_loop();
                     continue;
-                }
+                },
             }
         }
     });
 
     // Block until result is ready
     // 阻塞直到结果就绪
-    receiver.recv().unwrap_or_else(|_| {
-        panic!("block_on: Failed to receive result from executor")
-    })
+    receiver
+        .recv()
+        .unwrap_or_else(|_| panic!("block_on: Failed to receive result from executor"))
 }
 
 // No-op raw waker vtable for simple polling
 // 用于简单轮询的无操作raw waker vtable
-const NOOP_RAW_WAKER_VTABLE: std::task::RawWakerVTable =
-    std::task::RawWakerVTable::new(
-        |_| std::task::RawWaker::new(std::ptr::null(), &NOOP_RAW_WAKER_VTABLE), // clone
-        |_| {}, // drop
-        |_| {}, // wake
-        |_| {}, // wake_by_ref
-    );
+const NOOP_RAW_WAKER_VTABLE: std::task::RawWakerVTable = std::task::RawWakerVTable::new(
+    |_| std::task::RawWaker::new(std::ptr::null(), &NOOP_RAW_WAKER_VTABLE), // clone
+    |_| {},                                                                 // drop
+    |_| {},                                                                 // wake
+    |_| {},                                                                 // wake_by_ref
+);
 
 #[cfg(test)]
 mod tests {
@@ -621,10 +600,7 @@ mod tests {
 
     #[test]
     fn test_join_error_display() {
-        assert_eq!(
-            format!("{}", JoinError::TaskCancelled),
-            "Task was cancelled"
-        );
+        assert_eq!(format!("{}", JoinError::TaskCancelled), "Task was cancelled");
         assert_eq!(format!("{}", JoinError::TaskPanic), "Task panicked");
     }
 }

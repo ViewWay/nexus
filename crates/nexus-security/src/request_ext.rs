@@ -156,7 +156,10 @@ pub async fn get_authentication_from_request(req: &Request) -> Option<Authentica
 
 /// Convenience function: Set authentication to Request
 /// 便捷函数：将认证设置到Request
-pub fn set_authentication_to_request(req: &mut Request, auth: Authentication) -> Arc<SecurityContextExt> {
+pub fn set_authentication_to_request(
+    req: &mut Request,
+    auth: Authentication,
+) -> Arc<SecurityContextExt> {
     let ctx = SecurityContextExt::set_to_request(req);
     // Note: This is a synchronous function, so we can't await
     // In practice, you should use the async set_authentication method
@@ -168,19 +171,19 @@ pub fn set_authentication_to_request(req: &mut Request, auth: Authentication) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nexus_http::{Request, Method};
+    use nexus_http::{Method, Request};
 
     #[tokio::test]
     async fn test_security_context_ext() {
         let mut req = Request::from_method_uri(Method::GET, "/test");
-        
+
         // Set SecurityContext
         let ctx = SecurityContextExt::set_to_request(&mut req);
-        
+
         // Get from Request
         let ctx2 = SecurityContextExt::from_request(&req).unwrap();
         assert_eq!(Arc::as_ptr(&ctx), Arc::as_ptr(&ctx2));
-        
+
         // Test authentication
         let auth = Authentication {
             principal: "john".to_string(),
@@ -190,12 +193,12 @@ mod tests {
             details: None,
             login_time: chrono::Utc::now(),
         };
-        
+
         ctx.set_authentication(auth.clone()).await;
-        
+
         assert!(ctx.is_authenticated().await);
         assert_eq!(ctx.get_username().await, Some("john".to_string()));
-        
+
         // Get from Request again
         let auth_from_req = get_authentication_from_request(&req).await;
         assert_eq!(auth_from_req, Some(auth));

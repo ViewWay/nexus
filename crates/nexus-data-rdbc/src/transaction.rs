@@ -114,17 +114,12 @@ impl Clone for Transaction {
 pub trait TransactionInner: Send + Sync {
     /// Execute a statement
     /// 执行语句
-    fn execute(
-        &self,
-        sql: &str,
-    ) -> Result<u64, Box<dyn std::error::Error + Send + Sync>>;
+    fn execute(&self, sql: &str) -> Result<u64, Box<dyn std::error::Error + Send + Sync>>;
 
     /// Query and return rows
     /// 查询并返回行
-    fn query(
-        &self,
-        sql: &str,
-    ) -> Result<Vec<crate::Row>, Box<dyn std::error::Error + Send + Sync>>;
+    fn query(&self, sql: &str)
+    -> Result<Vec<crate::Row>, Box<dyn std::error::Error + Send + Sync>>;
 
     /// Commit the transaction
     /// 提交事务
@@ -195,10 +190,7 @@ impl Transaction {
 
     /// Execute a statement within this transaction
     /// 在此事务中执行语句
-    pub async fn execute(
-        &self,
-        sql: &str,
-    ) -> R2dbcResult<u64> {
+    pub async fn execute(&self, sql: &str) -> R2dbcResult<u64> {
         if !self.is_active() {
             return Err(R2dbcError::transaction("Transaction is not active"));
         }
@@ -209,10 +201,7 @@ impl Transaction {
 
     /// Query and return rows within this transaction
     /// 在此事务中查询并返回行
-    pub async fn query(
-        &self,
-        sql: &str,
-    ) -> R2dbcResult<Vec<crate::Row>> {
+    pub async fn query(&self, sql: &str) -> R2dbcResult<Vec<crate::Row>> {
         if !self.is_active() {
             return Err(R2dbcError::transaction("Transaction is not active"));
         }
@@ -361,10 +350,11 @@ impl TransactionManager {
             R2dbcError::Transaction(msg)
                 if msg.contains("deadlock")
                     || msg.contains("serialization")
-                    || msg.contains("40001") => // SQL state for serialization failure
+                    || msg.contains("40001") =>
+            // SQL state for serialization failure
             {
                 true
-            }
+            },
             _ => false,
         }
     }

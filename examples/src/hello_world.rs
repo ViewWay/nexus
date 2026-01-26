@@ -19,9 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Run the async server using the runtime
     // 使用运行时运行异步服务器
     block_on(async {
-        let _server = Server::bind("127.0.0.1:8080")
-            .run(handle_request)
-            .await?;
+        let _server = Server::bind("127.0.0.1:8080").run(handle_request).await?;
 
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     })

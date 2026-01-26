@@ -36,9 +36,9 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
-use serde::{Deserialize, Serialize};
 
 use crate::wallet::{Address, keccak256};
 
@@ -78,8 +78,7 @@ impl TxHash {
         }
 
         let mut bytes = [0u8; 32];
-        hex::decode_to_slice(hex, &mut bytes)
-            .map_err(|_| TransactionError::InvalidHex)?;
+        hex::decode_to_slice(hex, &mut bytes).map_err(|_| TransactionError::InvalidHex)?;
 
         Ok(Self(bytes))
     }
@@ -87,14 +86,38 @@ impl TxHash {
     /// Check if this is the zero hash
     /// 检查这是否是零哈希
     pub const fn is_zero(&self) -> bool {
-        self.0[0] == 0 && self.0[1] == 0 && self.0[2] == 0 && self.0[3] == 0 &&
-        self.0[4] == 0 && self.0[5] == 0 && self.0[6] == 0 && self.0[7] == 0 &&
-        self.0[8] == 0 && self.0[9] == 0 && self.0[10] == 0 && self.0[11] == 0 &&
-        self.0[12] == 0 && self.0[13] == 0 && self.0[14] == 0 && self.0[15] == 0 &&
-        self.0[16] == 0 && self.0[17] == 0 && self.0[18] == 0 && self.0[19] == 0 &&
-        self.0[20] == 0 && self.0[21] == 0 && self.0[22] == 0 && self.0[23] == 0 &&
-        self.0[24] == 0 && self.0[25] == 0 && self.0[26] == 0 && self.0[27] == 0 &&
-        self.0[28] == 0 && self.0[29] == 0 && self.0[30] == 0 && self.0[31] == 0
+        self.0[0] == 0
+            && self.0[1] == 0
+            && self.0[2] == 0
+            && self.0[3] == 0
+            && self.0[4] == 0
+            && self.0[5] == 0
+            && self.0[6] == 0
+            && self.0[7] == 0
+            && self.0[8] == 0
+            && self.0[9] == 0
+            && self.0[10] == 0
+            && self.0[11] == 0
+            && self.0[12] == 0
+            && self.0[13] == 0
+            && self.0[14] == 0
+            && self.0[15] == 0
+            && self.0[16] == 0
+            && self.0[17] == 0
+            && self.0[18] == 0
+            && self.0[19] == 0
+            && self.0[20] == 0
+            && self.0[21] == 0
+            && self.0[22] == 0
+            && self.0[23] == 0
+            && self.0[24] == 0
+            && self.0[25] == 0
+            && self.0[26] == 0
+            && self.0[27] == 0
+            && self.0[28] == 0
+            && self.0[29] == 0
+            && self.0[30] == 0
+            && self.0[31] == 0
     }
 }
 
@@ -660,7 +683,10 @@ impl TransactionBuilder {
     pub fn build(self) -> Result<Transaction, TransactionError> {
         match self.tx_type {
             TxType::EIP1559 => {
-                let mut tx = Eip1559Tx::new(self.chain_id, self.nonce.ok_or(TransactionError::MissingNonce)?);
+                let mut tx = Eip1559Tx::new(
+                    self.chain_id,
+                    self.nonce.ok_or(TransactionError::MissingNonce)?,
+                );
                 if let Some(to) = self.to {
                     tx = tx.to(to);
                 }
@@ -680,7 +706,7 @@ impl TransactionBuilder {
                     tx = tx.data(data);
                 }
                 Ok(Transaction::Eip1559(tx))
-            }
+            },
             TxType::Legacy => {
                 let mut tx = LegacyTx::new(self.nonce.ok_or(TransactionError::MissingNonce)?);
                 if let Some(to) = self.to {
@@ -700,10 +726,8 @@ impl TransactionBuilder {
                     tx = tx.data(data);
                 }
                 Ok(Transaction::Legacy(tx))
-            }
-            TxType::AccessList => {
-                Err(TransactionError::UnsupportedType("AccessList".to_string()))
-            }
+            },
+            TxType::AccessList => Err(TransactionError::UnsupportedType("AccessList".to_string())),
         }
     }
 }
@@ -736,10 +760,7 @@ impl U256 {
     /// Create a zero value
     /// 创建零值
     pub const fn zero() -> Self {
-        Self {
-            low: 0,
-            high: 0,
-        }
+        Self { low: 0, high: 0 }
     }
 
     /// Check if the value is zero
@@ -837,7 +858,10 @@ mod tests {
     fn test_tx_hash_zero() {
         let hash = TxHash::zero();
         assert!(hash.is_zero());
-        assert_eq!(hash.to_hex(), "0x0000000000000000000000000000000000000000000000000000000000000000");
+        assert_eq!(
+            hash.to_hex(),
+            "0x0000000000000000000000000000000000000000000000000000000000000000"
+        );
     }
 
     #[test]
@@ -926,9 +950,7 @@ mod tests {
 
     #[test]
     fn test_transaction_builder_missing_nonce() {
-        let result = TransactionBuilder::new()
-            .to(Address::zero())
-            .build();
+        let result = TransactionBuilder::new().to(Address::zero()).build();
 
         assert!(matches!(result, Err(TransactionError::MissingNonce)));
     }

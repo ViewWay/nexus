@@ -29,7 +29,7 @@
 //! }
 //! ```
 
-use crate::{ExtractorError, FromRequest, ExtractorFuture, Request};
+use crate::{ExtractorError, ExtractorFuture, FromRequest, Request};
 use std::sync::Arc;
 
 /// Request attribute extractor

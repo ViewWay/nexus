@@ -4,9 +4,9 @@
 //! Demonstrates the structured logging output format.
 //! 演示结构化日志输出格式。
 
-use nexus_observability::log::{Logger, LoggerConfig, LogFormat, LogLevel};
+use nexus_observability::log::{LogFormat, LogLevel, Logger, LoggerConfig};
 use nexus_observability::nexus_format::{Banner, StartupLogger};
-use tracing::{info, debug, warn, error, span, Level};
+use tracing::{Level, debug, error, info, span, warn};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

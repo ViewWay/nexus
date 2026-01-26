@@ -12,9 +12,9 @@
 
 use nexus_actuator::{
     endpoint::{Endpoint, EndpointHandler},
-    health::{HealthEndpoint, HealthStatus, HealthIndicator},
-    metrics::{MetricsEndpoint, MetricRegistry},
-    info::{InfoEndpoint, BuildInfo, GitInfo},
+    health::{HealthEndpoint, HealthIndicator, HealthStatus},
+    info::{BuildInfo, GitInfo, InfoEndpoint},
+    metrics::{MetricRegistry, MetricsEndpoint},
 };
 use nexus_http::{Request, Response, StatusCode};
 use nexus_router::Router;
@@ -51,7 +51,10 @@ impl HealthIndicator for DatabaseHealthIndicator {
         let mut details = HashMap::new();
         details.insert("pool_size".to_string(), serde_json::json!(self.connection_pool_size));
         details.insert("active".to_string(), serde_json::json!(self.active_connections));
-        details.insert("idle".to_string(), serde_json::json!(self.connection_pool_size - self.active_connections));
+        details.insert(
+            "idle".to_string(),
+            serde_json::json!(self.connection_pool_size - self.active_connections),
+        );
 
         HealthStatus::with_details(status, details)
     }
@@ -119,8 +122,10 @@ impl HealthIndicator for ExternalApiHealthIndicator {
         };
 
         let mut details = HashMap::new();
-        details.insert("response_time_ms".to_string(), serde_json::json!(self.last_response_time_ms));
-        details.insert("error_rate_percent".to_string(), serde_json::json!(self.error_rate_percent));
+        details
+            .insert("response_time_ms".to_string(), serde_json::json!(self.last_response_time_ms));
+        details
+            .insert("error_rate_percent".to_string(), serde_json::json!(self.error_rate_percent));
 
         HealthStatus::with_details(status, details)
     }
@@ -240,9 +245,27 @@ async fn system_info_example() {
     let mut info = info_endpoint.info().await;
 
     println!("Application Information:");
-    println!("  Name: {}", info.build.as_ref().map(|b| &b.name).unwrap_or(&"Unknown".to_string()));
-    println!("  Version: {}", info.build.as_ref().map(|b| &b.version).unwrap_or(&"Unknown".to_string()));
-    println!("  Artifact: {}", info.build.as_ref().map(|b| &b.artifact).unwrap_or(&"Unknown".to_string()));
+    println!(
+        "  Name: {}",
+        info.build
+            .as_ref()
+            .map(|b| &b.name)
+            .unwrap_or(&"Unknown".to_string())
+    );
+    println!(
+        "  Version: {}",
+        info.build
+            .as_ref()
+            .map(|b| &b.version)
+            .unwrap_or(&"Unknown".to_string())
+    );
+    println!(
+        "  Artifact: {}",
+        info.build
+            .as_ref()
+            .map(|b| &b.artifact)
+            .unwrap_or(&"Unknown".to_string())
+    );
 
     if let Some(git) = info.git {
         println!("\nGit Information:");

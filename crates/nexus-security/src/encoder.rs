@@ -70,7 +70,7 @@ impl PasswordEncoder for BcryptPasswordEncoder {
     fn encode(&self, raw: &str) -> String {
         bcrypt::hash(raw, self.cost).unwrap_or_else(|_| {
             // Fallback to simple hash on error
-            use md5::{Md5, Digest};
+            use md5::{Digest, Md5};
             let hash = Md5::digest(raw.as_bytes());
             hex::encode(hash)
         })
@@ -130,8 +130,7 @@ impl Clone for StandardPasswordEncoder {
 
 impl std::fmt::Debug for StandardPasswordEncoder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("StandardPasswordEncoder")
-            .finish()
+        f.debug_struct("StandardPasswordEncoder").finish()
     }
 }
 
@@ -223,10 +222,10 @@ impl Default for Pbkdf2PasswordEncoder {
 
 impl PasswordEncoder for Pbkdf2PasswordEncoder {
     fn encode(&self, raw: &str) -> String {
-        use rand::Rng;
-        use sha2::Sha256;
         use hmac::Hmac;
         use hmac::Mac;
+        use rand::Rng;
+        use sha2::Sha256;
 
         // Generate salt
         let salt: Vec<u8> = (0..self.salt_length)
@@ -274,9 +273,9 @@ impl PasswordEncoder for Pbkdf2PasswordEncoder {
         };
 
         // Derive key from raw password
-        use sha2::Sha256;
         use hmac::Hmac;
         use hmac::Mac;
+        use sha2::Sha256;
 
         let mut mac = Hmac::<Sha256>::new_from_slice(raw.as_bytes()).unwrap();
         mac.update(&salt);

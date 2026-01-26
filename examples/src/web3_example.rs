@@ -6,15 +6,12 @@
 //! 演示Web3功能，包括钱包管理、区块链交互和智能合约调用。
 
 use nexus_web3::{
-    ChainConfig, ChainId, Eip155Chain,
-    LocalWallet, Wallet, Address, Contract, FunctionSelector,
-    TransactionBuilder, TxType, BlockNumber, RpcClient
+    Address, BlockNumber, ChainConfig, ChainId, Contract, Eip155Chain, FunctionSelector,
+    LocalWallet, RpcClient, TransactionBuilder, TxType, Wallet,
 };
 
 #[cfg(feature = "ws")]
-use nexus_web3::{
-    WsClient, SubscriptionManager, SubscriptionType, LogFilter
-};
+use nexus_web3::{LogFilter, SubscriptionManager, SubscriptionType, WsClient};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -70,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("  r: {}", hex::encode(signature.r()));
             println!("  s: {}", hex::encode(signature.s()));
             println!("  v: {}", signature.v());
-        }
+        },
         Err(e) => println!("Signing error / 签名错误: {}", e),
     }
     println!();
@@ -185,9 +182,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!();
 
         println!("Example: Log filter for contract events / 示例：合约事件的日志过滤器");
-        let filter = LogFilter::new()
-            .address(&address)
-            .topic("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef".to_string()); // Transfer event
+        let filter = LogFilter::new().address(&address).topic(
+            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef".to_string(),
+        ); // Transfer event
         println!("  Filter configured for address: {}", address.to_checksummed());
         println!();
 

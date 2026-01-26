@@ -11,15 +11,18 @@
 // 等价于：Spring @Scheduled, Quartz Scheduler
 
 use nexus_schedule::{
-    scheduler::{ScheduledTask, TaskScheduler},
     cron::CronExpression,
+    scheduler::{ScheduledTask, TaskScheduler},
 };
 use std::time::Duration;
 use tokio::time::sleep;
 
 /// Simple scheduled task / 简单的定时任务
 async fn hello_world_task() {
-    println!("[Scheduled Task] Hello, World! - Time: {}", chrono::Utc::now().format("%H:%M:%S"));
+    println!(
+        "[Scheduled Task] Hello, World! - Time: {}",
+        chrono::Utc::now().format("%H:%M:%S")
+    );
 }
 
 /// Data cleanup task / 数据清理任务
@@ -122,11 +125,7 @@ async fn fixed_delay_scheduling_example() {
     let scheduler = TaskScheduler::new();
 
     // Schedule task with 2 second delay between executions / 调度任务，执行间隔2秒
-    let task = ScheduledTask::fixed_delay(
-        "sync-task",
-        data_sync_task,
-        Duration::from_secs(2),
-    );
+    let task = ScheduledTask::fixed_delay("sync-task", data_sync_task, Duration::from_secs(2));
     scheduler.schedule(task).await;
 
     println!("Fixed delay task scheduled:");
@@ -147,11 +146,8 @@ async fn one_time_task_example() {
     let scheduler = TaskScheduler::new();
 
     // Schedule task to run after 3 seconds / 3秒后调度任务
-    let task = ScheduledTask::one_time_delayed(
-        "health-check",
-        health_check_task,
-        Duration::from_secs(3),
-    );
+    let task =
+        ScheduledTask::one_time_delayed("health-check", health_check_task, Duration::from_secs(3));
     scheduler.schedule(task).await;
 
     println!("One-time task scheduled to run in 3 seconds");

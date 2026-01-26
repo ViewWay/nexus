@@ -120,7 +120,7 @@ impl<T> ValidateOptional for Option<T> {
             Some(value) => {
                 validator(&value)?;
                 Ok(value)
-            }
+            },
             None => Err(ValidationErrors::new()),
         }
     }

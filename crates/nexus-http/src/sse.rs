@@ -247,14 +247,13 @@ impl Sse {
         }
 
         // Serialize all events into the body
-        let body = self.events
+        let body = self
+            .events
             .iter()
             .map(|e| e.to_sse_format())
             .collect::<String>();
 
-        builder
-            .body(Body::from(body))
-            .unwrap()
+        builder.body(Body::from(body)).unwrap()
     }
 
     /// Create a simple event (shorthand)
@@ -382,7 +381,9 @@ mod tests {
 
     #[test]
     fn test_event_multiple_data_lines() {
-        let event = Event::data("Line 1").data_line("Line 2").data_line("Line 3");
+        let event = Event::data("Line 1")
+            .data_line("Line 2")
+            .data_line("Line 3");
         let output = event.to_sse_format();
         assert!(output.contains("data: Line 1\n"));
         assert!(output.contains("data: Line 2\n"));
@@ -410,8 +411,7 @@ mod tests {
 
     #[test]
     fn test_sse_into_response() {
-        let sse = Sse::new()
-            .with_event(Event::data("Hello"));
+        let sse = Sse::new().with_event(Event::data("Hello"));
         let response = sse.into_response();
 
         // Verify it compiles
@@ -427,16 +427,14 @@ mod tests {
 
     #[test]
     fn test_sse_keep_alive_custom() {
-        let keepalive = SseKeepAlive::new(Duration::from_secs(30))
-            .with_comment("ping");
+        let keepalive = SseKeepAlive::new(Duration::from_secs(30)).with_comment("ping");
         assert_eq!(keepalive.interval(), Duration::from_secs(30));
         assert_eq!(keepalive.comment(), "ping");
     }
 
     #[test]
     fn test_sse_keep_alive_to_event() {
-        let keepalive = SseKeepAlive::new(Duration::from_secs(30))
-            .with_comment("ping");
+        let keepalive = SseKeepAlive::new(Duration::from_secs(30)).with_comment("ping");
         let event = keepalive.to_event();
         let output = event.to_sse_format();
         assert!(output.contains(":ping\n"));

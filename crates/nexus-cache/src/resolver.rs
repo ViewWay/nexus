@@ -220,7 +220,11 @@ impl CacheResolutionContext {
 
     /// Add parameter
     /// 添加参数
-    pub fn add_param(mut self, param_type: impl Into<String>, param_value: impl Into<String>) -> Self {
+    pub fn add_param(
+        mut self,
+        param_type: impl Into<String>,
+        param_value: impl Into<String>,
+    ) -> Self {
         self.param_types.push(param_type.into());
         self.param_values.push(param_value.into());
         self

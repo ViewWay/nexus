@@ -15,7 +15,10 @@
 //! - Query execution with type safety
 //!   类型安全的查询执行
 
-use crate::{error::{R2dbcError, R2dbcResult}, Executor};
+use crate::{
+    Executor,
+    error::{R2dbcError, R2dbcResult},
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -141,7 +144,7 @@ impl QueryMetadata {
                 }
 
                 params
-            }
+            },
             ParamStyle::MyBatis => {
                 // Extract #{param} style
                 // 提取 #{param} 样式
@@ -168,7 +171,7 @@ impl QueryMetadata {
                 }
 
                 params
-            }
+            },
             ParamStyle::Positional => {
                 // Extract $1, $2 style parameters
                 // 提取 $1, $2 样式参数
@@ -199,15 +202,13 @@ impl QueryMetadata {
                 }
 
                 params
-            }
+            },
             ParamStyle::QuestionMark => {
                 // Count ? placeholders
                 // 统计 ? 占位符
                 let count = sql.matches('?').count();
-                (0..count)
-                    .map(|i| format!("param{}", i + 1))
-                    .collect()
-            }
+                (0..count).map(|i| format!("param{}", i + 1)).collect()
+            },
         }
     }
 
@@ -228,7 +229,10 @@ impl QueryMetadata {
     ///
     /// let (sql, values) = metadata.bind_params(&params)?;
     /// ```
-    pub fn bind_params(&self, params: &HashMap<String, serde_json::Value>) -> R2dbcResult<(String, Vec<serde_json::Value>)> {
+    pub fn bind_params(
+        &self,
+        params: &HashMap<String, serde_json::Value>,
+    ) -> R2dbcResult<(String, Vec<serde_json::Value>)> {
         let mut sql = self.sql.clone();
         let mut values = Vec::new();
 
@@ -244,12 +248,18 @@ impl QueryMetadata {
 
                     if let Some(pos) = sql[offset..].find(&placeholder) {
                         let replacement = format!("${}", param_index);
-                        sql.replace_range(offset + pos..offset + pos + placeholder.len(), &replacement);
+                        sql.replace_range(
+                            offset + pos..offset + pos + placeholder.len(),
+                            &replacement,
+                        );
 
                         if let Some(value) = params.get(param_name) {
                             values.push(value.clone());
                         } else {
-                            return Err(R2dbcError::sql(format!("Missing parameter: {}", param_name)));
+                            return Err(R2dbcError::sql(format!(
+                                "Missing parameter: {}",
+                                param_name
+                            )));
                         }
 
                         param_index += 1;
@@ -258,7 +268,7 @@ impl QueryMetadata {
                 }
 
                 Ok((sql, values))
-            }
+            },
             ParamStyle::MyBatis => {
                 // Replace #{param} with $1, $2, etc.
                 // 将 #{param} 替换为 $1, $2 等
@@ -280,7 +290,7 @@ impl QueryMetadata {
                 }
 
                 Ok((sql, values))
-            }
+            },
             ParamStyle::Positional => {
                 // Already in positional format, just order the values
                 // 已经是位置格式，只需排序值
@@ -295,7 +305,7 @@ impl QueryMetadata {
                 }
 
                 Ok((sql, ordered_values))
-            }
+            },
             ParamStyle::QuestionMark => {
                 // Map params by order
                 // 按顺序映射参数
@@ -310,7 +320,7 @@ impl QueryMetadata {
                 }
 
                 Ok((sql, ordered_values))
-            }
+            },
         }
     }
 }
@@ -384,10 +394,11 @@ where
         match row {
             Some(row) => {
                 let json = row.to_json()?;
-                let entity = serde_json::from_value(json)
-                    .map_err(|e| R2dbcError::row_mapping(format!("Failed to deserialize: {}", e)))?;
+                let entity = serde_json::from_value(json).map_err(|e| {
+                    R2dbcError::row_mapping(format!("Failed to deserialize: {}", e))
+                })?;
                 Ok(Some(entity))
-            }
+            },
             None => Ok(None),
         }
     }
@@ -513,7 +524,7 @@ mod tests {
     fn test_bind_named_params() {
         let metadata = QueryMetadata::new(
             "SELECT * FROM users WHERE id = :id AND name = :name",
-            ParamStyle::Named
+            ParamStyle::Named,
         );
 
         let mut params = HashMap::new();
@@ -529,10 +540,8 @@ mod tests {
 
     #[test]
     fn test_bind_mybatis_params() {
-        let metadata = QueryMetadata::new(
-            "SELECT * FROM users WHERE id = #{id}",
-            ParamStyle::MyBatis
-        );
+        let metadata =
+            QueryMetadata::new("SELECT * FROM users WHERE id = #{id}", ParamStyle::MyBatis);
 
         let mut params = HashMap::new();
         params.insert("id".to_string(), serde_json::json!(1));
@@ -547,7 +556,7 @@ mod tests {
     fn test_missing_param_error() {
         let metadata = QueryMetadata::new(
             "SELECT * FROM users WHERE id = :id AND name = :name",
-            ParamStyle::Named
+            ParamStyle::Named,
         );
 
         let mut params = HashMap::new();

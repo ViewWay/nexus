@@ -9,24 +9,19 @@ use regex::Regex;
 use std::collections::HashMap;
 
 /// 邮箱正则 / Email regex
-pub static EMAIL_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap()
-});
+pub static EMAIL_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap());
 
 /// URL 正则 / URL regex
-pub static URL_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^https?://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$").unwrap()
-});
+pub static URL_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^https?://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$").unwrap());
 
 /// 用户名正则 / Username regex
-pub static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^[a-zA-Z0-9_-]{3,20}$").unwrap()
-});
+pub static USERNAME_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^[a-zA-Z0-9_-]{3,20}$").unwrap());
 
 /// 手机号正则 / Phone regex
-pub static PHONE_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^[+]?[1-9]\d{1,14}$").unwrap()
-});
+pub static PHONE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[+]?[1-9]\d{1,14}$").unwrap());
 
 /// 验证规则 / Validation rules
 #[derive(Debug, Clone)]
@@ -59,42 +54,60 @@ impl ValidationRule {
                 if value.trim().is_empty() {
                     return Err(ValidationError::new(field, "Cannot be empty"));
                 }
-            }
+            },
             ValidationRule::Length { min, max } => {
                 let len = value.len();
                 if len < *min || len > *max {
                     return Err(ValidationError::invalid_length(field, *min, *max));
                 }
-            }
+            },
+            // Range validation for numeric strings
+            // Range 验证用于数字字符串
+            ValidationRule::Range { min, max } => {
+                // Try to parse as i64 for range validation
+                // 尝试解析为 i64 进行范围验证
+                if let Ok(num) = value.parse::<i64>() {
+                    if num < *min || num > *max {
+                        return Err(ValidationError::out_of_range(field, *min, *max));
+                    }
+                } else {
+                    // If not a valid number, return an error
+                    // 如果不是有效数字，则返回错误
+                    return Err(ValidationError::new(field, "Must be a valid number"));
+                }
+            },
             ValidationRule::Regex(pattern) => {
                 let regex = Regex::new(pattern).unwrap();
                 if !regex.is_match(value) {
                     return Err(ValidationError::pattern_mismatch(field, pattern));
                 }
-            }
+            },
             ValidationRule::Email => {
                 if !EMAIL_REGEX.is_match(value) {
                     return Err(ValidationError::invalid_email(field));
                 }
-            }
+            },
             ValidationRule::Url => {
                 if !URL_REGEX.is_match(value) {
                     return Err(ValidationError::new(field, "Invalid URL format"));
                 }
-            }
+            },
             ValidationRule::Username => {
                 if !USERNAME_REGEX.is_match(value) {
-                    return Err(ValidationError::new(field, "Username must be 3-20 characters (alphanumeric, underscore, hyphen)"));
+                    return Err(ValidationError::new(
+                        field,
+                        "Username must be 3-20 characters (alphanumeric, underscore, hyphen)",
+                    ));
                 }
-            }
+            },
             ValidationRule::Phone => {
                 if !PHONE_REGEX.is_match(value) {
                     return Err(ValidationError::new(field, "Invalid phone number format"));
                 }
-            }
+            },
             ValidationRule::Custom(validator) => {
                 validator(value).map_err(|msg| ValidationError::new(field, msg))?;
-            }
+            },
         }
         Ok(())
     }
@@ -140,7 +153,8 @@ impl ValidatorBuilder {
 
     /// 添加长度规则 / Add length rule
     pub fn length(mut self, field: &'static str, min: usize, max: usize) -> Self {
-        self.rules.push((field, ValidationRule::Length { min, max }));
+        self.rules
+            .push((field, ValidationRule::Length { min, max }));
         self
     }
 

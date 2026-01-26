@@ -240,12 +240,7 @@ pub struct Page<T> {
 
 impl<T> Page<T> {
     /// 创建分页结果 / Create page result
-    pub fn new(
-        content: Vec<T>,
-        number: usize,
-        size: usize,
-        total_elements: i64,
-    ) -> Self {
+    pub fn new(content: Vec<T>, number: usize, size: usize, total_elements: i64) -> Self {
         let total_pages = if total_elements == 0 {
             0
         } else {

@@ -14,12 +14,12 @@
 
 pub mod scheduled;
 
-pub use scheduled::{ScheduledTask, TaskScheduler, ScheduleType};
+pub use scheduled::{ScheduleType, ScheduledTask, TaskScheduler};
 
 /// Re-exports of commonly used types
 /// 常用类型的重新导出
 pub mod prelude {
-    pub use super::{ScheduledTask, TaskScheduler, ScheduleType};
+    pub use super::{ScheduleType, ScheduledTask, TaskScheduler};
 }
 
 /// Version of the schedule module

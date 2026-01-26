@@ -21,7 +21,7 @@
 //! let error: Result<User> = Result::error(404, "User not found");
 //! ```
 
-use crate::{Json, IntoResponse, Response};
+use crate::{IntoResponse, Json, Response};
 use http::StatusCode;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -173,8 +173,10 @@ impl<T> Result<T> {
 
     /// 创建404错误 / Create 404 error
     pub fn not_found(resource: impl Into<String>, id: impl Into<String>) -> Self {
-        Self::error(ResultCode::NotFound as u16, 
-            format!("{} {}: 不存在 / not found", resource.into(), id.into()))
+        Self::error(
+            ResultCode::NotFound as u16,
+            format!("{} {}: 不存在 / not found", resource.into(), id.into()),
+        )
     }
 
     /// 创建409错误 / Create 409 error
@@ -221,9 +223,8 @@ where
     T: Serialize,
 {
     fn into_response(self) -> Response {
-        let status = StatusCode::from_u16(self.code)
-            .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-        
+        let status = StatusCode::from_u16(self.code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+
         Json(self).into_response()
     }
 }
@@ -245,12 +246,7 @@ pub struct PageResult<T> {
 
 impl<T> PageResult<T> {
     /// 创建分页结果 / Create paginated result
-    pub fn new(
-        content: Vec<T>,
-        page: u32,
-        size: u32,
-        total_elements: u64,
-    ) -> Self {
+    pub fn new(content: Vec<T>, page: u32, size: u32, total_elements: u64) -> Self {
         let total_pages = if size == 0 {
             0
         } else {
@@ -301,7 +297,7 @@ mod tests {
         let result = Result::<()>::bad_request("Validation failed")
             .add_error("username", "Username is required")
             .add_error("email", "Email is invalid");
-        
+
         assert_eq!(result.code, 400);
         assert_eq!(result.errors.len(), 2);
     }
@@ -310,7 +306,7 @@ mod tests {
     fn test_page_result() {
         let items = vec!["a", "b", "c"];
         let page = PageResult::new(items.clone(), 0, 10, 3);
-        
+
         assert_eq!(page.content, items);
         assert_eq!(page.page, 0);
         assert_eq!(page.size, 10);

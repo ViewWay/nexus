@@ -3,9 +3,11 @@
 //! This example demonstrates combining Spring Data JPA annotations with MyBatis-Plus patterns
 //! 此示例演示了如何将 Spring Data JPA 注解与 MyBatis-Plus 模式结合使用
 
-use nexus_data_annotations::{Entity, Table, Id, GeneratedValue, Column, Query, Insert, Update, Delete};
+use nexus_data_annotations::{
+    Column, Delete, Entity, GeneratedValue, Id, Insert, Query, Table, Update,
+};
 use nexus_lombok::Data;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 // ============================================================================
 // Example 1: Basic Entity with Spring Data Annotations / 带有 Spring Data 注解的基本实体
@@ -170,7 +172,9 @@ trait OrderRepository {
 
     /// Calculate total sales for a user
     /// 计算用户总销售额
-    #[Query("SELECT SUM(total_amount) FROM orders WHERE user_id = :user_id AND status = 'completed'")]
+    #[Query(
+        "SELECT SUM(total_amount) FROM orders WHERE user_id = :user_id AND status = 'completed'"
+    )]
     async fn total_sales_by_user(&self, user_id: i64) -> Option<f64>;
 }
 
@@ -217,7 +221,11 @@ trait ProductRepository {
     /// Update multiple product prices
     /// 批量更新产品价格
     #[Update("UPDATE products SET price = price * :multiplier WHERE category = :category")]
-    async fn update_prices_by_category(&self, category: &str, multiplier: f64) -> Result<u64, String>;
+    async fn update_prices_by_category(
+        &self,
+        category: &str,
+        multiplier: f64,
+    ) -> Result<u64, String>;
 }
 
 // ============================================================================
@@ -249,7 +257,9 @@ pub struct Account {
 trait AccountRepository {
     /// Debit from account
     /// 从账户借记
-    #[Update("UPDATE accounts SET balance = balance - :amount WHERE id = :id AND balance >= :amount")]
+    #[Update(
+        "UPDATE accounts SET balance = balance - :amount WHERE id = :id AND balance >= :amount"
+    )]
     async fn debit(&self, id: i64, amount: f64) -> Result<u64, String>;
 
     /// Credit to account
@@ -259,7 +269,9 @@ trait AccountRepository {
 
     /// Transfer between accounts (would use transaction in real implementation)
     /// 账户间转账（实际实现中会使用事务）
-    #[Update("UPDATE accounts SET balance = balance - :amount WHERE id = :from_id AND balance >= :amount")]
+    #[Update(
+        "UPDATE accounts SET balance = balance - :amount WHERE id = :from_id AND balance >= :amount"
+    )]
     async fn transfer_debit(&self, from_id: i64, amount: f64) -> Result<u64, String>;
 
     #[Update("UPDATE accounts SET balance = balance + :amount WHERE id = :to_id")]

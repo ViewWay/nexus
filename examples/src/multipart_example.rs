@@ -44,7 +44,10 @@ async fn handle_single_file_upload(mut multipart: Multipart) -> Response {
     while let Some(field) = multipart.next_field().await.unwrap() {
         let name = field.name().unwrap_or("").to_string();
         let filename = field.filename().unwrap_or("unknown").to_string();
-        let content_type = field.content_type().unwrap_or("application/octet-stream").to_string();
+        let content_type = field
+            .content_type()
+            .unwrap_or("application/octet-stream")
+            .to_string();
 
         println!("Field: {}", name);
         println!("Filename: {}", filename);
@@ -123,7 +126,11 @@ async fn handle_multiple_files_upload(mut multipart: Multipart) -> Response {
         if let Err(e) = validate_file(&filename, &data) {
             return Response::builder()
                 .status(StatusCode::BAD_REQUEST)
-                .body(serde_json::json!({"error": e.to_string()}).to_string().into())
+                .body(
+                    serde_json::json!({"error": e.to_string()})
+                        .to_string()
+                        .into(),
+                )
                 .unwrap();
         }
 
@@ -188,11 +195,11 @@ async fn handle_file_with_metadata(mut multipart: Multipart) -> Response {
             "title" => {
                 title = field.text().await.unwrap_or_default();
                 println!("Title: {}", title);
-            }
+            },
             "description" => {
                 description = field.text().await.unwrap_or_default();
                 println!("Description: {}", description);
-            }
+            },
             "file" => {
                 let filename = field.filename().unwrap_or("unknown").to_string();
                 let content_type = field.content_type().unwrap_or("").to_string();
@@ -222,10 +229,10 @@ async fn handle_file_with_metadata(mut multipart: Multipart) -> Response {
                     size: data.len(),
                     path: save_path,
                 });
-            }
+            },
             _ => {
                 println!("Unknown field: {}", name);
-            }
+            },
         }
     }
 

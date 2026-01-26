@@ -21,9 +21,9 @@
 #![warn(unreachable_pub)]
 
 use super::error::{Error, Result};
-use std::sync::atomic::{AtomicU64, AtomicBool, Ordering};
-use std::time::{Instant, Duration};
 use std::net::SocketAddr;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::time::{Duration, Instant};
 
 /// Global connection ID counter
 /// 全局连接ID计数器
@@ -102,7 +102,7 @@ impl Connection {
     /// assert!(conn.id() > 0);
     /// ```
     pub fn new() -> Self {
-        Self::with_remote_addr(None::<String>)
+        Self::with_remote_addr_opt(None::<String>)
     }
 
     /// Create a connection with a remote address string
@@ -117,7 +117,7 @@ impl Connection {
     /// assert_eq!(conn.remote_addr(), Some("192.168.1.100:12345"));
     /// ```
     pub fn with_remote_addr(addr: impl Into<String>) -> Self {
-        Self::with_remote_addr(Some(addr.into()))
+        Self::with_remote_addr_opt(Some(addr.into()))
     }
 
     /// Create a connection with a SocketAddr
@@ -133,12 +133,12 @@ impl Connection {
     /// let conn = Connection::with_address(addr);
     /// ```
     pub fn with_address(addr: SocketAddr) -> Self {
-        Self::with_remote_addr(Some(addr.to_string()))
+        Self::with_remote_addr_opt(Some(addr.to_string()))
     }
 
     /// Internal constructor with optional remote address
     /// 带可选远程地址的内部构造函数
-    fn with_remote_addr(addr: Option<String>) -> Self {
+    fn with_remote_addr_opt(addr: Option<String>) -> Self {
         let now = Instant::now();
         Self {
             id: NEXT_CONNECTION_ID.fetch_add(1, Ordering::Relaxed),
@@ -260,7 +260,11 @@ impl Connection {
     pub fn close(&mut self) -> Result<()> {
         // Use compare_exchange to ensure we only close once
         // 使用compare_exchange确保只关闭一次
-        if self.state.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+        if self
+            .state
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+            .is_err()
+        {
             return Err(Error::connection("Connection already closed"));
         }
         Ok(())

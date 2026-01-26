@@ -173,10 +173,7 @@ impl EmailService {
     }
 
     pub fn send_email(&self, to: &str, subject: &str, body: &str) -> Result<()> {
-        println!(
-            "Sending email to {} via {}: {}",
-            to, self.smtp_server, subject
-        );
+        println!("Sending email to {} via {}: {}", to, self.smtp_server, subject);
         println!("Body: {}", body);
         Ok(())
     }
@@ -339,10 +336,7 @@ fn main() -> Result<()> {
             Ok(())
         })
         .pre_destroy(|email: &EmailService| {
-            println!(
-                "[EmailService] @PreDestroy - disconnecting from {}",
-                email.smtp_server
-            );
+            println!("[EmailService] @PreDestroy - disconnecting from {}", email.smtp_server);
             Ok(())
         })
         .scope(nexus_core::bean::Scope::Singleton)
@@ -373,16 +367,14 @@ fn main() -> Result<()> {
     // 使用类型名称按名称获取bean
     // Note: Bean names use the full type path from std::any::type_name
     // 注意：Bean名称使用来自std::any::type_name的完整类型路径
-    let repo: Arc<UserRepository> = container.get_bean_by_name("ioc_container_example::UserRepository")?;
+    let repo: Arc<UserRepository> =
+        container.get_bean_by_name("ioc_container_example::UserRepository")?;
 
     println!("Retrieved repository by name: {:?}", repo);
 
     // Check if bean exists
     // 检查bean是否存在
-    println!(
-        "Has UserRepository: {}",
-        container.has_bean::<UserRepository>()
-    );
+    println!("Has UserRepository: {}", container.has_bean::<UserRepository>());
 
     println!();
 

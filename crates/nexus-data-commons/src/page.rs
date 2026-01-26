@@ -81,12 +81,7 @@ impl<T> Page<T> {
 
     /// Create a new page from components
     /// 从组件创建新页
-    pub fn new(
-        content: Vec<T>,
-        number: u32,
-        size: u32,
-        total_elements: u64,
-    ) -> Self {
+    pub fn new(content: Vec<T>, number: u32, size: u32, total_elements: u64) -> Self {
         let total_pages = if size == 0 {
             0
         } else {
@@ -484,12 +479,7 @@ impl<T> List<T> {
     /// Convert to a Page
     /// 转换为 Page
     pub fn to_page(self, page_request: PageRequest, total_elements: u64) -> Page<T> {
-        Page::new(
-            self.content,
-            page_request.page,
-            page_request.size,
-            total_elements,
-        )
+        Page::new(self.content, page_request.page, page_request.size, total_elements)
     }
 }
 

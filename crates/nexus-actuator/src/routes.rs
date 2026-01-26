@@ -300,7 +300,8 @@ impl Actuator {
             let body = serde_json::to_vec(&property).unwrap_or_default();
             Response::new(StatusCode::OK).with_body(Body::from(body))
         } else {
-            Response::new(StatusCode::NOT_FOUND).with_body(Body::from(r#"{"error":"Property not found"}"#))
+            Response::new(StatusCode::NOT_FOUND)
+                .with_body(Body::from(r#"{"error":"Property not found"}"#))
         }
     }
 }
@@ -328,12 +329,14 @@ pub fn handle_request(actuator: Arc<Actuator>, req: &Request) -> Response {
         path if path.starts_with("/metrics/") => {
             let name = &path[10..]; // Remove "/metrics/"
             actuator.handle_metric(name, req)
-        }
+        },
         path if path.starts_with("/env/") => {
             let key = &path[6..]; // Remove "/env/"
             actuator.handle_property(key, req)
-        }
-        _ => Response::new(StatusCode::NOT_FOUND).with_body(Body::from("{\"error\":\"Not found\"}")),
+        },
+        _ => {
+            Response::new(StatusCode::NOT_FOUND).with_body(Body::from("{\"error\":\"Not found\"}"))
+        },
     }
 }
 
@@ -343,8 +346,7 @@ mod tests {
 
     #[test]
     fn test_actuator_new() {
-        let actuator = Actuator::new()
-            .info("test-app", "1.0.0");
+        let actuator = Actuator::new().info("test-app", "1.0.0");
 
         assert_eq!(actuator.app_info.name, Some("test-app".to_string()));
         assert_eq!(actuator.app_info.version, Some("1.0.0".to_string()));

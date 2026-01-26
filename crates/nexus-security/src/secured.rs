@@ -82,19 +82,32 @@ impl SecurityMetadata {
             // Must have both required roles AND authorities
             if !self.roles.is_empty() && !has_roles {
                 return Err(crate::SecurityError::InsufficientPermissions {
-                    required: self.roles.iter().map(|r| r.to_string()).collect::<Vec<_>>().join(", "),
+                    required: self
+                        .roles
+                        .iter()
+                        .map(|r| r.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", "),
                     has: "none".to_string(),
                 });
             }
             if !self.authorities.is_empty() && !has_authorities {
                 return Err(crate::SecurityError::InsufficientPermissions {
-                    required: self.authorities.iter().map(|a| a.authority()).collect::<Vec<_>>().join(", "),
+                    required: self
+                        .authorities
+                        .iter()
+                        .map(|a| a.authority())
+                        .collect::<Vec<_>>()
+                        .join(", "),
                     has: "none".to_string(),
                 });
             }
         } else {
             // Must have at least one of roles OR authorities
-            if !has_roles && !has_authorities && (!self.roles.is_empty() || !self.authorities.is_empty()) {
+            if !has_roles
+                && !has_authorities
+                && (!self.roles.is_empty() || !self.authorities.is_empty())
+            {
                 return Err(crate::SecurityError::AccessDenied(
                     "Access denied: insufficient permissions".to_string(),
                 ));
@@ -202,8 +215,7 @@ impl SecuredHelper {
     /// Create metadata with roles
     /// 使用角色创建元数据
     pub fn with_roles(roles: &[&str]) -> SecurityMetadata {
-        SecurityMetadata::new()
-            .add_roles(roles.iter().map(|r| Role::from_str(r)).collect())
+        SecurityMetadata::new().add_roles(roles.iter().map(|r| Role::from_str(r)).collect())
     }
 
     /// Create metadata with authorities

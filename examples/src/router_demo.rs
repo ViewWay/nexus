@@ -11,11 +11,11 @@
 //! - Static responses
 //! - Async handlers
 
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
 use nexus_http::{Body, Response, Server, StatusCode};
 use nexus_router::{Router, Stateful};
 use nexus_runtime::task::block_on;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Application state shared across all handlers
 /// 应用状态，在所有处理程序之间共享
@@ -185,9 +185,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Run the async server using the runtime
     // 使用运行时运行异步服务器
     block_on(async {
-        let _server = Server::bind("127.0.0.1:8080")
-            .run(app)
-            .await?;
+        let _server = Server::bind("127.0.0.1:8080").run(app).await?;
 
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     })

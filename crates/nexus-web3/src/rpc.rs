@@ -33,12 +33,12 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use std::fmt;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 use crate::chain::{Block, BlockNumber};
-use crate::wallet::Address;
 use crate::tx::TxHash;
+use crate::wallet::Address;
 
 /// RPC error
 /// RPC错误
@@ -112,7 +112,7 @@ impl RpcClient {
             reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
-                .map_err(|e| RpcError::HttpClientError(e.to_string()))?
+                .map_err(|e| RpcError::HttpClientError(e.to_string()))?,
         );
 
         Ok(Self { url, client })
@@ -126,7 +126,7 @@ impl RpcClient {
             reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(timeout_secs))
                 .build()
-                .map_err(|e| RpcError::HttpClientError(e.to_string()))?
+                .map_err(|e| RpcError::HttpClientError(e.to_string()))?,
         );
 
         Ok(Self { url, client })
@@ -148,51 +148,73 @@ impl RpcClient {
             BlockNumber::Number(n) => serde_json::json!(format!("0x{:x}", n)),
         };
 
-        let response: JsonRpcResponse<RpcBlock> = self.call("eth_getBlockByNumber", &[param]).await?;
+        let response: JsonRpcResponse<RpcBlock> =
+            self.call("eth_getBlockByNumber", &[param]).await?;
         Ok(response.result.into())
     }
 
     /// Get balance for an address
     /// 获取地址余额
-    pub async fn get_balance(&self, address: &Address, block: BlockNumber) -> Result<String, RpcError> {
+    pub async fn get_balance(
+        &self,
+        address: &Address,
+        block: BlockNumber,
+    ) -> Result<String, RpcError> {
         let block_param = match block {
             BlockNumber::Latest => "latest".to_string(),
             BlockNumber::Pending => "pending".to_string(),
             BlockNumber::Number(n) => format!("0x{:x}", n),
         };
 
-        let response: JsonRpcResponse<String> = self.call("eth_getBalance", &[
-            serde_json::json!(address.to_hex()),
-            serde_json::json!(block_param),
-        ]).await?;
+        let response: JsonRpcResponse<String> = self
+            .call(
+                "eth_getBalance",
+                &[
+                    serde_json::json!(address.to_hex()),
+                    serde_json::json!(block_param),
+                ],
+            )
+            .await?;
         Ok(response.result)
     }
 
     /// Get transaction count (nonce) for an address
     /// 获取地址的交易计数（nonce）
-    pub async fn get_transaction_count(&self, address: &Address, block: BlockNumber) -> Result<u64, RpcError> {
+    pub async fn get_transaction_count(
+        &self,
+        address: &Address,
+        block: BlockNumber,
+    ) -> Result<u64, RpcError> {
         let block_param = match block {
             BlockNumber::Latest => "latest".to_string(),
             BlockNumber::Pending => "pending".to_string(),
             BlockNumber::Number(n) => format!("0x{:x}", n),
         };
 
-        let response: JsonRpcResponse<String> = self.call("eth_getTransactionCount", &[
-            serde_json::json!(address.to_hex()),
-            serde_json::json!(block_param),
-        ]).await?;
+        let response: JsonRpcResponse<String> = self
+            .call(
+                "eth_getTransactionCount",
+                &[
+                    serde_json::json!(address.to_hex()),
+                    serde_json::json!(block_param),
+                ],
+            )
+            .await?;
 
         // Parse hex string to u64
-        let hex = response.result.strip_prefix("0x").unwrap_or(&response.result);
+        let hex = response
+            .result
+            .strip_prefix("0x")
+            .unwrap_or(&response.result);
         u64::from_str_radix(hex, 16).map_err(|_| RpcError::ParseError("Invalid nonce".to_string()))
     }
 
     /// Get transaction by hash
     /// 根据哈希获取交易
     pub async fn get_transaction(&self, hash: &TxHash) -> Result<RpcTransaction, RpcError> {
-        let response: JsonRpcResponse<RpcTransaction> = self.call("eth_getTransactionByHash", &[
-            serde_json::json!(hash.to_hex()),
-        ]).await?;
+        let response: JsonRpcResponse<RpcTransaction> = self
+            .call("eth_getTransactionByHash", &[serde_json::json!(hash.to_hex())])
+            .await?;
         Ok(response.result)
     }
 
@@ -200,9 +222,9 @@ impl RpcClient {
     /// 发送原始交易
     pub async fn send_raw_transaction(&self, bytes: &[u8]) -> Result<TxHash, RpcError> {
         let hex = format!("0x{}", hex::encode(bytes));
-        let response: JsonRpcResponse<String> = self.call("eth_sendRawTransaction", &[
-            serde_json::json!(hex),
-        ]).await?;
+        let response: JsonRpcResponse<String> = self
+            .call("eth_sendRawTransaction", &[serde_json::json!(hex)])
+            .await?;
         TxHash::from_hex(&response.result).map_err(|e| RpcError::ParseError(e.to_string()))
     }
 
@@ -221,13 +243,18 @@ impl RpcClient {
         };
 
         let hex_data = format!("0x{}", hex::encode(data));
-        let response: JsonRpcResponse<String> = self.call("eth_call", &[
-            serde_json::json!({
-                "to": to.to_hex(),
-                "data": hex_data
-            }),
-            serde_json::json!(block_param),
-        ]).await?;
+        let response: JsonRpcResponse<String> = self
+            .call(
+                "eth_call",
+                &[
+                    serde_json::json!({
+                        "to": to.to_hex(),
+                        "data": hex_data
+                    }),
+                    serde_json::json!(block_param),
+                ],
+            )
+            .await?;
         Ok(response.result)
     }
 
@@ -252,16 +279,20 @@ impl RpcClient {
             call_data.insert("value".to_string(), serde_json::json!(value));
         }
         if let Some(data) = data {
-            call_data.insert("data".to_string(), serde_json::json!(format!("0x{}", hex::encode(data))));
+            call_data
+                .insert("data".to_string(), serde_json::json!(format!("0x{}", hex::encode(data))));
         }
 
-        let response: JsonRpcResponse<String> = self.call("eth_estimateGas", &[
-            serde_json::json!(call_data),
-            serde_json::json!("latest"),
-        ]).await?;
+        let response: JsonRpcResponse<String> = self
+            .call("eth_estimateGas", &[serde_json::json!(call_data), serde_json::json!("latest")])
+            .await?;
 
-        let hex = response.result.strip_prefix("0x").unwrap_or(&response.result);
-        u64::from_str_radix(hex, 16).map_err(|_| RpcError::ParseError("Invalid gas estimate".to_string()))
+        let hex = response
+            .result
+            .strip_prefix("0x")
+            .unwrap_or(&response.result);
+        u64::from_str_radix(hex, 16)
+            .map_err(|_| RpcError::ParseError("Invalid gas estimate".to_string()))
     }
 
     /// Get gas price
@@ -276,8 +307,12 @@ impl RpcClient {
     pub async fn get_chain_id(&self) -> Result<u64, RpcError> {
         let response: JsonRpcResponse<String> = self.call("eth_chainId", &[]).await?;
 
-        let hex = response.result.strip_prefix("0x").unwrap_or(&response.result);
-        u64::from_str_radix(hex, 16).map_err(|_| RpcError::ParseError("Invalid chain ID".to_string()))
+        let hex = response
+            .result
+            .strip_prefix("0x")
+            .unwrap_or(&response.result);
+        u64::from_str_radix(hex, 16)
+            .map_err(|_| RpcError::ParseError("Invalid chain ID".to_string()))
     }
 
     /// Make a raw RPC call
@@ -294,7 +329,8 @@ impl RpcClient {
             params: params.to_vec(),
         };
 
-        let resp = self.client
+        let resp = self
+            .client
             .post(&self.url)
             .header("Content-Type", "application/json")
             .json(&request)
@@ -326,9 +362,7 @@ impl RpcClient {
 #[cfg(feature = "rpc")]
 impl fmt::Debug for RpcClient {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RpcClient")
-            .field("url", &self.url)
-            .finish()
+        f.debug_struct("RpcClient").field("url", &self.url).finish()
     }
 }
 
@@ -401,23 +435,34 @@ impl From<RpcBlock> for Block {
         Self {
             hash: block.hash.unwrap_or_default(),
             parent_hash: block.parent_hash,
-            number: block.number
-                .and_then(|s| s.strip_prefix("0x").and_then(|h| u64::from_str_radix(h, 16).ok()))
+            number: block
+                .number
+                .and_then(|s| {
+                    s.strip_prefix("0x")
+                        .and_then(|h| u64::from_str_radix(h, 16).ok())
+                })
                 .unwrap_or(0),
-            timestamp: block.timestamp
+            timestamp: block
+                .timestamp
                 .strip_prefix("0x")
                 .and_then(|h| u64::from_str_radix(h, 16).ok())
                 .unwrap_or(0),
-            gas_limit: block.gas_limit
+            gas_limit: block
+                .gas_limit
                 .strip_prefix("0x")
                 .and_then(|h| u64::from_str_radix(h, 16).ok())
                 .unwrap_or(0),
-            gas_used: block.gas_used
+            gas_used: block
+                .gas_used
                 .strip_prefix("0x")
                 .and_then(|h| u64::from_str_radix(h, 16).ok())
                 .unwrap_or(0),
-            transaction_count: block.transaction_count
-                .and_then(|s| s.strip_prefix("0x").and_then(|h| usize::from_str_radix(h, 16).ok()))
+            transaction_count: block
+                .transaction_count
+                .and_then(|s| {
+                    s.strip_prefix("0x")
+                        .and_then(|h| usize::from_str_radix(h, 16).ok())
+                })
                 .unwrap_or(0),
         }
     }

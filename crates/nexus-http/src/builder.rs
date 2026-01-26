@@ -129,7 +129,9 @@ impl Uri {
         if let Some(slash_pos) = after_scheme.find('/') {
             let path_and_query = &after_scheme[slash_pos..];
             // Strip query and fragment
-            let path_only = path_and_query.split_once('?').map_or(path_and_query, |(p, _)| p);
+            let path_only = path_and_query
+                .split_once('?')
+                .map_or(path_and_query, |(p, _)| p);
             let path_only = path_only.split_once('#').map_or(path_only, |(p, _)| p);
             if path_only.is_empty() { "/" } else { path_only }
         } else {
@@ -140,9 +142,9 @@ impl Uri {
     /// Get the query string (without leading ?)
     /// 获取查询字符串（不带前导?）
     pub fn query(&self) -> Option<&str> {
-        self.uri.split_once('?').map(|(_, q)| {
-            q.split_once('#').map_or(q, |(query, _)| query)
-        })
+        self.uri
+            .split_once('?')
+            .map(|(_, q)| q.split_once('#').map_or(q, |(query, _)| query))
     }
 
     /// Get the fragment (without leading #)
@@ -184,7 +186,8 @@ impl UriBuilder {
             // Parse user info if present
             if let Some(at_pos) = remaining.find('@') {
                 let before_host = &remaining[..at_pos];
-                let (user_info, _host_part) = before_host.split_once(':').unwrap_or((before_host, ""));
+                let (user_info, _host_part) =
+                    before_host.split_once(':').unwrap_or((before_host, ""));
                 builder = builder.user_info(user_info);
                 remaining = &remaining[at_pos + 1..];
             }
@@ -211,7 +214,11 @@ impl UriBuilder {
                 // Then parse query from before fragment
                 if let Some((path, q)) = to_parse.split_once('?') {
                     if !path.is_empty() {
-                        builder.path = path.split('/').filter(|s: &&str| !s.is_empty()).map(|s| s.to_string()).collect();
+                        builder.path = path
+                            .split('/')
+                            .filter(|s: &&str| !s.is_empty())
+                            .map(|s| s.to_string())
+                            .collect();
                     }
                     for pair in q.split('&') {
                         let parts: Vec<&str> = pair.splitn(2, '=').collect();
@@ -220,13 +227,21 @@ impl UriBuilder {
                         }
                     }
                 } else if !to_parse.is_empty() {
-                    builder.path = to_parse.split('/').filter(|s: &&str| !s.is_empty()).map(|s| s.to_string()).collect();
+                    builder.path = to_parse
+                        .split('/')
+                        .filter(|s: &&str| !s.is_empty())
+                        .map(|s| s.to_string())
+                        .collect();
                 }
             } else {
                 // No fragment, parse query from remaining
                 if let Some((path, q)) = remaining.split_once('?') {
                     if !path.is_empty() {
-                        builder.path = path.split('/').filter(|s: &&str| !s.is_empty()).map(|s| s.to_string()).collect();
+                        builder.path = path
+                            .split('/')
+                            .filter(|s: &&str| !s.is_empty())
+                            .map(|s| s.to_string())
+                            .collect();
                     }
                     for pair in q.split('&') {
                         let parts: Vec<&str> = pair.splitn(2, '=').collect();
@@ -235,12 +250,20 @@ impl UriBuilder {
                         }
                     }
                 } else if !remaining.is_empty() {
-                    builder.path = remaining.split('/').filter(|s: &&str| !s.is_empty()).map(|s| s.to_string()).collect();
+                    builder.path = remaining
+                        .split('/')
+                        .filter(|s: &&str| !s.is_empty())
+                        .map(|s| s.to_string())
+                        .collect();
                 }
             }
         } else {
             // No scheme, treat as path
-            builder.path = uri.split('/').filter(|s: &&str| !s.is_empty()).map(|s| s.to_string()).collect();
+            builder.path = uri
+                .split('/')
+                .filter(|s: &&str| !s.is_empty())
+                .map(|s| s.to_string())
+                .collect();
         }
 
         builder
@@ -278,7 +301,11 @@ impl UriBuilder {
     /// 设置路径
     pub fn path(mut self, path: impl Into<String>) -> Self {
         let path_str = path.into();
-        self.path = path_str.split('/').filter(|s| !s.is_empty()).map(|s| s.to_string()).collect();
+        self.path = path_str
+            .split('/')
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string())
+            .collect();
         self
     }
 
@@ -326,7 +353,10 @@ impl UriBuilder {
 
     /// Add multiple path variables
     /// 添加多个路径变量
-    pub fn path_vars(mut self, vars: impl IntoIterator<Item = (impl Into<String>, impl Into<String>)>) -> Self {
+    pub fn path_vars(
+        mut self,
+        vars: impl IntoIterator<Item = (impl Into<String>, impl Into<String>)>,
+    ) -> Self {
         for (name, value) in vars {
             self.path_vars.insert(name.into(), value.into());
         }
@@ -342,7 +372,10 @@ impl UriBuilder {
 
     /// Add multiple query parameters
     /// 添加多个查询参数
-    pub fn query_params(mut self, params: impl IntoIterator<Item = (impl Into<String>, impl Into<String>)>) -> Self {
+    pub fn query_params(
+        mut self,
+        params: impl IntoIterator<Item = (impl Into<String>, impl Into<String>)>,
+    ) -> Self {
         for (name, value) in params {
             self.query_params.push((name.into(), value.into()));
         }
@@ -597,9 +630,7 @@ mod tests {
 
     #[test]
     fn test_uri_builder_path_only() {
-        let uri = UriBuilder::new()
-            .path("/api/users")
-            .build();
+        let uri = UriBuilder::new().path("/api/users").build();
 
         assert_eq!(uri.as_str(), "/api/users");
     }

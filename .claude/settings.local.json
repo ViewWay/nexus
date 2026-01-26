@@ -51,7 +51,23 @@
       "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH\" cargo bench:*)",
       "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH\" cargo build:*)",
       "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH\" cargo check:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(gh run list:*)",
+      "Bash(source:*)",
+      "Bash(~/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc:*)",
+      "Bash(~/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo:*)",
+      "Bash($HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo build --workspace)",
+      "Bash(/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo build:*)",
+      "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:/Users/yimiliya/.cargo/bin:/usr/bin:/bin\" /Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo build:*)",
+      "Bash(PATH=\"/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin:/Users/yimiliya/.cargo/bin:/usr/bin:/bin\" /Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo:*)",
+      "Bash(/Users/yimiliya/.cargo/bin/cargo build:*)",
+      "Bash(/Users/yimiliya/.rustup/toolchains/1.93.0-aarch64-apple-darwin/bin/rustc:*)",
+      "Bash(\"$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc\":*)",
+      "Bash(\"$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo\" build:*)",
+      "Bash(RUSTC=/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc /Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo build:*)",
+      "Bash(RUSTC=/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc /Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo test:*)",
+      "Bash(RUSTC=/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc /Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo doc:*)",
+      "Bash(/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/git status)"
     ]
   }
 }

@@ -6,12 +6,9 @@
 //! This module provides BaseMapper (MyBatis-Plus) and R2dbcRepository implementations.
 //! 本模块提供 BaseMapper (MyBatis-Plus) 和 R2dbcRepository 实现。
 
-use async_trait::async_trait;
 use crate::{QueryExecutor, R2dbcError};
-use nexus_data_commons::{
-    Identifier, Page, PageRequest,
-    QueryWrapper, ToValue,
-};
+use async_trait::async_trait;
+use nexus_data_commons::{Identifier, Page, PageRequest, QueryWrapper, ToValue};
 
 /// Base Mapper trait (MyBatis-Plus equivalent)
 /// Base Mapper trait (MyBatis-Plus 等价)
@@ -85,11 +82,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     where
         Self: Sized,
     {
-        Ok(self
-            .executor()
-            .delete(&wrapper, Self::table_name())
-            .await?
-            as i64)
+        Ok(self.executor().delete(&wrapper, Self::table_name()).await? as i64)
     }
 
     /// Delete by batch of IDs
@@ -109,15 +102,14 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 根据条件更新
     ///
     /// Equivalent to MyBatis-Plus: `int update(Wrapper<T> updateWrapper);`
-    async fn update(&self, wrapper: nexus_data_commons::UpdateWrapper) -> std::result::Result<i64, R2dbcError>
+    async fn update(
+        &self,
+        wrapper: nexus_data_commons::UpdateWrapper,
+    ) -> std::result::Result<i64, R2dbcError>
     where
         Self: Sized,
     {
-        Ok(self
-            .executor()
-            .update(&wrapper, Self::table_name())
-            .await?
-            as i64)
+        Ok(self.executor().update(&wrapper, Self::table_name()).await? as i64)
     }
 
     /// Update by ID
@@ -167,7 +159,10 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 查询单条记录
     ///
     /// Equivalent to MyBatis-Plus: `T selectOne(Wrapper<T> queryWrapper);`
-    async fn select_one(&self, wrapper: QueryWrapper) -> std::result::Result<Option<T>, R2dbcError> {
+    async fn select_one(
+        &self,
+        wrapper: QueryWrapper,
+    ) -> std::result::Result<Option<T>, R2dbcError> {
         let limited = wrapper.clone().limit(1);
         let results = self.select_list(limited).await?;
         Ok(results.into_iter().next())
@@ -181,11 +176,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     where
         Self: Sized,
     {
-        Ok(self
-            .executor()
-            .count(&wrapper, Self::table_name())
-            .await?
-            as i64)
+        Ok(self.executor().count(&wrapper, Self::table_name()).await? as i64)
     }
 
     /// Select page
@@ -269,7 +260,9 @@ pub trait R2dbcRepository<T, ID>: Send + Sync {
 ///
 /// 此 trait 对所有操作使用 nexus_data_commons::Error，简化了错误处理。
 #[async_trait]
-pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>: R2dbcRepository<T, ID> {
+pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>:
+    R2dbcRepository<T, ID>
+{
     /// Save an entity (insert or update)
     /// 保存实体（插入或更新）
     async fn save(&self, entity: T) -> std::result::Result<T, nexus_data_commons::Error> {
@@ -293,7 +286,8 @@ pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>: R2d
 
     /// Find by ID
     /// 根据 ID 查找
-    async fn find_by_id(&self, id: ID) -> std::result::Result<Option<T>, nexus_data_commons::Error>;
+    async fn find_by_id(&self, id: ID)
+    -> std::result::Result<Option<T>, nexus_data_commons::Error>;
 
     /// Find all entities
     /// 查找所有实体
@@ -352,7 +346,10 @@ pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>: R2d
 
     /// Exists by wrapper
     /// 根据条件检查是否存在
-    async fn exists_by_wrapper(&self, wrapper: QueryWrapper) -> std::result::Result<bool, nexus_data_commons::Error> {
+    async fn exists_by_wrapper(
+        &self,
+        wrapper: QueryWrapper,
+    ) -> std::result::Result<bool, nexus_data_commons::Error> {
         Ok(self.count_by_wrapper(wrapper).await? > 0)
     }
 

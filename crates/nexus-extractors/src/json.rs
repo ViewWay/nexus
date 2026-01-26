@@ -25,7 +25,7 @@
 //! }
 //! ```
 
-use crate::{ExtractorError, FromRequest, ExtractorFuture, Request};
+use crate::{ExtractorError, ExtractorFuture, FromRequest, Request};
 use nexus_http::HttpBody;
 use serde::Deserialize;
 
@@ -101,9 +101,7 @@ where
 {
     fn from_request(req: &Request) -> ExtractorFuture<Self> {
         let body_bytes = req.body().as_bytes().map(|b| b.to_vec());
-        let content_type = req.header("content-type")
-            .unwrap_or("")
-            .to_string();
+        let content_type = req.header("content-type").unwrap_or("").to_string();
 
         Box::pin(async move {
             // Validate content type
@@ -132,9 +130,7 @@ where
 /// Get content type from request
 /// 从请求获取content type
 pub fn get_content_type(req: &Request) -> String {
-    req.header("content-type")
-        .unwrap_or("")
-        .to_string()
+    req.header("content-type").unwrap_or("").to_string()
 }
 
 /// Maximum JSON body size (default: 10MB)

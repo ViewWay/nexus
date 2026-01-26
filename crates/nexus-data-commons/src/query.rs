@@ -230,14 +230,16 @@ impl QueryWrapper {
     /// Add a nested AND condition
     /// 添加嵌套 AND 条件
     pub fn and(mut self, wrapper: QueryWrapper) -> Self {
-        self.conditions.push(Condition::And(Box::new(wrapper.conditions)));
+        self.conditions
+            .push(Condition::And(Box::new(wrapper.conditions)));
         self
     }
 
     /// Add a nested OR condition
     /// 添加嵌套 OR 条件
     pub fn or(mut self, wrapper: QueryWrapper) -> Self {
-        self.conditions.push(Condition::Or(Box::new(wrapper.conditions)));
+        self.conditions
+            .push(Condition::Or(Box::new(wrapper.conditions)));
         self
     }
 
@@ -439,9 +441,17 @@ pub enum Condition {
     /// NOT IN: field NOT IN (values...)
     NotIn { field: String, values: Vec<Value> },
     /// BETWEEN: field BETWEEN low AND high
-    Between { field: String, low: Value, high: Value },
+    Between {
+        field: String,
+        low: Value,
+        high: Value,
+    },
     /// NOT BETWEEN: field NOT BETWEEN low AND high
-    NotBetween { field: String, low: Value, high: Value },
+    NotBetween {
+        field: String,
+        low: Value,
+        high: Value,
+    },
     /// IS NULL: field IS NULL
     IsNull { field: String },
     /// IS NOT NULL: field IS NOT NULL
@@ -468,27 +478,27 @@ impl Condition {
             Self::In { field, values } => {
                 let vals: Vec<String> = values.iter().map(|v| v.to_sql()).collect();
                 format!("{} IN ({})", field, vals.join(", "))
-            }
+            },
             Self::NotIn { field, values } => {
                 let vals: Vec<String> = values.iter().map(|v| v.to_sql()).collect();
                 format!("{} NOT IN ({})", field, vals.join(", "))
-            }
+            },
             Self::Between { field, low, high } => {
                 format!("{} BETWEEN {} AND {}", field, low.to_sql(), high.to_sql())
-            }
+            },
             Self::NotBetween { field, low, high } => {
                 format!("{} NOT BETWEEN {} AND {}", field, low.to_sql(), high.to_sql())
-            }
+            },
             Self::IsNull { field } => format!("{} IS NULL", field),
             Self::IsNotNull { field } => format!("{} IS NOT NULL", field),
             Self::And(conditions) => {
                 let conds: Vec<String> = conditions.iter().map(|c| c.to_sql()).collect();
                 format!("({})", conds.join(" AND "))
-            }
+            },
             Self::Or(conditions) => {
                 let conds: Vec<String> = conditions.iter().map(|c| c.to_sql()).collect();
                 format!("({})", conds.join(" OR "))
-            }
+            },
         }
     }
 }
@@ -711,9 +721,7 @@ impl Specification {
     /// Create a new specification
     /// 创建新的规范
     pub fn new() -> Self {
-        Self {
-            predicate: None,
-        }
+        Self { predicate: None }
     }
 
     /// Create an AND specification
@@ -899,9 +907,7 @@ mod tests {
 
     #[test]
     fn test_update_wrapper() {
-        let uw = UpdateWrapper::new()
-            .set("name", "Alice")
-            .set("age", 25);
+        let uw = UpdateWrapper::new().set("name", "Alice").set("age", 25);
         assert!(uw.has_sets());
         assert_eq!(uw.sets.len(), 2);
     }

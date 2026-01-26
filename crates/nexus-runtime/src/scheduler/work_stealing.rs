@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-use super::{handle::WakeChannel, queue::LocalQueue, RawTask};
+use super::{RawTask, handle::WakeChannel, queue::LocalQueue};
 
 /// Work-stealing scheduler
 /// 工作窃取调度器
@@ -77,11 +77,9 @@ impl WorkStealingScheduler {
             let state_clone = state.clone();
             let thread_name = format!("{}-{}", thread_name, worker_id);
 
-            let thread_handle = thread::Builder::new()
-                .name(thread_name)
-                .spawn(move || {
-                    Self::run_worker(worker_id, queues, state_clone);
-                })?;
+            let thread_handle = thread::Builder::new().name(thread_name).spawn(move || {
+                Self::run_worker(worker_id, queues, state_clone);
+            })?;
 
             workers.push(WorkerContext {
                 queue: queue.clone(),
@@ -141,7 +139,8 @@ impl WorkStealingScheduler {
         static WORKER_INDEX: std::sync::atomic::AtomicUsize =
             std::sync::atomic::AtomicUsize::new(0);
 
-        let index = WORKER_INDEX.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % self.workers.len();
+        let index =
+            WORKER_INDEX.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % self.workers.len();
 
         if self.workers[index].queue.push(task) {
             Ok(())
@@ -228,11 +227,7 @@ impl WorkStealingConfig {
     /// Set the number of worker threads
     /// 设置工作线程数量
     pub fn worker_threads(mut self, count: usize) -> Self {
-        self.num_workers = if count == 0 {
-            num_cpus::get()
-        } else {
-            count
-        };
+        self.num_workers = if count == 0 { num_cpus::get() } else { count };
         self
     }
 
@@ -286,7 +281,8 @@ impl WorkStealingHandle {
         static WORKER_INDEX: std::sync::atomic::AtomicUsize =
             std::sync::atomic::AtomicUsize::new(0);
 
-        let index = WORKER_INDEX.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % self.queues.len();
+        let index =
+            WORKER_INDEX.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % self.queues.len();
 
         if self.queues[index].push(task) {
             Ok(())

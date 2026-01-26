@@ -46,7 +46,7 @@ impl TestAuthContext {
 fn evaluate_test_expression(
     expression: &str,
     auth: &TestAuthContext,
-    args: &HashMap<String, String>
+    args: &HashMap<String, String>,
 ) -> bool {
     // Handle has_role('ROLE_NAME')
     if let Some(rest) = expression.strip_prefix("has_role('") {
@@ -83,13 +83,17 @@ fn evaluate_test_expression(
     // Handle OR expressions
     if expression.contains(" or ") {
         let parts: Vec<&str> = expression.split(" or ").collect();
-        return parts.iter().any(|part| evaluate_test_expression(part, auth, args));
+        return parts
+            .iter()
+            .any(|part| evaluate_test_expression(part, auth, args));
     }
 
     // Handle AND expressions
     if expression.contains(" and ") {
         let parts: Vec<&str> = expression.split(" and ").collect();
-        return parts.iter().all(|part| evaluate_test_expression(part, auth, args));
+        return parts
+            .iter()
+            .all(|part| evaluate_test_expression(part, auth, args));
     }
 
     false
@@ -134,12 +138,7 @@ fn test_has_role_user() {
 
 #[test]
 fn test_has_permission() {
-    let user = TestAuthContext::new(
-        2,
-        "alice",
-        vec!["USER"],
-        vec!["user:read", "user:write"]
-    );
+    let user = TestAuthContext::new(2, "alice", vec!["USER"], vec!["user:read", "user:write"]);
     let args = HashMap::new();
 
     assert!(
@@ -197,12 +196,7 @@ fn test_parameter_match() {
 
 #[test]
 fn test_or_expression() {
-    let user = TestAuthContext::new(
-        2,
-        "alice",
-        vec!["USER"],
-        vec!["user:read"]
-    );
+    let user = TestAuthContext::new(2, "alice", vec!["USER"], vec!["user:read"]);
     let args = HashMap::new();
 
     // Should pass - has permission
@@ -213,48 +207,45 @@ fn test_or_expression() {
 
     // Should fail - neither condition met
     assert!(
-        !evaluate_test_expression("has_role('ADMIN') or has_permission('admin:delete')", &user, &args),
+        !evaluate_test_expression(
+            "has_role('ADMIN') or has_permission('admin:delete')",
+            &user,
+            &args
+        ),
         "Should fail: user is neither admin nor has admin:delete permission"
     );
 }
 
 #[test]
 fn test_and_expression() {
-    let admin = TestAuthContext::new(
-        1,
-        "admin",
-        vec!["ADMIN"],
-        vec!["user:write"]
-    );
-    let user = TestAuthContext::new(
-        2,
-        "alice",
-        vec!["USER"],
-        vec!["user:read"]
-    );
+    let admin = TestAuthContext::new(1, "admin", vec!["ADMIN"], vec!["user:write"]);
+    let user = TestAuthContext::new(2, "alice", vec!["USER"], vec!["user:read"]);
     let args = HashMap::new();
 
     // Should pass - admin has both role and permission
     assert!(
-        evaluate_test_expression("has_role('ADMIN') and has_permission('user:write')", &admin, &args),
+        evaluate_test_expression(
+            "has_role('ADMIN') and has_permission('user:write')",
+            &admin,
+            &args
+        ),
         "Should pass: admin has both ADMIN role and user:write permission"
     );
 
     // Should fail - user has neither
     assert!(
-        !evaluate_test_expression("has_role('ADMIN') and has_permission('user:write')", &user, &args),
+        !evaluate_test_expression(
+            "has_role('ADMIN') and has_permission('user:write')",
+            &user,
+            &args
+        ),
         "Should fail: user lacks either ADMIN role or user:write permission"
     );
 }
 
 #[test]
 fn test_complex_expression() {
-    let user = TestAuthContext::new(
-        2,
-        "alice",
-        vec!["USER"],
-        vec!["user:read"]
-    );
+    let user = TestAuthContext::new(2, "alice", vec!["USER"], vec!["user:read"]);
     let mut args = HashMap::new();
 
     // User accessing their own resource - should pass
@@ -288,20 +279,16 @@ fn test_security_expression_builder() {
     let expr1 = SecurityExpression::new("has_role('ADMIN')");
     assert_eq!(expr1.as_str(), "has_role('ADMIN')");
 
-    let expr2 = SecurityExpression::new("base")
-        .has_role("USER");
+    let expr2 = SecurityExpression::new("base").has_role("USER");
     assert_eq!(expr2.as_str(), "has_role('USER')");
 
-    let expr3 = SecurityExpression::new("base")
-        .has_permission("user:read");
+    let expr3 = SecurityExpression::new("base").has_permission("user:read");
     assert_eq!(expr3.as_str(), "has_permission('user:read')");
 
-    let expr4 = SecurityExpression::new("expr1")
-        .or(SecurityExpression::new("expr2"));
+    let expr4 = SecurityExpression::new("expr1").or(SecurityExpression::new("expr2"));
     assert!(expr4.as_str().contains(" or "));
 
-    let expr5 = SecurityExpression::new("expr1")
-        .and(SecurityExpression::new("expr2"));
+    let expr5 = SecurityExpression::new("expr1").and(SecurityExpression::new("expr2"));
     assert!(expr5.as_str().contains(" and "));
 }
 
@@ -318,10 +305,7 @@ fn test_pre_authorize_annotation() {
     assert_eq!(annotation.expression(), "has_role('ADMIN')");
 
     let annotation = PreAuthorizeAnnotation::new("has_permission('user:write') and is_admin()");
-    assert_eq!(
-        annotation.expression(),
-        "has_permission('user:write') and is_admin()"
-    );
+    assert_eq!(annotation.expression(), "has_permission('user:write') and is_admin()");
 }
 
 #[test]
@@ -399,12 +383,7 @@ fn test_admin_can_update_any_profile() {
 
 #[test]
 fn test_user_with_read_permission_can_view() {
-    let user = TestAuthContext::new(
-        2,
-        "alice",
-        vec!["USER"],
-        vec!["user:read"]
-    );
+    let user = TestAuthContext::new(2, "alice", vec!["USER"], vec!["user:read"]);
     let args = HashMap::new();
 
     let expression = "has_role('ADMIN') or has_permission('user:read')";
@@ -415,12 +394,7 @@ fn test_user_with_read_permission_can_view() {
 
 #[test]
 fn test_user_without_permission_cannot_view() {
-    let user = TestAuthContext::new(
-        2,
-        "alice",
-        vec!["USER"],
-        vec![]
-    );
+    let user = TestAuthContext::new(2, "alice", vec!["USER"], vec![]);
     let args = HashMap::new();
 
     let expression = "has_role('ADMIN') or has_permission('user:read')";

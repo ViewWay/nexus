@@ -39,9 +39,9 @@ pub mod metrics;
 pub mod routes;
 
 pub use env::{Environment, EnvironmentCollector, PropertySource, PropertyValue};
-pub use health::{HealthIndicator, HealthStatus, HealthCheck};
+pub use health::{HealthCheck, HealthIndicator, HealthStatus};
 pub use info::InfoBuilder;
-pub use metrics::{Metric, MetricsRegistry, MetricType};
+pub use metrics::{Metric, MetricType, MetricsRegistry};
 pub use routes::Actuator;
 
 /// Version of the actuator module
@@ -51,7 +51,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// 常用类型的重新导出
 pub mod prelude {
     pub use super::{
-        Actuator, HealthIndicator, HealthStatus, HealthCheck, InfoBuilder, MetricsRegistry,
-        Metric, MetricType, Environment, EnvironmentCollector, PropertySource, PropertyValue,
+        Actuator, Environment, EnvironmentCollector, HealthCheck, HealthIndicator, HealthStatus,
+        InfoBuilder, Metric, MetricType, MetricsRegistry, PropertySource, PropertyValue,
     };
 }

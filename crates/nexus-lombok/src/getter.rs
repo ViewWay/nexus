@@ -3,7 +3,7 @@
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse::Parse, DeriveInput, Data, DataStruct, Fields};
+use syn::{DeriveInput, Data, DataStruct, Fields};
 
 /// Implement #[Getter] derive macro
 /// 实现 #[Getter] 派生宏

@@ -76,6 +76,7 @@ pin-project-lite = { workspace = true }
 
 # Utilities / 工具
 once_cell = { workspace = true }
+regex = { workspace = true }
 
 [lints]
 workspace = true

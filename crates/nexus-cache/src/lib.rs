@@ -48,31 +48,31 @@
 #![warn(unreachable_pub)]
 
 mod cache;
-mod cacheable;
 mod cache_config;
 mod cache_evict;
 mod cache_manager;
 mod cache_put;
+mod cacheable;
+mod condition_evaluator;
 mod key_generator;
 mod resolver;
-mod condition_evaluator;
 
 pub use cache::{Cache, CacheBuilder, CacheConfig, CacheStats, MemoryCache};
-pub use cacheable::{Cacheable, Cached, CacheableOptions};
 pub use cache_config::CacheConfig as CacheSettings;
-pub use cache_evict::{CacheEvict, EvictPolicy, CacheEvictOptions};
+pub use cache_evict::{CacheEvict, CacheEvictOptions, EvictPolicy};
 pub use cache_manager::{CacheManager, CacheManagerBuilder};
 pub use cache_put::{CachePut, CachePutOptions};
-pub use key_generator::{KeyGenerator, DefaultKeyGenerator, HashKeyGenerator};
-pub use resolver::{CacheResolver, SimpleCacheResolver};
+pub use cacheable::{Cacheable, CacheableOptions, Cached};
 pub use condition_evaluator::evaluate_cache_condition;
+pub use key_generator::{DefaultKeyGenerator, HashKeyGenerator, KeyGenerator};
+pub use resolver::{CacheResolver, SimpleCacheResolver};
 
 /// Re-exports of commonly used types
 /// 常用类型的重新导出
 pub mod prelude {
     pub use super::{
-        Cache, CacheBuilder, CacheConfig, CacheManager, CacheManagerBuilder,
-        Cacheable, CacheEvict, CachePut, Cached,
+        Cache, CacheBuilder, CacheConfig, CacheEvict, CacheManager, CacheManagerBuilder, CachePut,
+        Cacheable, Cached,
     };
 }
 

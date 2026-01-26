@@ -85,7 +85,9 @@ impl IsolationLevel {
         match self {
             IsolationLevel::ReadUncommitted => "Read Uncommitted - allows dirty reads",
             IsolationLevel::ReadCommitted => "Read Committed - prevents dirty reads",
-            IsolationLevel::RepeatableRead => "Repeatable Read - prevents dirty and non-repeatable reads",
+            IsolationLevel::RepeatableRead => {
+                "Repeatable Read - prevents dirty and non-repeatable reads"
+            },
             IsolationLevel::Serializable => "Serializable - full isolation",
             IsolationLevel::Default => "Default - uses database default",
         }
@@ -131,10 +133,7 @@ mod tests {
 
     #[test]
     fn test_isolation_from_str() {
-        assert_eq!(
-            "SERIALIZABLE".parse::<IsolationLevel>().unwrap(),
-            IsolationLevel::Serializable
-        );
+        assert_eq!("SERIALIZABLE".parse::<IsolationLevel>().unwrap(), IsolationLevel::Serializable);
         assert_eq!(
             "read_committed".parse::<IsolationLevel>().unwrap(),
             IsolationLevel::ReadCommitted

@@ -4,9 +4,7 @@
 //! This module provides dynamic bean operations using bevy_reflect.
 //! 本模块使用bevy_reflect提供动态Bean操作。
 
-use super::{
-    error::{Error, Result},
-};
+use super::error::{Error, Result};
 use bevy_reflect::Reflect;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -59,9 +57,9 @@ impl ReflectContainer {
     /// 按类型名称动态创建Bean
     pub fn create_bean_by_name(&self, type_name: &str) -> Result<Box<dyn Reflect>> {
         let factories = self.factories_by_name.read().unwrap();
-        let factory = factories
-            .get(type_name)
-            .ok_or_else(|| Error::not_found(format!("Factory not found for type: {}", type_name)))?;
+        let factory = factories.get(type_name).ok_or_else(|| {
+            Error::not_found(format!("Factory not found for type: {}", type_name))
+        })?;
 
         factory.create()
     }

@@ -3,7 +3,9 @@
 //! This example demonstrates all Lombok-style annotations available in Nexus.
 //! 此示例演示了 Nexus 中所有可用的 Lombok 风格注解。
 
-use nexus_lombok::{Data, Getter, Setter, AllArgsConstructor, NoArgsConstructor, Value, With, Builder};
+use nexus_lombok::{
+    AllArgsConstructor, Builder, Data, Getter, NoArgsConstructor, Setter, Value, With,
+};
 
 // ============================================================================
 // Example 1: #[Data] - Most Common / 最常用
@@ -182,10 +184,10 @@ fn example_with() {
 /// User combining multiple macros
 /// 组合多个宏的用户
 #[derive(
-    Data,           // Getters, setters, constructor, with methods
-    Clone,          // Required for with methods
-    PartialEq,      // For comparisons
-    Debug,          // For debugging
+    Data,      // Getters, setters, constructor, with methods
+    Clone,     // Required for with methods
+    PartialEq, // For comparisons
+    Debug,     // For debugging
 )]
 pub struct CompleteUser {
     pub id: i64,

@@ -13,16 +13,16 @@
 
 pub mod chain;
 pub mod contract;
-pub mod wallet;
-pub mod tx;
 pub mod rpc;
 pub mod subscribe;
+pub mod tx;
+pub mod wallet;
 
-pub use chain::{ChainId, Eip155Chain, ChainConfig, Block, BlockNumber};
-pub use wallet::{Wallet, LocalWallet, Address};
-pub use tx::{Transaction, TransactionBuilder, TxHash};
+pub use chain::{Block, BlockNumber, ChainConfig, ChainId, Eip155Chain};
+pub use contract::{CallParams, ContractError, FunctionSelector};
 pub use rpc::RpcError;
-pub use contract::{ContractError, FunctionSelector, CallParams};
+pub use tx::{Transaction, TransactionBuilder, TxHash};
+pub use wallet::{Address, LocalWallet, Wallet};
 
 #[cfg(feature = "rpc")]
 pub use rpc::RpcClient;
@@ -32,7 +32,6 @@ pub use contract::{Contract, ContractCall, ERC20, ERC721};
 
 #[cfg(feature = "ws")]
 pub use subscribe::{
-    WsClient, SubscriptionManager, SubscriptionType, SubscriptionId,
-    SubscriptionNotification, LogFilter, NewBlockHeader, LogNotification,
-    PendingTransaction, WsError
+    LogFilter, LogNotification, NewBlockHeader, PendingTransaction, SubscriptionId,
+    SubscriptionManager, SubscriptionNotification, SubscriptionType, WsClient, WsError,
 };

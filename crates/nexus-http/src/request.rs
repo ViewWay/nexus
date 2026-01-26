@@ -10,8 +10,8 @@
 
 use super::{
     body::Body,
-    method::Method,
     error::{Error, Result},
+    method::Method,
 };
 use http::request::Parts;
 use std::collections::HashMap;
@@ -127,10 +127,7 @@ impl Request {
     /// Get a header value
     /// 获取header值
     pub fn header(&self, name: &str) -> Option<&str> {
-        self.inner
-            .headers()
-            .get(name)
-            .and_then(|v| v.to_str().ok())
+        self.inner.headers().get(name).and_then(|v| v.to_str().ok())
     }
 
     /// Get all headers
@@ -175,10 +172,8 @@ impl Request {
         &mut self,
         vars: impl IntoIterator<Item = (impl Into<String>, impl Into<String>)>,
     ) {
-        self.path_vars.extend(
-            vars.into_iter()
-                .map(|(k, v)| (k.into(), v.into())),
-        );
+        self.path_vars
+            .extend(vars.into_iter().map(|(k, v)| (k.into(), v.into())));
     }
 
     /// Get a mutable reference to the inner request
@@ -323,9 +318,10 @@ impl RequestBuilder {
     /// 构建请求
     pub fn build(self) -> Result<Request> {
         let body = self.body.unwrap_or_else(Body::empty);
-        let inner = self.inner.body(body).map_err(|e| {
-            Error::InvalidRequest(format!("Failed to build request: {}", e))
-        })?;
+        let inner = self
+            .inner
+            .body(body)
+            .map_err(|e| Error::InvalidRequest(format!("Failed to build request: {}", e)))?;
 
         let mut request = Request::new(inner);
         request.path_vars = self.path_vars;

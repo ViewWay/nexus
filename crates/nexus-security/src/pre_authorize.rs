@@ -54,34 +54,30 @@ impl SecurityExpression {
     /// 评估表达式
     pub async fn evaluate(&self, context: &SecurityContext) -> bool {
         match self {
-            SecurityExpression::IsAuthenticated => {
-                context.is_authenticated().await
-            }
-            SecurityExpression::IsAnonymous => {
-                !context.is_authenticated().await
-            }
+            SecurityExpression::IsAuthenticated => context.is_authenticated().await,
+            SecurityExpression::IsAnonymous => !context.is_authenticated().await,
             SecurityExpression::IsFullyAuthenticated => {
                 // For now, same as authenticated
                 context.is_authenticated().await
-            }
+            },
             SecurityExpression::HasRole(role) => {
                 let role = crate::Role::from_str(role);
                 context.has_role(&role).await
-            }
+            },
             SecurityExpression::HasAuthority(auth) => {
                 let authority = Authority::Permission(auth.clone());
                 context.has_authority(&authority).await
-            }
+            },
             SecurityExpression::HasPermission(target, permission) => {
                 let auth = Authority::Permission(format!("{}:{}", target, permission));
                 context.has_authority(&auth).await
-            }
+            },
             SecurityExpression::Custom(expr) => {
                 // Custom expressions would need a full expression parser
                 // For now, return false
                 tracing::warn!("Custom security expression not implemented: {}", expr);
                 false
-            }
+            },
         }
     }
 
@@ -145,7 +141,10 @@ impl SecurityExpression {
 pub trait PreAuthorize {
     /// Check if access should be granted
     /// 检查是否应授予访问
-    fn check_authorization(&self, context: &SecurityContext) -> Pin<Box<dyn Future<Output = bool> + Send>>;
+    fn check_authorization(
+        &self,
+        context: &SecurityContext,
+    ) -> Pin<Box<dyn Future<Output = bool> + Send>>;
 }
 
 /// PreAuthorize options
@@ -267,7 +266,10 @@ impl Expressions {
 
     /// Has permission expression
     /// 有许可表达式
-    pub fn has_permission(target: impl Into<String>, permission: impl Into<String>) -> SecurityExpression {
+    pub fn has_permission(
+        target: impl Into<String>,
+        permission: impl Into<String>,
+    ) -> SecurityExpression {
         SecurityExpression::HasPermission(target.into(), permission.into())
     }
 }

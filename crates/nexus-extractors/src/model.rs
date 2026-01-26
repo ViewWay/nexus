@@ -42,8 +42,8 @@
 //! }
 //! ```
 
-use crate::{ExtractorError, FromRequest, ExtractorFuture, Request};
 use crate::form::{parse_form_data, url_decode};
+use crate::{ExtractorError, ExtractorFuture, FromRequest, Request};
 use nexus_http::HttpBody;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -132,9 +132,7 @@ where
 
         // Extract form data from body (if present)
         let body_bytes = req.body().as_bytes().map(|b| b.to_vec());
-        let content_type = req.header("content-type")
-            .unwrap_or("")
-            .to_string();
+        let content_type = req.header("content-type").unwrap_or("").to_string();
         let has_form_body = content_type.starts_with("application/x-www-form-urlencoded");
 
         Box::pin(async move {
@@ -143,8 +141,9 @@ where
             // Merge form data if present (form data takes precedence)
             if has_form_body {
                 if let Some(body) = body_bytes {
-                    let body_str = String::from_utf8(body)
-                        .map_err(|_| ExtractorError::Invalid("Invalid UTF-8 in body".to_string()))?;
+                    let body_str = String::from_utf8(body).map_err(|_| {
+                        ExtractorError::Invalid("Invalid UTF-8 in body".to_string())
+                    })?;
 
                     let form_params = parse_form_data(&body_str);
                     for (key, value) in form_params {

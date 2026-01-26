@@ -15,7 +15,7 @@
 //! - Type-safe validation errors
 //! 类型安全的验证错误
 
-use crate::{error::Error, request::Request};
+use crate::{body::HttpBody, error::Error, request::Request};
 use serde::Deserialize;
 use std::future::Future;
 use std::pin::Pin;
@@ -65,11 +65,7 @@ impl ValidationError {
 
 impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Validation failed on field '{}': {}",
-            self.field, self.message
-        )
+        write!(f, "Validation failed on field '{}': {}", self.field, self.message)
     }
 }
 
@@ -88,9 +84,7 @@ impl ValidationErrors {
     /// Create new validation errors
     /// 创建新的验证错误
     pub fn new() -> Self {
-        Self {
-            errors: Vec::new(),
-        }
+        Self { errors: Vec::new() }
     }
 
     /// Add a validation error
@@ -114,11 +108,7 @@ impl ValidationErrors {
     /// Convert to HTTP error
     /// 转换为 HTTP 错误
     pub fn to_http_error(&self) -> Error {
-        let error_messages: Vec<String> = self
-            .errors
-            .iter()
-            .map(|e| e.to_string())
-            .collect();
+        let error_messages: Vec<String> = self.errors.iter().map(|e| e.to_string()).collect();
 
         Error::bad_request(format!("Validation failed: {}", error_messages.join(", ")))
     }
@@ -318,14 +308,14 @@ where
     /// 从请求体中提取并验证 JSON
     pub async fn from_request(req: &Request) -> Result<Validated<T>, Error> {
         // Extract JSON body
-        let json_bytes = req.body_bytes().await.map_err(|e| {
-            Error::bad_request(format!("Failed to read request body: {}", e))
-        })?;
+        let json_bytes = req
+            .body()
+            .as_bytes()
+            .ok_or_else(|| Error::bad_request("Request body is not available".to_string()))?;
 
         // Deserialize
-        let value: T = serde_json::from_slice(&json_bytes).map_err(|e| {
-            Error::bad_request(format!("Failed to parse JSON: {}", e))
-        })?;
+        let value: T = serde_json::from_slice(json_bytes)
+            .map_err(|e| Error::bad_request(format!("Failed to parse JSON: {}", e)))?;
 
         // Validate
         value.validate().map_err(|errors| errors.to_http_error())?;
@@ -369,10 +359,7 @@ impl ValidationMiddleware {
 
     /// Process a request through validation
     /// 通过验证处理请求
-    pub async fn validate_request<T>(
-        &self,
-        req: &Request,
-    ) -> Result<Validated<T>, Error>
+    pub async fn validate_request<T>(&self, req: &Request) -> Result<Validated<T>, Error>
     where
         T: Validatable + for<'de> Deserialize<'de> + Send + Sync,
     {
@@ -432,11 +419,7 @@ impl ValidationHelpers {
     ///     errors.add(error);
     /// }
     /// ```
-    pub fn require_min_length(
-        field: &str,
-        value: &str,
-        min: usize,
-    ) -> Option<ValidationError> {
+    pub fn require_min_length(field: &str, value: &str, min: usize) -> Option<ValidationError> {
         if value.len() < min {
             Some(ValidationError::with_value(
                 field,
@@ -450,11 +433,7 @@ impl ValidationHelpers {
 
     /// Validate maximum length
     /// 验证最大长度
-    pub fn require_max_length(
-        field: &str,
-        value: &str,
-        max: usize,
-    ) -> Option<ValidationError> {
+    pub fn require_max_length(field: &str, value: &str, max: usize) -> Option<ValidationError> {
         if value.len() > max {
             Some(ValidationError::with_value(
                 field,
@@ -526,11 +505,7 @@ impl ValidationHelpers {
     ///     errors.add(error);
     /// }
     /// ```
-    pub fn require_pattern(
-        field: &str,
-        value: &str,
-        pattern: &str,
-    ) -> Option<ValidationError> {
+    pub fn require_pattern(field: &str, value: &str, pattern: &str) -> Option<ValidationError> {
         match regex::Regex::new(pattern) {
             Ok(re) => {
                 if !re.is_match(value) {
@@ -538,7 +513,7 @@ impl ValidationHelpers {
                 } else {
                     None
                 }
-            }
+            },
             Err(_) => Some(ValidationError::new(field, "Invalid regex pattern")),
         }
     }
@@ -618,18 +593,13 @@ mod tests {
 
     #[test]
     fn test_require_pattern() {
-        assert!(ValidationHelpers::require_pattern(
-            "username",
-            "user123",
-            r"^[a-zA-Z0-9_]+$"
-        )
-        .is_none());
+        assert!(
+            ValidationHelpers::require_pattern("username", "user123", r"^[a-zA-Z0-9_]+$").is_none()
+        );
 
-        assert!(ValidationHelpers::require_pattern(
-            "username",
-            "user@123",
-            r"^[a-zA-Z0-9_]+$"
-        )
-        .is_some());
+        assert!(
+            ValidationHelpers::require_pattern("username", "user@123", r"^[a-zA-Z0-9_]+$")
+                .is_some()
+        );
     }
 }

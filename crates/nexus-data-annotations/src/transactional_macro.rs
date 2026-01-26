@@ -6,8 +6,8 @@
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, ItemFn, Lit, Meta, MetaNameList, NestedMeta};
-use syn::{parse::Parse, ParseStream, Result as SynResult};
+use syn::{AttributeArgs, ItemFn, Lit, Meta, MetaNameList, NestedMeta, parse_macro_input};
+use syn::{ParseStream, Result as SynResult, parse::Parse};
 
 /// Parses @Transactional attributes
 /// 解析 @Transactional 属性
@@ -263,7 +263,8 @@ pub fn impl_transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// 这是一个辅助函数，应该被从依赖注入容器中获取实际执行器的代码替换。
 #[doc(hidden)]
-pub fn get_transactional_executor() -> ::nexus_data_annotations::transactional::TransactionalExecutor {
+pub fn get_transactional_executor() -> ::nexus_data_annotations::transactional::TransactionalExecutor
+{
     // This is a placeholder - actual implementation would get the executor
     // from a dependency injection container or global context
     // 这是一个占位符 - 实际实现会从依赖注入容器或全局上下文获取执行器

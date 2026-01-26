@@ -154,7 +154,10 @@ fn test_with_macro() {
         username: String,
     }
 
-    let user1 = User { id: 1, username: "alice".into() };
+    let user1 = User {
+        id: 1,
+        username: "alice".into(),
+    };
     let user2 = user1.with_id(2);
     assert_eq!(user2.id, 2);
     assert_eq!(user1.id, 1); // Original unchanged / 原始未改变

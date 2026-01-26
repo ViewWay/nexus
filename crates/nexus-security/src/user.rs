@@ -168,7 +168,11 @@ impl UserBuilder {
 
     /// Set password with encoder
     /// 使用编码器设置密码
-    pub fn password_encoded(mut self, password: impl Into<String>, encoder: &dyn PasswordEncoder) -> Self {
+    pub fn password_encoded(
+        mut self,
+        password: impl Into<String>,
+        encoder: &dyn PasswordEncoder,
+    ) -> Self {
         let raw = password.into();
         self.password = Some(encoder.encode(&raw));
         self
@@ -389,16 +393,11 @@ impl InMemoryUserService {
     /// 使用用户创建
     pub fn with_users(users: Vec<User>) -> Self {
         let service = Self::new();
-        let users_map: std::collections::HashMap<_, _> = users
-            .into_iter()
-            .map(|u| (u.username.clone(), u))
-            .collect();
+        let users_map: std::collections::HashMap<_, _> =
+            users.into_iter().map(|u| (u.username.clone(), u)).collect();
 
         // Note: This is synchronous - in real async context would need tokio spawn
-        service
-            .users
-            .blocking_write()
-            .extend(users_map);
+        service.users.blocking_write().extend(users_map);
 
         service
     }
@@ -413,7 +412,8 @@ impl Default for InMemoryUserService {
 #[async_trait::async_trait]
 impl UserService for InMemoryUserService {
     async fn load_user_by_username(&self, username: &str) -> SecurityResult<Arc<dyn UserDetails>> {
-        let users: tokio::sync::RwLockReadGuard<'_, std::collections::HashMap<String, User>> = self.users.read().await;
+        let users: tokio::sync::RwLockReadGuard<'_, std::collections::HashMap<String, User>> =
+            self.users.read().await;
         users
             .get(username)
             .map(|u: &User| Arc::new(u.clone()) as Arc<dyn UserDetails>)
@@ -421,25 +421,31 @@ impl UserService for InMemoryUserService {
     }
 
     async fn create_user(&self, user: User) -> SecurityResult<()> {
-        let mut users: tokio::sync::RwLockWriteGuard<'_, std::collections::HashMap<String, User>> = self.users.write().await;
+        let mut users: tokio::sync::RwLockWriteGuard<'_, std::collections::HashMap<String, User>> =
+            self.users.write().await;
         users.insert(user.username.clone(), user);
         Ok(())
     }
 
     async fn update_user(&self, user: User) -> SecurityResult<()> {
-        let mut users: tokio::sync::RwLockWriteGuard<'_, std::collections::HashMap<String, User>> = self.users.write().await;
+        let mut users: tokio::sync::RwLockWriteGuard<'_, std::collections::HashMap<String, User>> =
+            self.users.write().await;
         users.insert(user.username.clone(), user);
         Ok(())
     }
 
     async fn delete_user(&self, username: &str) -> SecurityResult<()> {
-        let mut users: tokio::sync::RwLockWriteGuard<'_, std::collections::HashMap<String, User>> = self.users.write().await;
-        users.remove(username).ok_or_else(|| SecurityError::UserNotFound(username.to_string()))?;
+        let mut users: tokio::sync::RwLockWriteGuard<'_, std::collections::HashMap<String, User>> =
+            self.users.write().await;
+        users
+            .remove(username)
+            .ok_or_else(|| SecurityError::UserNotFound(username.to_string()))?;
         Ok(())
     }
 
     async fn user_exists(&self, username: &str) -> bool {
-        let users: tokio::sync::RwLockReadGuard<'_, std::collections::HashMap<String, User>> = self.users.read().await;
+        let users: tokio::sync::RwLockReadGuard<'_, std::collections::HashMap<String, User>> =
+            self.users.read().await;
         users.contains_key(username)
     }
 }

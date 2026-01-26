@@ -186,9 +186,9 @@ impl JwtAuthenticationMiddleware {
     /// Check if request path should skip authentication
     /// 检查请求路径是否应该跳过认证
     fn should_skip_auth(&self, path: &str) -> bool {
-        self.skip_paths.iter().any(|skip_path| {
-            path == skip_path || path.starts_with(&format!("{}/", skip_path))
-        })
+        self.skip_paths
+            .iter()
+            .any(|skip_path| path == skip_path || path.starts_with(&format!("{}/", skip_path)))
     }
 }
 
@@ -218,7 +218,7 @@ where
             None => {
                 tracing::warn!("Missing JWT token for path: {}", path);
                 return Err(Error::unauthorized("Missing authentication token"));
-            }
+            },
         };
 
         // Verify and parse JWT token
@@ -226,19 +226,19 @@ where
             Ok(claims) => {
                 tracing::debug!("JWT verified for user: {}", claims.username);
                 claims
-            }
+            },
             Err(SecurityError::TokenExpired(msg)) => {
                 tracing::warn!("JWT token expired: {}", msg);
                 return Err(Error::unauthorized("Token has expired"));
-            }
+            },
             Err(SecurityError::InvalidToken(msg)) => {
                 tracing::warn!("Invalid JWT token: {}", msg);
                 return Err(Error::unauthorized("Invalid token"));
-            }
+            },
             Err(e) => {
                 tracing::error!("JWT verification error: {:?}", e);
                 return Err(Error::internal_server_error("Authentication error"));
-            }
+            },
         };
 
         // Store authentication in request extensions
@@ -336,7 +336,9 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert(
             AUTHORIZATION,
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test".parse().unwrap(),
+            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test"
+                .parse()
+                .unwrap(),
         );
 
         let token = middleware.resolve_token(&headers);

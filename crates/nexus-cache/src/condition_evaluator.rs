@@ -4,8 +4,8 @@
 //! Evaluates SpEL-like expressions for cache annotations
 //! 评估缓存注解的类似 SpEL 的表达式
 
-use std::collections::HashMap;
 use serde_json::Value as JsonValue;
+use std::collections::HashMap;
 
 /// Evaluate cache condition expression
 /// 评估缓存条件表达式
@@ -201,7 +201,7 @@ fn find_operator(expr: &str, op: &str) -> Option<usize> {
             '(' => depth += 1,
             ')' => depth -= 1,
             _ if depth == 0 && expr[i..].starts_with(op) => return Some(i),
-            _ => {}
+            _ => {},
         }
     }
 
@@ -232,7 +232,7 @@ fn get_value(
 
     // Handle string literals
     if expr.starts_with('"') && expr.ends_with('"') {
-        return JsonValue::String(expr[1..expr.len()-1].to_string());
+        return JsonValue::String(expr[1..expr.len() - 1].to_string());
     }
 
     // Handle number literals
@@ -428,11 +428,23 @@ mod tests {
 
         // Don't cache if result is null
         assert!(evaluate_cache_condition("#result == null", &args, Some(&JsonValue::Null)));
-        assert!(!evaluate_cache_condition("#result == null", &args, Some(&JsonValue::String("test".to_string()))));
+        assert!(!evaluate_cache_condition(
+            "#result == null",
+            &args,
+            Some(&JsonValue::String("test".to_string()))
+        ));
 
         // Don't cache if result is empty
-        assert!(evaluate_cache_condition("#result.isEmpty()", &args, Some(&JsonValue::String("".to_string()))));
-        assert!(!evaluate_cache_condition("#result.isEmpty()", &args, Some(&JsonValue::String("test".to_string()))));
+        assert!(evaluate_cache_condition(
+            "#result.isEmpty()",
+            &args,
+            Some(&JsonValue::String("".to_string()))
+        ));
+        assert!(!evaluate_cache_condition(
+            "#result.isEmpty()",
+            &args,
+            Some(&JsonValue::String("test".to_string()))
+        ));
     }
 
     #[test]

@@ -29,14 +29,13 @@
 
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::{
-    parse_macro_input, Attribute, DeriveInput,
-    Expr, FnArg, ItemFn, ItemStatic, ItemStruct, ItemTrait, Meta, PatType,
-    PathSegment, ReturnType, Signature, Type, TypePath, Visibility,
+    Attribute, DeriveInput, Expr, FnArg, ItemFn, ItemStatic, ItemStruct, ItemTrait, Meta, PatType,
+    PathSegment, ReturnType, Signature, Type, TypePath, Visibility, parse_macro_input,
 };
 
 mod transactional;
@@ -638,7 +637,10 @@ pub fn slf4j(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     // Check if struct already has a log field
     let has_log_field = input.fields.iter().any(|f| {
-        f.ident.as_ref().map(|i| i.to_string() == "log").unwrap_or(false)
+        f.ident
+            .as_ref()
+            .map(|i| i.to_string() == "log")
+            .unwrap_or(false)
     });
 
     if has_log_field {
@@ -757,6 +759,7 @@ pub fn cacheable(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     let fn_name = &input.sig.ident;
     let fn_name_str = fn_name.to_string();
+    let fn_name_inner = quote::format_ident!("{}_inner", fn_name);
 
     // Generate a cache key prefix
     // 生成缓存键前缀
@@ -1045,7 +1048,6 @@ pub fn exception_handler(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
-
 
 // ============================================================================
 // Parameter Extraction Macros (equivalent to @PathVariable, @RequestParam, etc.)
@@ -1919,26 +1921,6 @@ pub fn require_role(_attr: TokenStream, item: TokenStream) -> TokenStream {
 // HTTP 方法特定宏（常见映射的简短别名）
 // ============================================================================
 
-/// Map HEAD requests
-/// 映射 HEAD 请求
-///
-/// Shorthand for `#[request_mapping(method = "HEAD")]`.
-/// `#[request_mapping(method = "HEAD")]` 的简写。
-#[proc_macro_attribute]
-pub fn head(attr: TokenStream, item: TokenStream) -> TokenStream {
-    request_mapping(attr, item)
-}
-
-/// Map OPTIONS requests
-/// 映射 OPTIONS 请求
-///
-/// Shorthand for `#[request_mapping(method = "OPTIONS")]`.
-/// `#[request_mapping(method = "OPTIONS")]` 的简写。
-#[proc_macro_attribute]
-pub fn options(attr: TokenStream, item: TokenStream) -> TokenStream {
-    request_mapping(attr, item)
-}
-
 /// Map TRACE requests
 /// 映射 TRACE 请求
 ///
@@ -2725,4 +2707,3 @@ pub fn gateway_route(_attr: TokenStream, item: TokenStream) -> TokenStream {
 pub fn gateway_configuration(_attr: TokenStream, item: TokenStream) -> TokenStream {
     item
 }
-

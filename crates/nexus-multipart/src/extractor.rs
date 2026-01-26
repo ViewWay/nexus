@@ -20,11 +20,12 @@
 //! }
 //! ```
 
-use crate::{error::MultipartError, Multipart, MultipartFile, MultipartResult};
+use crate::{Multipart, MultipartFile, MultipartResult, error::MultipartError};
 use async_trait::async_trait;
 use bytes::Bytes;
-use http_body::Body;
-use nexus_http::Request;
+// Use nexus_http for Body type instead of http_body crate
+// 使用 nexus_http 的 Body 类型而不是 http_body crate
+use nexus_http::{Body, Request};
 use std::collections::HashSet;
 
 /// File type validator
@@ -64,7 +65,10 @@ impl FileValidator {
 
     /// Set allowed extensions
     /// 设置允许的扩展名
-    pub fn allowed_extensions(mut self, extensions: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub fn allowed_extensions(
+        mut self,
+        extensions: impl IntoIterator<Item = impl Into<String>>,
+    ) -> Self {
         self.allowed_extensions = Some(
             extensions
                 .into_iter()
@@ -167,7 +171,13 @@ pub mod mime_types {
 
     /// Common document types set / 常用文档类型集合
     pub fn document_types() -> Vec<&'static str> {
-        vec![APPLICATION_PDF, APPLICATION_JSON, APPLICATION_XML, TEXT_PLAIN, TEXT_CSV]
+        vec![
+            APPLICATION_PDF,
+            APPLICATION_JSON,
+            APPLICATION_XML,
+            TEXT_PLAIN,
+            TEXT_CSV,
+        ]
     }
 }
 
@@ -300,15 +310,27 @@ impl<T> Part<T> {
 ///
 /// This is typically used internally by the framework.
 /// 这通常由框架内部使用。
-pub async fn extract_multipart<B>(
-    req: &Request<B>,
+///
+/// # Parameters / 参数
+///
+/// * `req` - The HTTP request to extract multipart data from
+///          从中提取多部分数据的 HTTP 请求
+/// * `config` - Configuration for multipart processing
+///            多部分处理的配置
+///
+/// # Returns / 返回
+///
+/// Returns `Ok(Multipart)` if the request contains valid multipart/form-data,
+/// or an error if the content type is missing/invalid or the body cannot be read.
+///
+/// 如果请求包含有效的 multipart/form-data，则返回 `Ok(Multipart)`，
+/// 如果内容类型缺失/无效或无法读取主体，则返回错误。
+pub async fn extract_multipart(
+    req: &Request,
     config: &MultipartConfig,
-) -> MultipartResult<Multipart>
-where
-    B: Body,
-    B::Data: Into<Bytes>,
-{
+) -> MultipartResult<Multipart> {
     // Get content type header
+    // 获取 content-type 头部
     let content_type = req
         .headers()
         .get("content-type")
@@ -316,23 +338,26 @@ where
         .ok_or_else(|| MultipartError::InvalidRequest("Missing Content-Type header".to_string()))?;
 
     // Check if it's multipart
+    // 检查是否为 multipart
     if !content_type.starts_with("multipart/form-data") {
         return Err(MultipartError::InvalidRequest(
             "Invalid Content-Type, expected multipart/form-data".to_string(),
         ));
     }
 
-    // Get body bytes
-    let body_bytes = match req.body().clone().try_into_bytes() {
-        Ok(bytes) => bytes,
-        Err(_) => {
-            return Err(MultipartError::InvalidRequest(
-                "Unable to read request body".to_string(),
-            ))
-        }
-    };
+    // Get body bytes directly from the request
+    // 直接从请求获取主体字节
+    //
+    // In nexus-http, Request::body() returns &Body (which is FullBody).
+    // FullBody has a data() method that returns &Bytes.
+    // We clone the bytes since Bytes is reference-counted (efficient clone).
+    // 在 nexus-http 中，Request::body() 返回 &Body（即 FullBody）。
+    // FullBody 有一个 data() 方法返回 &Bytes。
+    // 我们克隆字节，因为 Bytes 是引用计数的（高效克隆）。
+    let body_bytes = req.body().data().clone();
 
-    // Create multipart
+    // Create multipart with the extracted data
+    // 使用提取的数据创建 multipart
     Multipart::new(content_type, body_bytes, config.max_file_size)
 }
 

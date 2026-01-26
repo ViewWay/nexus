@@ -68,6 +68,7 @@
 #![warn(clippy::all)]
 
 use proc_macro::TokenStream;
+use syn::parse_macro_input;
 
 // ========================================================================
 // Public API - Derive Macros / 公共 API - 派生宏
@@ -96,7 +97,7 @@ use proc_macro::TokenStream;
 #[proc_macro_derive(Getter)]
 pub fn derive_getter(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    getter::impl_getter(input)
+    getter::impl_getter(input).into()
 }
 
 /// Generates setter methods for all struct fields
@@ -122,7 +123,7 @@ pub fn derive_getter(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Setter)]
 pub fn derive_setter(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    setter::impl_setter(input)
+    setter::impl_setter(input).into()
 }
 
 /// Generates constructor with all fields
@@ -149,7 +150,7 @@ pub fn derive_setter(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(AllArgsConstructor)]
 pub fn derive_all_args_constructor(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    constructor::impl_all_args(input)
+    constructor::impl_all_args(input).into()
 }
 
 /// Generates default constructor (no args)
@@ -180,7 +181,7 @@ pub fn derive_all_args_constructor(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(NoArgsConstructor)]
 pub fn derive_no_args_constructor(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    constructor::impl_no_args(input)
+    constructor::impl_no_args(input).into()
 }
 
 /// Generates getters, setters, constructor, and with methods
@@ -212,7 +213,7 @@ pub fn derive_no_args_constructor(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Data)]
 pub fn derive_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    data::impl_data(input)
+    data::impl_data(input).into()
 }
 
 /// Generates builder pattern
@@ -239,7 +240,7 @@ pub fn derive_data(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Builder)]
 pub fn derive_builder(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    builder::impl_builder(input)
+    builder::impl_builder(input).into()
 }
 
 /// Generates immutable value class with getters
@@ -265,7 +266,7 @@ pub fn derive_builder(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Value)]
 pub fn derive_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    value::impl_value(input)
+    value::impl_value(input).into()
 }
 
 /// Generates with_xxx methods for creating modified copies
@@ -295,13 +296,11 @@ pub fn derive_value(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(With)]
 pub fn derive_with(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    with_method::impl_with(input)
+    with_method::impl_with(input).into()
 }
 
 // ========================================================================
 // Internal modules / 内部模块
-// ========================================================================
-
 mod data;
 mod getter;
 mod setter;

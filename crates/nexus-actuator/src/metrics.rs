@@ -6,8 +6,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 
 /// Metric type
 /// 指标类型
@@ -141,7 +141,9 @@ impl MetricsRegistry {
     /// Increment a counter
     /// 增加计数器
     pub fn increment(&mut self, name: &str) -> u64 {
-        let counter = self.counters.entry(name.to_string())
+        let counter = self
+            .counters
+            .entry(name.to_string())
             .or_insert_with(|| Arc::new(AtomicU64::new(0)));
         counter.fetch_add(1, Ordering::Relaxed)
     }
@@ -149,7 +151,9 @@ impl MetricsRegistry {
     /// Increment a counter by a specific amount
     /// 按指定数量增加计数器
     pub fn increment_by(&mut self, name: &str, amount: u64) -> u64 {
-        let counter = self.counters.entry(name.to_string())
+        let counter = self
+            .counters
+            .entry(name.to_string())
             .or_insert_with(|| Arc::new(AtomicU64::new(0)));
         counter.fetch_add(amount, Ordering::Relaxed)
     }
@@ -163,7 +167,9 @@ impl MetricsRegistry {
     /// Set a gauge value
     /// 设置仪表盘值
     pub fn set_gauge(&mut self, name: &str, value: i64) {
-        let gauge = self.gauges.entry(name.to_string())
+        let gauge = self
+            .gauges
+            .entry(name.to_string())
             .or_insert_with(|| Arc::new(AtomicI64::new(0)));
         gauge.store(value, Ordering::Relaxed);
     }
@@ -182,15 +188,13 @@ impl MetricsRegistry {
         // Collect counters
         for (name, counter) in &self.counters {
             let value = counter.load(Ordering::Relaxed);
-            metrics.push(Metric::counter(name, value)
-                .with_description("Counter metric"));
+            metrics.push(Metric::counter(name, value).with_description("Counter metric"));
         }
 
         // Collect gauges
         for (name, gauge) in &self.gauges {
             let value = gauge.load(Ordering::Relaxed);
-            metrics.push(Metric::gauge(name, value)
-                .with_description("Gauge metric"));
+            metrics.push(Metric::gauge(name, value).with_description("Gauge metric"));
         }
 
         metrics
@@ -229,18 +233,18 @@ impl SystemMetrics {
         let mut metrics = Vec::new();
 
         // JVM/process equivalent metrics (placeholder values)
-        metrics.push(Metric::gauge("jvm.memory.max", 1024 * 1024 * 512)
-            .with_description("Maximum memory"));
-        metrics.push(Metric::gauge("jvm.memory.used", 1024 * 1024 * 128)
-            .with_description("Used memory"));
+        metrics.push(
+            Metric::gauge("jvm.memory.max", 1024 * 1024 * 512).with_description("Maximum memory"),
+        );
+        metrics.push(
+            Metric::gauge("jvm.memory.used", 1024 * 1024 * 128).with_description("Used memory"),
+        );
 
         // Process CPU
-        metrics.push(Metric::gauge("process.cpu.usage", 5)
-            .with_description("Process CPU usage"));
+        metrics.push(Metric::gauge("process.cpu.usage", 5).with_description("Process CPU usage"));
 
         // System info
-        metrics.push(Metric::gauge("system.cpu.count", 4)
-            .with_description("Number of processors"));
+        metrics.push(Metric::gauge("system.cpu.count", 4).with_description("Number of processors"));
 
         metrics
     }

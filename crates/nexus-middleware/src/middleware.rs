@@ -22,7 +22,7 @@ use std::sync::Arc;
 
 // Re-export core types from nexus-http and nexus-router
 // 从nexus-http和nexus-router重新导出核心类型
-pub use nexus_http::{Request, Response, Result, Error};
+pub use nexus_http::{Error, Request, Response, Result};
 pub use nexus_router::{Middleware, Next};
 
 /// Middleware stack

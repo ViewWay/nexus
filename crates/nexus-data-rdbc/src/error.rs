@@ -6,8 +6,8 @@
 //! This module defines error types specific to R2DBC operations.
 //! 本模块定义 R2DBC 操作特定的错误类型。
 
-use std::fmt;
 use nexus_data_commons::Error as DataError;
+use std::fmt;
 
 /// R2DBC error
 /// R2DBC 错误
@@ -171,9 +171,13 @@ impl From<DataError> for R2dbcError {
 impl From<sqlx::Error> for R2dbcError {
     fn from(err: sqlx::Error) -> Self {
         match err {
-            sqlx::Error::Database(db_err) => {
-                Self::Sql(format!("{}: {}", db_err.message(), db_err.code().unwrap_or(std::borrow::Cow::Borrowed("UNKNOWN"))))
-            }
+            sqlx::Error::Database(db_err) => Self::Sql(format!(
+                "{}: {}",
+                db_err.message(),
+                db_err
+                    .code()
+                    .unwrap_or(std::borrow::Cow::Borrowed("UNKNOWN"))
+            )),
             sqlx::Error::PoolTimedOut => Self::Timeout("Pool timeout".to_string()),
             sqlx::Error::PoolClosed => Self::Pool("Pool closed".to_string()),
             sqlx::Error::WorkerCrashed => Self::Pool("Worker crashed".to_string()),

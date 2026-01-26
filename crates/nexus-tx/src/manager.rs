@@ -26,7 +26,10 @@ pub trait TransactionManager: Send + Sync {
     ///
     /// Returns a transaction status that can be used for commit/rollback.
     /// 返回可用于提交/回滚的事务状态。
-    async fn begin(&self, definition: &TransactionDefinition) -> TransactionResult<TransactionStatus>;
+    async fn begin(
+        &self,
+        definition: &TransactionDefinition,
+    ) -> TransactionResult<TransactionStatus>;
 
     /// Commit the transaction
     /// 提交事务
@@ -225,9 +228,7 @@ impl SimpleTransactionManager {
     /// Create with name
     /// 使用名称创建
     pub fn with_name(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-        }
+        Self { name: name.into() }
     }
 }
 
@@ -239,7 +240,10 @@ impl Default for SimpleTransactionManager {
 
 #[async_trait]
 impl TransactionManager for SimpleTransactionManager {
-    async fn begin(&self, definition: &TransactionDefinition) -> TransactionResult<TransactionStatus> {
+    async fn begin(
+        &self,
+        definition: &TransactionDefinition,
+    ) -> TransactionResult<TransactionStatus> {
         // Create a new transaction status
         Ok(TransactionStatus::new(&definition.name))
     }

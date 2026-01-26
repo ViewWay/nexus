@@ -59,7 +59,12 @@ where
 {
     /// Execute and put result in cache
     /// 执行并将结果放入缓存
-    fn execute_and_put(&self, cache: &dyn Cache<K, V>, key: K, f: F) -> Pin<Box<dyn Future<Output = V> + Send>>;
+    fn execute_and_put(
+        &self,
+        cache: &dyn Cache<K, V>,
+        key: K,
+        f: F,
+    ) -> Pin<Box<dyn Future<Output = V> + Send>>;
 }
 
 /// CachePut wrapper for async functions
@@ -95,11 +100,7 @@ impl CachePutExec {
     ///
     /// Equivalent to Spring's @CachePut method execution.
     /// 等价于Spring的@CachePut方法执行。
-    pub async fn execute_and_update<K, V, F>(
-        cache: &dyn Cache<K, V>,
-        key: K,
-        f: F,
-    ) -> V
+    pub async fn execute_and_update<K, V, F>(cache: &dyn Cache<K, V>, key: K, f: F) -> V
     where
         K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
@@ -131,7 +132,9 @@ impl CachePutExec {
         let result = f.await;
 
         // Put result in cache with TTL
-        cache.put_with_ttl(key.clone(), result.clone(), ttl_secs).await;
+        cache
+            .put_with_ttl(key.clone(), result.clone(), ttl_secs)
+            .await;
 
         result
     }
@@ -250,9 +253,7 @@ mod tests {
 
     #[test]
     fn test_cache_put_options() {
-        let options = CachePutOptions::new()
-            .cache_name("users")
-            .key("#user.id");
+        let options = CachePutOptions::new().cache_name("users").key("#user.id");
 
         assert_eq!(options.cache_names, vec!["users"]);
         assert_eq!(options.key, Some("#user.id".to_string()));

@@ -14,13 +14,11 @@
 
 use std::cell::UnsafeCell;
 use std::os::fd::{AsRawFd, RawFd};
-use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 use std::time::Duration;
 
-use crate::driver::{
-    CompletionEntry, Driver, ERROR_TRANSPORT, Interest, SubmitEntry,
-};
+use crate::driver::{CompletionEntry, Driver, ERROR_TRANSPORT, Interest, SubmitEntry};
 
 /// Minimum kqueue instance size / 最小kqueue实例大小
 const MIN_KQUEUE_SIZE: u32 = 32;
@@ -214,10 +212,7 @@ impl KqueueDriver {
         unsafe {
             let mut cpuset: libc::cpuset_t = std::mem::zeroed();
             libc::CPU_ZERO(&mut cpuset);
-            libc::CPU_SET(
-                core % libc::CPU_SETSIZE as usize,
-                &mut cpuset,
-            );
+            libc::CPU_SET(core % libc::CPU_SETSIZE as usize, &mut cpuset);
 
             let result = libc::cpuset_setaffinity(
                 libc::CP_WHICH,
@@ -296,16 +291,8 @@ impl KqueueDriver {
             std::ptr::null_mut()
         };
 
-        let result = unsafe {
-            libc::kevent(
-                self.kqueue_fd,
-                std::ptr::null(),
-                0,
-                ptr,
-                len,
-                timeout_ptr,
-            )
-        };
+        let result =
+            unsafe { libc::kevent(self.kqueue_fd, std::ptr::null(), 0, ptr, len, timeout_ptr) };
 
         if result < 0 {
             return Err(std::io::Error::last_os_error());
@@ -335,12 +322,14 @@ impl KqueueDriver {
             };
 
             unsafe {
-                self.completion_queue
-                    .set(pos, Some(CompletionEntry {
+                self.completion_queue.set(
+                    pos,
+                    Some(CompletionEntry {
                         user_data: event.udata as u64,
                         result,
                         flags: event.flags as u32,
-                    }));
+                    }),
+                );
             }
 
             self.state
@@ -386,8 +375,12 @@ impl Driver for KqueueDriver {
                 // Convert submit entry to kevent change
                 // 将提交条目转换为kevent change
                 let (filter, flags) = match entry.opcode {
-                    crate::driver::opcode::READ => (libc::EVFILT_READ, libc::EV_ADD | libc::EV_ONESHOT),
-                    crate::driver::opcode::WRITE => (libc::EVFILT_WRITE, libc::EV_ADD | libc::EV_ONESHOT),
+                    crate::driver::opcode::READ => {
+                        (libc::EVFILT_READ, libc::EV_ADD | libc::EV_ONESHOT)
+                    },
+                    crate::driver::opcode::WRITE => {
+                        (libc::EVFILT_WRITE, libc::EV_ADD | libc::EV_ONESHOT)
+                    },
                     _ => (0, 0),
                 };
 
@@ -509,7 +502,9 @@ impl Driver for KqueueDriver {
             }
 
             let new_head = head + 1;
-            self.state.completion_head.store(new_head, Ordering::Release);
+            self.state
+                .completion_head
+                .store(new_head, Ordering::Release);
         }
     }
 
@@ -526,14 +521,7 @@ impl Driver for KqueueDriver {
         };
 
         let result = unsafe {
-            libc::kevent(
-                self.kqueue_fd,
-                &change,
-                1,
-                std::ptr::null_mut(),
-                0,
-                std::ptr::null_mut(),
-            )
+            libc::kevent(self.kqueue_fd, &change, 1, std::ptr::null_mut(), 0, std::ptr::null_mut())
         };
 
         if result < 0 {
@@ -554,14 +542,7 @@ impl Driver for KqueueDriver {
         };
 
         let result = unsafe {
-            libc::kevent(
-                self.kqueue_fd,
-                &change,
-                1,
-                std::ptr::null_mut(),
-                0,
-                std::ptr::null_mut(),
-            )
+            libc::kevent(self.kqueue_fd, &change, 1, std::ptr::null_mut(), 0, std::ptr::null_mut())
         };
 
         if result < 0 {

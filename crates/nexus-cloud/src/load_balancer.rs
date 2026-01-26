@@ -9,8 +9,8 @@
 
 use crate::ServiceInstance;
 use rand::prelude::{IndexedRandom, Rng};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Load balancer
 /// 负载均衡器
@@ -144,7 +144,9 @@ impl WeightedLoadBalancer {
             }
         }
 
-        weighted_instances.first().map(|(instance, _)| instance.clone())
+        weighted_instances
+            .first()
+            .map(|(instance, _)| instance.clone())
     }
 }
 

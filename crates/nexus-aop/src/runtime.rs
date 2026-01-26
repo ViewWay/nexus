@@ -115,9 +115,7 @@ impl JoinPoint {
     /// Get argument by index
     /// 通过索引获取参数
     pub fn arg<T: 'static>(&self, index: usize) -> Option<&T> {
-        self.args
-            .get(index)
-            .and_then(|arg| arg.downcast_ref::<T>())
+        self.args.get(index).and_then(|arg| arg.downcast_ref::<T>())
     }
 }
 
@@ -282,17 +280,17 @@ impl PointcutExpression {
                     if *method == "*" || *method == join_point.method_name() {
                         return true;
                     }
-                }
+                },
                 ExpressionComponent::Within(class) => {
                     if *class == "*" || *class == join_point.target_class() {
                         return true;
                     }
-                }
+                },
                 ExpressionComponent::And | ExpressionComponent::Or | ExpressionComponent::Not => {
                     // Logical operators would need more complex evaluation
                     // 逻辑运算符需要更复杂的评估
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
         false
@@ -388,11 +386,7 @@ impl AspectRegistry {
 
     /// Register an aspect
     /// 注册切面
-    pub async fn register_aspect<T: Any + Send + Sync>(
-        &self,
-        name: String,
-        instance: T,
-    ) {
+    pub async fn register_aspect<T: Any + Send + Sync>(&self, name: String, instance: T) {
         let info = AspectInfo {
             name: name.clone(),
             type_id: TypeId::of::<T>(),

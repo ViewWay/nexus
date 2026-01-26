@@ -92,9 +92,7 @@ impl Sort {
     /// Unsort (no sorting)
     /// 无排序
     pub fn unsorted() -> Self {
-        Self {
-            orders: Vec::new(),
-        }
+        Self { orders: Vec::new() }
     }
 }
 

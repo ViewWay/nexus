@@ -13,13 +13,13 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
+mod context;
 mod request;
 mod response;
-mod context;
 
-pub use request::{parse_request, RequestParser};
-pub use response::{encode_response, ResponseEncoder};
 pub use context::{ConnectionContext, HttpVersion};
+pub use request::{RequestParser, parse_request};
+pub use response::{ResponseEncoder, encode_response};
 
 /// Maximum header size (8KB)
 /// 最大头部大小 (8KB)

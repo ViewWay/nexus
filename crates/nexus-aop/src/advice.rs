@@ -3,8 +3,8 @@
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, LitStr};
-use syn::{parse::Parse, ParseStream, Result as SynResult};
+use syn::{ItemFn, LitStr, parse_macro_input};
+use syn::{ParseStream, Result as SynResult, parse::Parse};
 
 /// Parses pointcut expression from advice annotation
 /// 解析通知注解中的切点表达式

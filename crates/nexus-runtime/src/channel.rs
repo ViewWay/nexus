@@ -48,7 +48,9 @@ pub enum SendError<T> {
 
 impl<T> std::fmt::Debug for SendError<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("SendError::Closed").field(&format_args!("_")).finish()
+        f.debug_tuple("SendError::Closed")
+            .field(&format_args!("_"))
+            .finish()
     }
 }
 
@@ -292,7 +294,9 @@ impl<T> Drop for Receiver<T> {
     fn drop(&mut self) {
         // Mark receiver as dropped
         // 标记接收器已丢弃
-        self.shared.is_receiver_alive.store(false, Ordering::Release);
+        self.shared
+            .is_receiver_alive
+            .store(false, Ordering::Release);
     }
 }
 

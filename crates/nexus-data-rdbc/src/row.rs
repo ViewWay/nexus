@@ -221,11 +221,14 @@ impl Row {
                 ColumnValue::Bool(b) => serde_json::Value::Bool(*b),
                 ColumnValue::I32(i) => serde_json::Value::Number((*i).into()),
                 ColumnValue::I64(i) => serde_json::Value::Number((*i).into()),
-                ColumnValue::F64(f) => serde_json::Number::from_f64(*f)
-                    .unwrap_or(serde_json::Number::new(0)),
+                ColumnValue::F64(f) => {
+                    serde_json::Number::from_f64(*f).unwrap_or(serde_json::Number::new(0))
+                },
                 ColumnValue::String(s) => serde_json::Value::String(s.clone()),
                 ColumnValue::Bytes(b) => serde_json::Value::Array(
-                    b.iter().map(|byte| serde_json::Value::Number((*byte).into())).collect()
+                    b.iter()
+                        .map(|byte| serde_json::Value::Number((*byte).into()))
+                        .collect(),
                 ),
                 ColumnValue::Uuid(u) => serde_json::Value::String(u.to_string()),
                 ColumnValue::DateTime(dt) => serde_json::Value::String(dt.to_rfc3339()),
@@ -259,11 +262,14 @@ impl Row {
                     ColumnValue::Bool(b) => serde_json::Value::Bool(*b),
                     ColumnValue::I32(i) => serde_json::Value::Number((*i).into()),
                     ColumnValue::I64(i) => serde_json::Value::Number((*i).into()),
-                    ColumnValue::F64(f) => serde_json::Number::from_f64(*f)
-                        .unwrap_or(serde_json::Number::new(0)),
+                    ColumnValue::F64(f) => {
+                        serde_json::Number::from_f64(*f).unwrap_or(serde_json::Number::new(0))
+                    },
                     ColumnValue::String(s) => serde_json::Value::String(s.clone()),
                     ColumnValue::Bytes(b) => serde_json::Value::Array(
-                        b.iter().map(|byte| serde_json::Value::Number((*byte).into())).collect()
+                        b.iter()
+                            .map(|byte| serde_json::Value::Number((*byte).into()))
+                            .collect(),
                     ),
                     ColumnValue::Uuid(u) => serde_json::Value::String(u.to_string()),
                     ColumnValue::DateTime(dt) => serde_json::Value::String(dt.to_rfc3339()),
@@ -594,10 +600,7 @@ mod tests {
             FromColumn::from_column(&ColumnValue::String("hello".to_string())),
             Some("hello".to_string())
         );
-        assert_eq!(
-            FromColumn::from_column(&ColumnValue::Bool(true)),
-            Some("true".to_string())
-        );
+        assert_eq!(FromColumn::from_column(&ColumnValue::Bool(true)), Some("true".to_string()));
     }
 
     #[test]

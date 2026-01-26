@@ -32,11 +32,11 @@
 // Address module is defined inline below
 // pub use address::{Address, AddressError, H160};
 
+use rand::RngCore;
+use serde::de::Error as SerdeError;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::str::FromStr;
-use serde::{Deserialize, Serialize, Deserializer, Serializer};
-use serde::de::Error as SerdeError;
-use rand::RngCore;
 
 /// Wallet trait
 /// 钱包trait
@@ -142,8 +142,7 @@ impl LocalWallet {
         }
 
         let mut bytes = [0u8; 32];
-        hex::decode_to_slice(hex, &mut bytes)
-            .map_err(|_| WalletError::InvalidPrivateKey)?;
+        hex::decode_to_slice(hex, &mut bytes).map_err(|_| WalletError::InvalidPrivateKey)?;
 
         Ok(Self {
             signer: Signer::new(bytes),
@@ -156,8 +155,7 @@ impl LocalWallet {
     pub fn from_mnemonic(phrase: &str) -> Result<Self, WalletError> {
         use bip39::Mnemonic;
 
-        let mnemonic = Mnemonic::from_phrase(phrase)
-            .map_err(|_| WalletError::InvalidMnemonic)?;
+        let mnemonic = Mnemonic::from_phrase(phrase).map_err(|_| WalletError::InvalidMnemonic)?;
 
         let seed = mnemonic.to_seed("");
         // Use first 32 bytes of seed as private key
@@ -263,14 +261,11 @@ impl Signature {
         }
 
         // Decode r (first 64 hex chars = 32 bytes)
-        let r_bytes = hex::decode(&hex[0..64])
-            .map_err(|_| SignatureError::InvalidHex)?;
+        let r_bytes = hex::decode(&hex[0..64]).map_err(|_| SignatureError::InvalidHex)?;
         // Decode s (next 64 hex chars = 32 bytes)
-        let s_bytes = hex::decode(&hex[64..128])
-            .map_err(|_| SignatureError::InvalidHex)?;
+        let s_bytes = hex::decode(&hex[64..128]).map_err(|_| SignatureError::InvalidHex)?;
         // Parse v (last 2 hex chars = 1 byte)
-        let v = u8::from_str_radix(&hex[128..130], 16)
-            .map_err(|_| SignatureError::InvalidHex)?;
+        let v = u8::from_str_radix(&hex[128..130], 16).map_err(|_| SignatureError::InvalidHex)?;
 
         let mut r = [0u8; 32];
         let mut s = [0u8; 32];
@@ -393,11 +388,26 @@ pub mod address {
         /// Check if this is the zero address
         /// 检查这是否是零地址
         pub const fn is_zero(&self) -> bool {
-            self.0[0] == 0 && self.0[1] == 0 && self.0[2] == 0 && self.0[3] == 0 &&
-            self.0[4] == 0 && self.0[5] == 0 && self.0[6] == 0 && self.0[7] == 0 &&
-            self.0[8] == 0 && self.0[9] == 0 && self.0[10] == 0 && self.0[11] == 0 &&
-            self.0[12] == 0 && self.0[13] == 0 && self.0[14] == 0 && self.0[15] == 0 &&
-            self.0[16] == 0 && self.0[17] == 0 && self.0[18] == 0 && self.0[19] == 0
+            self.0[0] == 0
+                && self.0[1] == 0
+                && self.0[2] == 0
+                && self.0[3] == 0
+                && self.0[4] == 0
+                && self.0[5] == 0
+                && self.0[6] == 0
+                && self.0[7] == 0
+                && self.0[8] == 0
+                && self.0[9] == 0
+                && self.0[10] == 0
+                && self.0[11] == 0
+                && self.0[12] == 0
+                && self.0[13] == 0
+                && self.0[14] == 0
+                && self.0[15] == 0
+                && self.0[16] == 0
+                && self.0[17] == 0
+                && self.0[18] == 0
+                && self.0[19] == 0
         }
 
         /// Create from 20-byte array
@@ -448,8 +458,7 @@ pub mod address {
                 return Err(AddressError::InvalidLength);
             }
 
-            let bytes = hex::decode(hex)
-                .map_err(|_| AddressError::InvalidHex)?;
+            let bytes = hex::decode(hex).map_err(|_| AddressError::InvalidHex)?;
 
             let mut addr = [0u8; 20];
             addr.copy_from_slice(&bytes);

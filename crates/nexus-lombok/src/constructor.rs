@@ -37,61 +37,14 @@ pub fn impl_all_args(input: DeriveInput) -> TokenStream {
 
     let field_types: Vec<_> = fields.iter().map(|f| &f.ty).collect();
 
-    // Check for static_factory attribute
-    // 检查 static_factory 属性
-    let factory_method_name = input
-        .attrs
-        .iter()
-        .find(|attr| {
-            attr.path()
-                .segments
-                .last()
-                .map(|seg| seg.ident == "constructor")
-                .unwrap_or(false)
-        })
-        .and_then(|attr| {
-            attr.parse_meta()
-                .ok()
-                .and_then(|meta| {
-                    if let syn::Meta::List(meta_list) = meta {
-                        meta_list
-                            .nested
-                            .pairs
-                            .find(|pair| {
-                                pair
-                                    .key()
-                                    .ident
-                                    .map(|id| id == "static_name")
-                                    .unwrap_or(false)
-                            })
-                            .and_then(|pair| {
-                                if let syn::NestedMeta::Meta(syn::Meta::NameValue(path)) =
-                                    pair.value()
-                                {
-                                    if let syn::Lit::Str(lit_str) = &path.lit {
-                                        Some(lit_str.value())
-                                    } else {
-                                        None
-                                    }
-                                } else {
-                                    None
-                                }
-                            })
-                    } else {
-                        None
-                    }
-                })
-        })
-        .unwrap_or_else(|| "new".to_string());
-
-    let factory_ident = syn::Ident::new(&factory_method_name, struct_name.span());
-
-    // Generate constructor
-    // 生成构造函数
+    // Generate constructor with default name "new"
+    // 生成名为 "new" 的构造函数
     let expanded = quote! {
         impl #impl_generics #struct_name #ty_generics #where_clause {
             #[inline]
-            pub fn #factory_ident(#(#field_names: #field_types),*) -> Self {
+            #[doc = "Creates a new instance with all fields.\n"]
+            #[doc = "使用所有字段创建新实例。"]
+            pub fn new(#(#field_names: #field_types),*) -> Self {
                 Self {
                     #(#field_names),*
                 }
@@ -137,6 +90,8 @@ pub fn impl_no_args(input: DeriveInput) -> TokenStream {
     let constructor_expanded = quote! {
         impl #impl_generics #struct_name #ty_generics #where_clause {
             #[inline]
+            #[doc = "Creates a new instance with default values.\n"]
+            #[doc = "使用默认值创建新实例。"]
             pub fn new() -> Self
             where
                 Self: Default,

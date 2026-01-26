@@ -49,8 +49,8 @@ use proc_macro::TokenStream;
 // Aspect Annotations / Aspect 注解
 // ========================================================================
 
-pub mod aspect;
 pub mod advice;
+pub mod aspect;
 pub mod pointcut;
 pub mod runtime;
 
@@ -157,18 +157,12 @@ pub fn pointcut(attr: TokenStream, item: TokenStream) -> TokenStream {
 // Re-exports / 重新导出
 // ========================================================================
 
+pub use advice::{after as After, around as Around, before as Before};
 pub use aspect::aspect as Aspect;
-pub use advice::{before as Before, after as After, around as Around};
 pub use pointcut::pointcut as Pointcut;
 
 // ============================================================================
 // Runtime Re-exports / 运行时重新导出
 // ============================================================================
 
-pub use runtime::{
-    JoinPoint,
-    PointcutExpression,
-    AdviceType,
-    AspectRegistry,
-    global_registry,
-};
+pub use runtime::{AdviceType, AspectRegistry, JoinPoint, PointcutExpression, global_registry};

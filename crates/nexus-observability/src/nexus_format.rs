@@ -12,8 +12,8 @@ use std::fmt;
 use std::process;
 use tracing::{Event, Level, Subscriber};
 use tracing_subscriber::fmt::{
-    format::{FormatEvent, FormatFields, Writer},
     FmtContext,
+    format::{FormatEvent, FormatFields, Writer},
 };
 use tracing_subscriber::registry::LookupSpan;
 
@@ -201,11 +201,11 @@ fn format_level(level: Level) -> (&'static str, &'static str) {
 /// 获取日志级别的 ANSI 颜色代码
 fn level_color(level: Level) -> &'static str {
     match level {
-        Level::TRACE => "\x1b[36m",    // Cyan
-        Level::DEBUG => "\x1b[36m",    // Cyan
-        Level::INFO => "\x1b[32m",     // Green
-        Level::WARN => "\x1b[33m",     // Yellow
-        Level::ERROR => "\x1b[31m",    // Red
+        Level::TRACE => "\x1b[36m", // Cyan
+        Level::DEBUG => "\x1b[36m", // Cyan
+        Level::INFO => "\x1b[32m",  // Green
+        Level::WARN => "\x1b[33m",  // Yellow
+        Level::ERROR => "\x1b[31m", // Red
     }
 }
 
@@ -317,14 +317,11 @@ impl RequestLogFormat {
     /// Format as a compact one-line log
     /// 格式化为紧凑的单行日志
     pub fn format_compact(&self) -> String {
-        let status = self.status.map(|s| s.to_string()).unwrap_or("-".to_string());
-        format!(
-            "{} {} {} {}ms",
-            self.method,
-            self.path,
-            status,
-            self.duration_ms
-        )
+        let status = self
+            .status
+            .map(|s| s.to_string())
+            .unwrap_or("-".to_string());
+        format!("{} {} {} {}ms", self.method, self.path, status, self.duration_ms)
     }
 
     /// Format with details
@@ -333,7 +330,12 @@ impl RequestLogFormat {
         let mut parts = vec![
             format!("method={}", self.method),
             format!("uri={}", self.path),
-            format!("status={}", self.status.map(|s| s.to_string()).unwrap_or("-".to_string())),
+            format!(
+                "status={}",
+                self.status
+                    .map(|s| s.to_string())
+                    .unwrap_or("-".to_string())
+            ),
             format!("duration={}ms", self.duration_ms),
         ];
 
@@ -383,10 +385,7 @@ impl Banner {
     /// Print simple startup info
     /// 打印简单启动信息
     pub fn print_simple(app_name: &str, version: &str) {
-        println!(
-            "{} v{} starting...",
-            app_name, version
-        );
+        println!("{} v{} starting...", app_name, version);
     }
 }
 
@@ -502,9 +501,7 @@ mod tests {
     fn test_truncate_thread() {
         assert_eq!(truncate_thread("main"), "main");
         assert_eq!(truncate_thread("tokio-runtime-worker"), "tokio-runtime-worker");
-        assert!(
-            truncate_thread("very-long-thread-name-that-exceeds-limit").len() <= 20
-        );
+        assert!(truncate_thread("very-long-thread-name-that-exceeds-limit").len() <= 20);
     }
 
     #[test]

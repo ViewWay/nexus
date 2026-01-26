@@ -24,7 +24,7 @@
 
 use crate::{Authority, Role, SecurityError, SecurityResult};
 use chrono::{Duration, Utc};
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -126,7 +126,8 @@ impl JwtClaims {
     /// Check if has role
     /// 检查是否有角色
     pub fn has_role(&self, role: &Role) -> bool {
-        self.get_authorities().contains(&Authority::Role(role.clone()))
+        self.get_authorities()
+            .contains(&Authority::Role(role.clone()))
     }
 }
 
@@ -243,9 +244,7 @@ impl JwtUtil {
 
                 // Check expiration manually for better error messages
                 if claims.is_expired() {
-                    return Err(SecurityError::TokenExpired(
-                        "Token has expired".to_string()
-                    ));
+                    return Err(SecurityError::TokenExpired("Token has expired".to_string()));
                 }
 
                 Ok(claims)
@@ -253,8 +252,8 @@ impl JwtUtil {
             .map_err(|e| match e.kind() {
                 jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
                     SecurityError::TokenExpired("Token signature has expired".to_string())
-                }
-                _ => SecurityError::InvalidToken(format!("Invalid token: {}", e))
+                },
+                _ => SecurityError::InvalidToken(format!("Invalid token: {}", e)),
             })?
     }
 
@@ -508,8 +507,8 @@ mod tests {
     #[test]
     fn test_token_with_custom_expiration() {
         let authorities = vec![Authority::Role(Role::User)];
-        let token = JwtUtil::create_token_with_expiration("123", "alice", &authorities, 48)
-            .unwrap();
+        let token =
+            JwtUtil::create_token_with_expiration("123", "alice", &authorities, 48).unwrap();
 
         let claims = JwtUtil::verify_token(&token).unwrap();
         // Should expire in ~48 hours

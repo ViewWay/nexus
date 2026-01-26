@@ -4,7 +4,10 @@
 //! Demonstrates the use of Nexus cache annotations equivalent to Spring's @Cacheable, @CachePut, and @CacheEvict.
 //! 演示Nexus缓存注解的使用，等同于Spring的@Cacheable、@CachePut和@CacheEvict。
 
-use nexus_cache::{cacheable::Cached, cache_put::CachePutExec, cache_evict::CacheEvictExec, Cache, CacheConfig, MemoryCache};
+use nexus_cache::{
+    Cache, CacheConfig, MemoryCache, cache_evict::CacheEvictExec, cache_put::CachePutExec,
+    cacheable::Cached,
+};
 use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -23,9 +26,7 @@ impl UserService {
     /// Create a new user service with cache
     /// 创建带缓存的新用户服务
     pub fn new() -> Self {
-        let config = CacheConfig::new("users")
-            .max_capacity(100)
-            .ttl_secs(3600); // 1 hour TTL
+        let config = CacheConfig::new("users").max_capacity(100).ttl_secs(3600); // 1 hour TTL
         Self {
             cache: Arc::new(MemoryCache::new(config)),
         }
@@ -47,7 +48,8 @@ impl UserService {
             // 模拟数据库查找
             println!("[Database] Fetching user: {}", id);
             self.fetch_from_database(id).await
-        }).await
+        })
+        .await
     }
 
     /// Update user - always executes and updates cache (@CachePut equivalent)
@@ -66,7 +68,8 @@ impl UserService {
             // 模拟数据库更新
             println!("[Database] Updating user: {}", user.id);
             user.clone()
-        }).await
+        })
+        .await
     }
 
     /// Delete user - removes from cache (@CacheEvict equivalent)
@@ -84,7 +87,8 @@ impl UserService {
             // Simulate database deletion
             // 模拟数据库删除
             println!("[Database] Deleting user: {}", id);
-        }).await
+        })
+        .await
     }
 
     /// Delete all users - clears entire cache
@@ -102,7 +106,8 @@ impl UserService {
             // Simulate database deletion of all users
             // 模拟删除所有用户的数据库操作
             println!("[Database] Deleting all users");
-        }).await
+        })
+        .await
     }
 
     /// Simulate database fetch
@@ -156,8 +161,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Check stats
     // 检查统计
     let (hits, misses, rate, size) = service.get_stats().await;
-    println!("   Stats: Hits={}, Misses={}, Hit Rate={:.2}%, Size={}\n",
-        hits, misses, rate * 100.0, size);
+    println!(
+        "   Stats: Hits={}, Misses={}, Hit Rate={:.2}%, Size={}\n",
+        hits,
+        misses,
+        rate * 100.0,
+        size
+    );
 
     // Example 3: CachePut - update user and update cache
     // 示例3: CachePut - 更新用户并更新缓存
@@ -184,8 +194,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Check stats again
     // 再次检查统计
     let (hits, misses, rate, size) = service.get_stats().await;
-    println!("   Stats: Hits={}, Misses={}, Hit Rate={:.2}%, Size={}\n",
-        hits, misses, rate * 100.0, size);
+    println!(
+        "   Stats: Hits={}, Misses={}, Hit Rate={:.2}%, Size={}\n",
+        hits,
+        misses,
+        rate * 100.0,
+        size
+    );
 
     // Example 5: Fetch again after eviction - cache miss
     // 示例5: 驱逐后再次获取 - 缓存未命中
@@ -199,14 +214,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     service.get_user("1").await;
     service.get_user("2").await;
     let (hits, misses, rate, size) = service.get_stats().await;
-    println!("   Before clear: Hits={}, Misses={}, Hit Rate={:.2}%, Size={}\n",
-        hits, misses, rate * 100.0, size);
+    println!(
+        "   Before clear: Hits={}, Misses={}, Hit Rate={:.2}%, Size={}\n",
+        hits,
+        misses,
+        rate * 100.0,
+        size
+    );
 
     println!("7. Clear all cache entries / 清除所有缓存条目");
     service.delete_all_users().await;
     let (hits, misses, rate, size) = service.get_stats().await;
-    println!("   After clear: Hits={}, Misses={}, Hit Rate={:.2}%, Size={}\n",
-        hits, misses, rate * 100.0, size);
+    println!(
+        "   After clear: Hits={}, Misses={}, Hit Rate={:.2}%, Size={}\n",
+        hits,
+        misses,
+        rate * 100.0,
+        size
+    );
 
     println!("=== Example Complete / 示例完成 ===");
 

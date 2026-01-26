@@ -49,7 +49,12 @@ where
 {
     /// Execute with caching
     /// 使用缓存执行
-    fn cached(&self, cache: &dyn Cache<K, V>, key: K, f: F) -> Pin<Box<dyn Future<Output = Option<V>> + Send>>;
+    fn cached(
+        &self,
+        cache: &dyn Cache<K, V>,
+        key: K,
+        f: F,
+    ) -> Pin<Box<dyn Future<Output = Option<V>> + Send>>;
 }
 
 /// Cached wrapper for async functions
@@ -86,11 +91,7 @@ impl Cached {
     ///
     /// Equivalent to Spring's @Cacheable method execution.
     /// 等价于Spring的@Cacheable方法执行。
-    pub async fn get_or_fetch<K, V, F>(
-        cache: &dyn Cache<K, V>,
-        key: &K,
-        fetch: F,
-    ) -> Option<V>
+    pub async fn get_or_fetch<K, V, F>(cache: &dyn Cache<K, V>, key: &K, fetch: F) -> Option<V>
     where
         K: std::hash::Hash + Eq + Clone + Send + Sync + 'static,
         V: Clone + Send + Sync + 'static,
@@ -155,7 +156,9 @@ impl Cached {
 
         // Fetch the value
         if let Some(value) = fetch.await {
-            cache.put_with_ttl(key.clone(), value.clone(), ttl_secs).await;
+            cache
+                .put_with_ttl(key.clone(), value.clone(), ttl_secs)
+                .await;
             Some(value)
         } else {
             None
@@ -185,7 +188,7 @@ impl Cached {
             Ok(Some(value)) => {
                 cache.put(key.clone(), value.clone()).await;
                 Ok(Some(value))
-            }
+            },
             Ok(None) => Ok(None),
             Err(e) => Err(e),
         }

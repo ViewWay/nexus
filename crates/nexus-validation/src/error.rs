@@ -55,9 +55,10 @@ impl ValidationError {
 
     /// 必填错误 / Required error
     pub fn required(field: impl Into<String>) -> Self {
+        let field_name = field.into();
         Self {
-            field: field.into(),
-            message: format!("{} is required", field.into()),
+            field: field_name.clone(),
+            message: format!("{} is required", field_name),
             code: "required".to_string(),
             value: None,
         }
@@ -75,9 +76,10 @@ impl ValidationError {
 
     /// 长度错误 / Length error
     pub fn invalid_length(field: impl Into<String>, min: usize, max: usize) -> Self {
+        let field_name = field.into();
         Self {
-            field: field.into(),
-            message: format!("{} length must be between {} and {}", field.into(), min, max),
+            field: field_name.clone(),
+            message: format!("{} length must be between {} and {}", field_name, min, max),
             code: "invalid_length".to_string(),
             value: None,
         }
@@ -85,9 +87,10 @@ impl ValidationError {
 
     /// 范围错误 / Range error
     pub fn out_of_range(field: impl Into<String>, min: i64, max: i64) -> Self {
+        let field_name = field.into();
         Self {
-            field: field.into(),
-            message: format!("{} must be between {} and {}", field.into(), min, max),
+            field: field_name.clone(),
+            message: format!("{} must be between {} and {}", field_name, min, max),
             code: "out_of_range".to_string(),
             value: None,
         }
@@ -95,9 +98,10 @@ impl ValidationError {
 
     /// 正则表达式错误 / Regex error
     pub fn pattern_mismatch(field: impl Into<String>, pattern: &str) -> Self {
+        let field_name = field.into();
         Self {
-            field: field.into(),
-            message: format!("{} does not match required pattern", field.into()),
+            field: field_name.clone(),
+            message: format!("{} does not match required pattern", field_name),
             code: "pattern_mismatch".to_string(),
             value: Some(pattern.to_string()),
         }
@@ -111,6 +115,39 @@ impl fmt::Display for ValidationError {
 }
 
 impl std::error::Error for ValidationError {}
+
+/// Convert ValidationErrors to ValidationError
+/// 将 ValidationErrors 转换为 ValidationError
+///
+/// This conversion is used when propagating validation errors
+/// through error handling mechanisms that expect a single error.
+/// 当通过期望单个错误的错误处理机制传播验证错误时使用此转换。
+impl From<ValidationErrors> for ValidationError {
+    fn from(errors: ValidationErrors) -> Self {
+        // Create a single validation error that summarizes all field errors
+        // 创建一个汇总所有字段错误的单个验证错误
+        let field_count = errors.len();
+        let error_messages: Vec<String> = errors
+            .errors
+            .into_iter()
+            .flat_map(|(field, errs)| {
+                errs.into_iter()
+                    .map(move |e| format!("{}: {}", field, e.message))
+            })
+            .collect();
+
+        Self {
+            field: "multiple".to_string(),
+            message: format!(
+                "Validation failed for {} field(s): {}",
+                field_count,
+                error_messages.join(", ")
+            ),
+            code: "validation_failed".to_string(),
+            value: None,
+        }
+    }
+}
 
 /// 多个验证错误集合 / Collection of validation errors
 #[derive(Debug, Clone, Default)]

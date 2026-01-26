@@ -1,8 +1,8 @@
 //! Data derive macro implementation
 //! Data 派生宏实现
 
-use proc_macro2::TokenStream;
-use quote::quote;
+use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote};
 use syn::{DeriveInput, Data, DataStruct, Fields};
 
 /// Implement #[Data] derive macro
@@ -37,12 +37,26 @@ pub fn impl_data(input: DeriveInput) -> TokenStream {
 
     // Get field names and types
     // 获取字段名和类型
-    let field_names: Vec<_> = fields
+    let field_names: Vec<&Ident> = fields
         .iter()
         .filter_map(|f| f.ident.as_ref())
         .collect();
 
     let field_types: Vec<_> = fields.iter().map(|f| &f.ty).collect();
+
+    // Generate set_ method names using format_ident
+    // 使用 format_ident 生成 set_ 方法名
+    let setter_method_names: Vec<Ident> = field_names
+        .iter()
+        .map(|name| format_ident!("set_{}", name))
+        .collect();
+
+    // Generate with_ method names using format_ident
+    // 使用 format_ident 生成 with_ 方法名
+    let with_method_names: Vec<Ident> = field_names
+        .iter()
+        .map(|name| format_ident!("with_{}", name))
+        .collect();
 
     // Generate constructor: new()
     // 生成构造函数: new()
@@ -61,48 +75,53 @@ pub fn impl_data(input: DeriveInput) -> TokenStream {
 
     // Generate getters
     // 生成 getters
-    let getters = field_names.iter().zip(field_types.iter()).map(|(name, ty)| {
+    let getters: Vec<TokenStream> = field_names.iter().zip(field_types.iter()).map(|(name, ty)| {
         quote! {
             #[inline]
             pub fn #name(&self) -> #ty {
                 self.#name
             }
         }
-    });
+    }).collect();
 
     // Generate setters
     // 生成 setters
-    let setters = field_names.iter().zip(field_types.iter()).map(|(name, ty)| {
-        quote! {
-            #[inline]
-            pub fn set_#name(&mut self, #name: #ty) {
-                self.#name = #name;
+    let setters: Vec<TokenStream> = field_names
+        .iter()
+        .zip(field_types.iter())
+        .zip(setter_method_names.iter())
+        .map(|((name, ty), set_name)| {
+            quote! {
+                #[inline]
+                pub fn #set_name(&mut self, #name: #ty) {
+                    self.#name = #name;
+                }
             }
-        }
-    });
+        })
+        .collect();
 
     // Generate with_ methods (requires Clone)
     // 生成 with_ 方法（需要 Clone）
-    let with_methods = quote! {
-        impl #impl_generics #struct_name #ty_generics #where_clause
-        where
-            #struct_name: Clone,
-        {
-            #(
+    let with_methods: Vec<TokenStream> = field_names
+        .iter()
+        .zip(field_types.iter())
+        .zip(with_method_names.iter())
+        .map(|((name, ty), with_name)| {
+            quote! {
                 #[inline]
-                #[doc = concat!("Creates a modified copy with `", stringify!(#field_names), "` changed.")]
-                pub fn with_#field_names(&self, #field_names: #field_types) -> Self {
+                #[doc = concat!("Creates a modified copy with `", stringify!(#name), "` changed.")]
+                pub fn #with_name(&self, #name: #ty) -> Self {
                     let mut clone = self.clone();
-                    clone.#field_names = #field_names;
+                    clone.#name = #name;
                     clone
                 }
-            )*
-        }
-    };
+            }
+        })
+        .collect();
 
     // Combine all expansions
     // 合并所有展开
-    let expanded = quote! {
+    let expanded: TokenStream = quote! {
         #constructor
 
         impl #impl_generics #struct_name #ty_generics #where_clause {
@@ -110,7 +129,12 @@ pub fn impl_data(input: DeriveInput) -> TokenStream {
             #(#setters)*
         }
 
-        #with_methods
+        impl #impl_generics #struct_name #ty_generics #where_clause
+        where
+            #struct_name: Clone,
+        {
+            #(#with_methods)*
+        }
     };
 
     TokenStream::from(expanded)

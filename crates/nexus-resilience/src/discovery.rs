@@ -361,13 +361,11 @@ impl SimpleServiceRegistry {
     /// 获取服务的健康实例
     fn get_healthy_instances(&self, service_name: &str) -> Result<Vec<ServiceInstance>> {
         let services = self.services.read().unwrap();
-        let instances = services.get(service_name)
+        let instances = services
+            .get(service_name)
             .ok_or_else(|| DiscoveryError::ServiceNotFound(service_name.to_string()))?;
 
-        let healthy: Vec<_> = instances.iter()
-            .filter(|i| i.is_up())
-            .cloned()
-            .collect();
+        let healthy: Vec<_> = instances.iter().filter(|i| i.is_up()).cloned().collect();
 
         if healthy.is_empty() {
             Err(DiscoveryError::NoHealthyInstances(service_name.to_string()))
@@ -378,7 +376,11 @@ impl SimpleServiceRegistry {
 
     /// Select an instance using the configured strategy
     /// 使用配置的策略选择实例
-    fn select_instance(&self, instances: &[ServiceInstance], service_name: &str) -> ServiceInstance {
+    fn select_instance(
+        &self,
+        instances: &[ServiceInstance],
+        service_name: &str,
+    ) -> ServiceInstance {
         if instances.is_empty() {
             panic!("Cannot select from empty instances list");
         }
@@ -390,20 +392,20 @@ impl SimpleServiceRegistry {
                 let instance = instances[*index % instances.len()].clone();
                 *index = (*index + 1) % instances.len();
                 instance
-            }
+            },
             LoadBalanceStrategy::Random => {
                 let index = (rand::random::<u64>() as usize) % instances.len();
                 instances[index].clone()
-            }
+            },
             LoadBalanceStrategy::LeastConnections => {
                 // For now, return the first instance (would need connection tracking)
                 instances[0].clone()
-            }
+            },
             LoadBalanceStrategy::IpHash => {
                 // Use a simple hash of the service name
                 let hash = service_name.len() % instances.len();
                 instances[hash].clone()
-            }
+            },
         }
     }
 }
@@ -420,7 +422,9 @@ impl ServiceRegistry for SimpleServiceRegistry {
 
     fn register(&self, service_name: &str, instance: ServiceInstance) -> Result<()> {
         let mut services = self.services.write().unwrap();
-        let entry = services.entry(service_name.to_string()).or_insert_with(Vec::new);
+        let entry = services
+            .entry(service_name.to_string())
+            .or_insert_with(Vec::new);
 
         // Check if instance already exists
         let exists = entry.iter().any(|i| i.id == instance.id);

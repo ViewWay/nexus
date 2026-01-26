@@ -1,7 +1,7 @@
 //! Tests for Nexus Data Annotations
 //! Nexus Data 注解测试
 
-use nexus_data_annotations::{Entity, Table, Id, GeneratedValue, Column};
+use nexus_data_annotations::{Column, Entity, GeneratedValue, Id, Table};
 
 // ========================================================================
 // Entity Annotation Tests / @Entity 注解测试

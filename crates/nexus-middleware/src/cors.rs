@@ -14,7 +14,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use nexus_http::{Request, Response, Result, StatusCode, Method, Body};
+use nexus_http::{Body, Method, Request, Response, Result, StatusCode};
 use nexus_router::{Middleware, Next};
 
 /// CORS configuration
@@ -72,7 +72,12 @@ impl CorsConfig {
     pub fn new() -> Self {
         Self {
             allowed_origins: vec!["*".to_string()],
-            allowed_methods: vec!["GET".to_string(), "POST".to_string(), "PUT".to_string(), "DELETE".to_string()],
+            allowed_methods: vec![
+                "GET".to_string(),
+                "POST".to_string(),
+                "PUT".to_string(),
+                "DELETE".to_string(),
+            ],
             allowed_headers: vec!["*".to_string()],
             exposed_headers: Vec::new(),
             allow_credentials: false,
@@ -231,26 +236,23 @@ where
 
                 // Build preflight response
                 // 构建预检响应
-                let mut builder = Response::builder()
-                    .status(StatusCode::OK)
-                    .header("Access-Control-Allow-Origin", if config.wildcard { "*" } else { &origin });
+                let mut builder = Response::builder().status(StatusCode::OK).header(
+                    "Access-Control-Allow-Origin",
+                    if config.wildcard { "*" } else { &origin },
+                );
 
                 if config.allow_credentials {
                     builder = builder.header("Access-Control-Allow-Credentials", "true");
                 }
 
                 if !config.allowed_methods.is_empty() {
-                    builder = builder.header(
-                        "Access-Control-Allow-Methods",
-                        config.allowed_methods.join(", "),
-                    );
+                    builder = builder
+                        .header("Access-Control-Allow-Methods", config.allowed_methods.join(", "));
                 }
 
                 if !config.allowed_headers.is_empty() {
-                    builder = builder.header(
-                        "Access-Control-Allow-Headers",
-                        config.allowed_headers.join(", "),
-                    );
+                    builder = builder
+                        .header("Access-Control-Allow-Headers", config.allowed_headers.join(", "));
                 }
 
                 if let Some(max_age) = config.max_age {
@@ -287,24 +289,15 @@ pub fn add_cors_headers(config: &CorsConfig, origin: Option<&str>) -> Vec<(&'sta
     }
 
     if !config.allowed_methods.is_empty() {
-        headers.push((
-            "Access-Control-Allow-Methods",
-            config.allowed_methods.join(", "),
-        ));
+        headers.push(("Access-Control-Allow-Methods", config.allowed_methods.join(", ")));
     }
 
     if !config.allowed_headers.is_empty() {
-        headers.push((
-            "Access-Control-Allow-Headers",
-            config.allowed_headers.join(", "),
-        ));
+        headers.push(("Access-Control-Allow-Headers", config.allowed_headers.join(", ")));
     }
 
     if !config.exposed_headers.is_empty() {
-        headers.push((
-            "Access-Control-Expose-Headers",
-            config.exposed_headers.join(", "),
-        ));
+        headers.push(("Access-Control-Expose-Headers", config.exposed_headers.join(", ")));
     }
 
     if config.allow_credentials {
@@ -338,7 +331,11 @@ mod tests {
             .max_age(3600);
 
         assert!(!config.wildcard);
-        assert!(config.allowed_origins.contains(&"https://example.com".to_string()));
+        assert!(
+            config
+                .allowed_origins
+                .contains(&"https://example.com".to_string())
+        );
         assert!(config.allow_credentials);
         assert_eq!(config.max_age, Some(3600));
     }

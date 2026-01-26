@@ -215,7 +215,8 @@ impl SubmitEntry {
     /// 返回的切片仅在缓冲区仍然存活时有效。
     #[must_use]
     pub unsafe fn buffer(&self) -> Option<&[u8]> {
-        self.buf_ptr.map(|ptr| std::slice::from_raw_parts(ptr.as_ptr(), self.buf_len as usize))
+        self.buf_ptr
+            .map(|ptr| std::slice::from_raw_parts(ptr.as_ptr(), self.buf_len as usize))
     }
 
     /// Get the buffer as a mutable slice if available
@@ -227,9 +228,8 @@ impl SubmitEntry {
     /// 返回的切片仅在缓冲区仍然存活且可变时有效。
     #[must_use]
     pub unsafe fn buffer_mut(&self) -> Option<&mut [u8]> {
-        self.buf_ptr.map(|ptr| {
-            std::slice::from_raw_parts_mut(ptr.as_ptr(), self.buf_len as usize)
-        })
+        self.buf_ptr
+            .map(|ptr| std::slice::from_raw_parts_mut(ptr.as_ptr(), self.buf_len as usize))
     }
 }
 

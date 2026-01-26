@@ -84,9 +84,8 @@ enforced-import-renames = []
 # Literal representation threshold / 字面量表示阈值
 literal-representation-threshold = 10
 
-# Missing docs in private items / 私有项中缺失文档
-# We want docs on private items too / 我们也想要私有项的文档
-missing-docs-in-private-items = false
+# Check private items too / 也检查私有项
+check-private-items = true
 
 # Too many arguments threshold / 参数过多阈值
 too-many-arguments-threshold = 7

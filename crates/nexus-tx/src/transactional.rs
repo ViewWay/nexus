@@ -31,8 +31,8 @@
 //! ```
 
 use crate::{IsolationLevel, Propagation, TransactionError, TransactionResult};
-use std::sync::Arc;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 /// Transactional options
 /// Transactional选项
@@ -206,10 +206,7 @@ impl Default for TransactionalOptions {
 pub trait Transactional {
     /// Execute a function within a transaction
     /// 在事务中执行函数
-    async fn in_transaction<F, T, E>(
-        &self,
-        f: F,
-    ) -> TransactionResult<T>
+    async fn in_transaction<F, T, E>(&self, f: F) -> TransactionResult<T>
     where
         F: FnOnce() -> futures::future::BoxFuture<'static, Result<T, E>> + Send + Sync,
         T: Send + 'static,
@@ -249,7 +246,7 @@ pub trait Transactional {
                 // Even if we don't rollback, the operation failed
                 // 即使不回滚，操作仍然失败
                 Err(tx_error)
-            }
+            },
         }
     }
 }
@@ -297,7 +294,8 @@ impl<'a> TransactionGuard<'a> {
     /// Commit the transaction
     /// 提交事务
     pub async fn commit(mut self) -> crate::TransactionResult<()> {
-        self.committed.store(true, std::sync::atomic::Ordering::SeqCst);
+        self.committed
+            .store(true, std::sync::atomic::Ordering::SeqCst);
         self.manager.commit(self.status.clone()).await
     }
 

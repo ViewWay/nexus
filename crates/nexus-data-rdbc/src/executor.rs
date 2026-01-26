@@ -100,11 +100,7 @@ impl QueryExecutor {
     ///     "users"
     /// ).await?;
     /// ```
-    pub async fn select<T>(
-        &self,
-        wrapper: &QueryWrapper,
-        table: &str,
-    ) -> R2dbcResult<Vec<T>>
+    pub async fn select<T>(&self, wrapper: &QueryWrapper, table: &str) -> R2dbcResult<Vec<T>>
     where
         T: serde::de::DeserializeOwned,
     {
@@ -232,7 +228,11 @@ impl QueryExecutor {
 
     // Query building methods
 
-    fn build_select_query(&self, wrapper: &QueryWrapper, table: &str) -> (String, Vec<serde_json::Value>) {
+    fn build_select_query(
+        &self,
+        wrapper: &QueryWrapper,
+        table: &str,
+    ) -> (String, Vec<serde_json::Value>) {
         let mut sql = String::new();
         let mut params = Vec::new();
 
@@ -341,7 +341,11 @@ impl QueryExecutor {
         (sql, params)
     }
 
-    fn build_count_query(&self, wrapper: &QueryWrapper, table: &str) -> (String, Vec<serde_json::Value>) {
+    fn build_count_query(
+        &self,
+        wrapper: &QueryWrapper,
+        table: &str,
+    ) -> (String, Vec<serde_json::Value>) {
         let mut sql = format!("SELECT COUNT(*) FROM {}", table);
         let mut params = Vec::new();
 
@@ -355,7 +359,11 @@ impl QueryExecutor {
         (sql, params)
     }
 
-    fn build_update_query(&self, wrapper: &UpdateWrapper, table: &str) -> (String, Vec<serde_json::Value>) {
+    fn build_update_query(
+        &self,
+        wrapper: &UpdateWrapper,
+        table: &str,
+    ) -> (String, Vec<serde_json::Value>) {
         let mut sql = format!("UPDATE {} SET ", table);
         let mut params = Vec::new();
         let mut set_clauses = Vec::new();
@@ -381,7 +389,11 @@ impl QueryExecutor {
         (sql, params)
     }
 
-    fn build_delete_query(&self, wrapper: &QueryWrapper, table: &str) -> (String, Vec<serde_json::Value>) {
+    fn build_delete_query(
+        &self,
+        wrapper: &QueryWrapper,
+        table: &str,
+    ) -> (String, Vec<serde_json::Value>) {
         let mut sql = format!("DELETE FROM {}", table);
         let mut params = Vec::new();
 
@@ -420,7 +432,7 @@ impl QueryExecutor {
                         "value": value
                     }));
                     param_index += 1;
-                }
+                },
                 nexus_data_commons::Condition::Ne { field, value } => {
                     sql.push_str(&format!("{} != @{}", field, param_index));
                     params.push(serde_json::json!({
@@ -428,7 +440,7 @@ impl QueryExecutor {
                         "value": value
                     }));
                     param_index += 1;
-                }
+                },
                 nexus_data_commons::Condition::Gt { field, value } => {
                     sql.push_str(&format!("{} > @{}", field, param_index));
                     params.push(serde_json::json!({
@@ -436,7 +448,7 @@ impl QueryExecutor {
                         "value": value
                     }));
                     param_index += 1;
-                }
+                },
                 nexus_data_commons::Condition::Ge { field, value } => {
                     sql.push_str(&format!("{} >= @{}", field, param_index));
                     params.push(serde_json::json!({
@@ -444,7 +456,7 @@ impl QueryExecutor {
                         "value": value
                     }));
                     param_index += 1;
-                }
+                },
                 nexus_data_commons::Condition::Lt { field, value } => {
                     sql.push_str(&format!("{} < @{}", field, param_index));
                     params.push(serde_json::json!({
@@ -452,7 +464,7 @@ impl QueryExecutor {
                         "value": value
                     }));
                     param_index += 1;
-                }
+                },
                 nexus_data_commons::Condition::Le { field, value } => {
                     sql.push_str(&format!("{} <= @{}", field, param_index));
                     params.push(serde_json::json!({
@@ -460,7 +472,7 @@ impl QueryExecutor {
                         "value": value
                     }));
                     param_index += 1;
-                }
+                },
                 nexus_data_commons::Condition::Like { field, pattern } => {
                     sql.push_str(&format!("{} LIKE @{}", field, param_index));
                     params.push(serde_json::json!({
@@ -468,7 +480,7 @@ impl QueryExecutor {
                         "value": pattern
                     }));
                     param_index += 1;
-                }
+                },
                 nexus_data_commons::Condition::In { field, values } => {
                     let placeholders: Vec<String> = (0..values.len())
                         .map(|j| format!("@{}", param_index + j))
@@ -481,7 +493,7 @@ impl QueryExecutor {
                         }));
                         param_index += 1;
                     }
-                }
+                },
                 nexus_data_commons::Condition::NotIn { field, values } => {
                     let placeholders: Vec<String> = (0..values.len())
                         .map(|j| format!("@{}", param_index + j))
@@ -494,9 +506,14 @@ impl QueryExecutor {
                         }));
                         param_index += 1;
                     }
-                }
+                },
                 nexus_data_commons::Condition::Between { field, low, high } => {
-                    sql.push_str(&format!("{} BETWEEN @{} AND @{}", field, param_index, param_index + 1));
+                    sql.push_str(&format!(
+                        "{} BETWEEN @{} AND @{}",
+                        field,
+                        param_index,
+                        param_index + 1
+                    ));
                     params.push(serde_json::json!({
                         "name": param_index.to_string(),
                         "value": low
@@ -506,13 +523,13 @@ impl QueryExecutor {
                         "value": high
                     }));
                     param_index += 2;
-                }
+                },
                 nexus_data_commons::Condition::IsNull { field } => {
                     sql.push_str(&format!("{} IS NULL", field));
-                }
+                },
                 nexus_data_commons::Condition::IsNotNull { field } => {
                     sql.push_str(&format!("{} IS NOT NULL", field));
-                }
+                },
                 nexus_data_commons::Condition::NotLike { field, pattern } => {
                     sql.push_str(&format!("{} NOT LIKE @{}", field, param_index));
                     params.push(serde_json::json!({
@@ -520,9 +537,14 @@ impl QueryExecutor {
                         "value": pattern
                     }));
                     param_index += 1;
-                }
+                },
                 nexus_data_commons::Condition::NotBetween { field, low, high } => {
-                    sql.push_str(&format!("{} NOT BETWEEN @{} AND @{}", field, param_index, param_index + 1));
+                    sql.push_str(&format!(
+                        "{} NOT BETWEEN @{} AND @{}",
+                        field,
+                        param_index,
+                        param_index + 1
+                    ));
                     params.push(serde_json::json!({
                         "name": param_index.to_string(),
                         "value": low
@@ -532,11 +554,11 @@ impl QueryExecutor {
                         "value": high
                     }));
                     param_index += 2;
-                }
+                },
                 nexus_data_commons::Condition::And(_) | nexus_data_commons::Condition::Or(_) => {
                     // Nested conditions - for now, skip (would need recursive handling)
                     continue;
-                }
+                },
             }
         }
 
@@ -573,9 +595,7 @@ impl Executor for QueryExecutor {
         _params: Vec<serde_json::Value>,
     ) -> Pin<Box<dyn Future<Output = R2dbcResult<Option<Row>>> + Send + '_>> {
         let sql = sql.to_string();
-        Box::pin(async move {
-            self.client.fetch_one(&sql).await
-        })
+        Box::pin(async move { self.client.fetch_one(&sql).await })
     }
 
     fn fetch_all(
@@ -584,9 +604,7 @@ impl Executor for QueryExecutor {
         _params: Vec<serde_json::Value>,
     ) -> Pin<Box<dyn Future<Output = R2dbcResult<Vec<Row>>> + Send + '_>> {
         let sql = sql.to_string();
-        Box::pin(async move {
-            self.client.fetch_all(&sql).await
-        })
+        Box::pin(async move { self.client.fetch_all(&sql).await })
     }
 
     fn execute(
@@ -595,9 +613,7 @@ impl Executor for QueryExecutor {
         _params: Vec<serde_json::Value>,
     ) -> Pin<Box<dyn Future<Output = R2dbcResult<u64>> + Send + '_>> {
         let sql = sql.to_string();
-        Box::pin(async move {
-            self.client.execute(&sql).await
-        })
+        Box::pin(async move { self.client.execute(&sql).await })
     }
 }
 
@@ -611,7 +627,7 @@ mod tests {
         let client = DatabaseClient::new(
             ConnectionPool::connect("postgresql://localhost/test")
                 .await
-                .unwrap()
+                .unwrap(),
         );
         let executor = QueryExecutor::new(client);
 
@@ -627,7 +643,7 @@ mod tests {
         let client = DatabaseClient::new(
             ConnectionPool::connect("postgresql://localhost/test")
                 .await
-                .unwrap()
+                .unwrap(),
         );
         let executor = QueryExecutor::new(client);
 

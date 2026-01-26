@@ -13,8 +13,8 @@
 use nexus_http::{Request, Response, StatusCode};
 use nexus_router::Router;
 use nexus_validation::{
-    validator::{ValidationError, Validator},
     rules::{email::EmailRule, length::LengthRule, range::RangeRule},
+    validator::{ValidationError, Validator},
 };
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -22,7 +22,10 @@ use validator::Validate;
 /// User registration request / 用户注册请求
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 struct RegisterUserRequest {
-    #[validate(length(min = 3, max = 50), message = "Username must be 3-50 characters")]
+    #[validate(
+        length(min = 3, max = 50),
+        message = "Username must be 3-50 characters"
+    )]
     username: String,
 
     #[validate(email(message = "Invalid email format"))]
@@ -41,7 +44,9 @@ fn validate_password_strength(password: &str) -> Result<(), validator::Validatio
     let has_upper = password.chars().any(|c| c.is_uppercase());
     let has_lower = password.chars().any(|c| c.is_lowercase());
     let has_digit = password.chars().any(|c| c.is_ascii_digit());
-    let has_special = password.chars().any(|c| "!@#$%^&*()_+-=[]{}|;:,.<>?".contains(c));
+    let has_special = password
+        .chars()
+        .any(|c| "!@#$%^&*()_+-=[]{}|;:,.<>?".contains(c));
 
     if has_upper && has_lower && has_digit && has_special {
         Ok(())
@@ -105,7 +110,7 @@ fn manual_validation_example() {
     // Invalid request / 无效请求
     println!("\n--- Testing Invalid Request / 测试无效请求 ---");
     let invalid_request = RegisterUserRequest {
-        username: "ab".to_string(),        // Too short / 太短
+        username: "ab".to_string(),         // Too short / 太短
         email: "invalid-email".to_string(), // Invalid email / 无效邮箱
         password: "weak".to_string(),       // Too weak / 太弱
         age: 15,                            // Too young / 太年轻
@@ -118,7 +123,7 @@ fn manual_validation_example() {
             for error in errors.field_errors() {
                 println!("  - {}: {:?}", error.0, error.1);
             }
-        }
+        },
     }
 
     println!();
@@ -127,33 +132,29 @@ fn manual_validation_example() {
 /// Request validation in HTTP handlers / HTTP处理程序中的请求验证
 async fn validate_request_handler(req: RegisterUserRequest) -> Response {
     match req.validate() {
-        Ok(_) => {
-            Response::builder()
-                .status(StatusCode::OK)
-                .body(
-                    serde_json::json!({
-                        "message": "User registered successfully",
-                        "username": req.username
-                    })
-                    .to_string()
-                    .into(),
-                )
-                .unwrap()
-        }
-        Err(errors) => {
-            Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .header("content-type", "application/json")
-                .body(
-                    serde_json::json!({
-                        "error": "Validation failed",
-                        "details": errors.to_string()
-                    })
-                    .to_string()
-                    .into(),
-                )
-                .unwrap()
-        }
+        Ok(_) => Response::builder()
+            .status(StatusCode::OK)
+            .body(
+                serde_json::json!({
+                    "message": "User registered successfully",
+                    "username": req.username
+                })
+                .to_string()
+                .into(),
+            )
+            .unwrap(),
+        Err(errors) => Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .header("content-type", "application/json")
+            .body(
+                serde_json::json!({
+                    "error": "Validation failed",
+                    "details": errors.to_string()
+                })
+                .to_string()
+                .into(),
+            )
+            .unwrap(),
     }
 }
 
@@ -176,9 +177,9 @@ async fn product_validation_example() {
 
     // Invalid product / 无效产品
     let invalid_product = CreateProductRequest {
-        name: "".to_string(),        // Empty name / 空名称
+        name: "".to_string(),             // Empty name / 空名称
         description: "Short".to_string(), // Too short / 太短
-        price: -10.0,                // Negative price / 负价格
+        price: -10.0,                     // Negative price / 负价格
         stock: 0,
     };
 
@@ -193,7 +194,7 @@ async fn product_validation_example() {
                     }
                 }
             }
-        }
+        },
     }
 
     println!();
@@ -240,7 +241,7 @@ async fn order_validation_example() {
                     }
                 }
             }
-        }
+        },
     }
 
     println!();

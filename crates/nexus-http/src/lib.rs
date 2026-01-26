@@ -35,49 +35,48 @@
 #![warn(unreachable_pub)]
 
 pub mod body;
-pub mod server;
+pub mod builder;
 pub mod conn;
-pub mod service;
-pub mod request;
-pub mod response;
-pub mod method;
-pub mod status;
 pub mod error;
 pub mod ext;
-pub mod proto;
-pub mod builder;
-pub mod sse;
-pub mod websocket;
 pub mod http2;
+pub mod method;
+pub mod proto;
+pub mod request;
+pub mod response;
+pub mod server;
+pub mod service;
+pub mod sse;
+pub mod status;
 pub mod validation;
+pub mod websocket;
 
 // Re-exports for convenience
 // 重新导出以便使用
-pub use body::{Body, FullBody, EmptyBody, HttpBody};
-pub use request::Request;
-pub use response::{Response, BodyBuilder};
-pub use method::Method;
-pub use status::StatusCode;
+pub use body::{Body, EmptyBody, FullBody, HttpBody};
+pub use builder::{Uri, UriBuilder};
+pub use conn::{Connection, ConnectionState};
 pub use error::{Error, Result};
+pub use http2::{
+    ErrorCode, FrameType, Http2Config, Http2Error, Priority, SettingsParameter,
+    StreamId, StreamReset, StreamState,
+};
+// Re-export http2::ConnectionState with a different name to avoid conflict
+// 使用不同的名称重新导出 http2::ConnectionState 以避免冲突
+pub use http2::ConnectionState as Http2ConnectionState;
+pub use method::Method;
+pub use request::Request;
+pub use response::{BodyBuilder, Response};
 pub use server::Server;
 pub use service::HttpService;
-pub use conn::{Connection, ConnectionState};
-pub use builder::{UriBuilder, Uri};
 pub use sse::{Event, Sse, SseKeepAlive};
-pub use websocket::{Message, WebSocket, WebSocketUpgrade, WebSocketConfig, CloseFrame, WebSocketError};
-pub use http2::{
-    FrameType, ErrorCode, SettingsParameter, StreamId,
-    Http2Config, ConnectionState, StreamState, Priority,
-    Http2Error, StreamReset
-};
+pub use status::StatusCode;
 pub use validation::{
-    ValidationError,
-    ValidationErrors,
-    Validated,
-    Validatable,
-    ValidatableExtractor,
-    ValidationMiddleware,
-    ValidationHelpers
+    Validatable, ValidatableExtractor, Validated, ValidationError, ValidationErrors,
+    ValidationHelpers, ValidationMiddleware,
+};
+pub use websocket::{
+    CloseFrame, Message, WebSocket, WebSocketConfig, WebSocketError, WebSocketUpgrade,
 };
 
 /// Content-Type constants
@@ -283,9 +282,10 @@ impl FromRequest for () {
 
 impl FromRequest for String {
     async fn from_request(req: &Request) -> Result<Self> {
-        let body = req.body().as_bytes().ok_or_else(|| {
-            Error::InvalidRequest("Request body is not text".to_string())
-        })?;
+        let body = req
+            .body()
+            .as_bytes()
+            .ok_or_else(|| Error::InvalidRequest("Request body is not text".to_string()))?;
 
         String::from_utf8(body.to_vec())
             .map_err(|_| Error::InvalidRequest("Invalid UTF-8 in body".to_string()))
@@ -294,15 +294,20 @@ impl FromRequest for String {
 
 impl FromRequest for Vec<u8> {
     async fn from_request(req: &Request) -> Result<Self> {
-        Ok(req.body().as_bytes().map(|b| b.to_vec()).unwrap_or_default())
+        Ok(req
+            .body()
+            .as_bytes()
+            .map(|b| b.to_vec())
+            .unwrap_or_default())
     }
 }
 
 impl<T: serde::de::DeserializeOwned> FromRequest for Json<T> {
     async fn from_request(req: &Request) -> Result<Self> {
-        let body = req.body().as_bytes().ok_or_else(|| {
-            Error::InvalidRequest("Request body is not available".to_string())
-        })?;
+        let body = req
+            .body()
+            .as_bytes()
+            .ok_or_else(|| Error::InvalidRequest("Request body is not available".to_string()))?;
 
         serde_json::from_slice(body)
             .map(Json)

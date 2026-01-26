@@ -277,22 +277,22 @@ impl TransactionalExecutor {
             (None, Propagation::Supports) => false,
             (None, Propagation::Mandatory) => {
                 return Err(TransactionError::NoExistingTransaction);
-            }
+            },
             (None, Propagation::NotSupported) => false,
             (None, Propagation::Never) => false,
             (None, Propagation::Nested) => {
                 return Err(TransactionError::NoExistingTransaction);
-            }
+            },
             (Some(_), Propagation::Required) => false,
             (Some(_), Propagation::RequiresNew) => true,
             (Some(_), Propagation::Supports) => false,
             (Some(_), Propagation::Mandatory) => false,
             (Some(_), Propagation::NotSupported) => {
                 return Err(TransactionError::ExistingTransaction);
-            }
+            },
             (Some(_), Propagation::Never) => {
                 return Err(TransactionError::ExistingTransaction);
-            }
+            },
             (Some(_), Propagation::Nested) => false,
         };
         drop(context);
@@ -354,12 +354,12 @@ impl TransactionalExecutor {
                 tx.commit()
                     .await
                     .map_err(|e| TransactionError::CommitFailed(e.to_string()))?;
-            }
+            },
             Err(_) => {
                 tx.rollback()
                     .await
                     .map_err(|e| TransactionError::RollbackFailed(e.to_string()))?;
-            }
+            },
         }
 
         result
@@ -367,10 +367,7 @@ impl TransactionalExecutor {
 
     /// Execute in existing transaction
     /// 在现有事务中执行
-    async fn execute_in_existing_transaction<F, T, E>(
-        &self,
-        f: F,
-    ) -> Result<T, TransactionError<E>>
+    async fn execute_in_existing_transaction<F, T, E>(&self, f: F) -> Result<T, TransactionError<E>>
     where
         F: FnOnce() -> Pin<Box<dyn Future<Output = Result<T, E>> + Send>>,
         E: std::error::Error + Send + Sync + 'static,
@@ -406,10 +403,10 @@ impl TransactionalExecutor {
                     // 重试
                     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
                     continue;
-                }
+                },
                 _ => {
                     return result.map_err(TransactionError::ExecutionFailed);
-                }
+                },
             }
         }
     }

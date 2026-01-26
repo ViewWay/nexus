@@ -4,7 +4,7 @@
 use std::sync::Arc;
 use std::task::RawWaker;
 
-use super::{gen_task_id, queue::LocalQueue, RawTask, TaskId};
+use super::{RawTask, TaskId, gen_task_id, queue::LocalQueue};
 
 /// Wake-up notification channel
 /// 唤醒通知通道
@@ -43,9 +43,7 @@ impl WakeChannel {
             // Use pipe on macOS/BSD
             // 在macOS/BSD上使用pipe
             let mut fds = [-1i32; 2];
-            let result = unsafe {
-                libc::pipe(fds.as_mut_ptr())
-            };
+            let result = unsafe { libc::pipe(fds.as_mut_ptr()) };
 
             if result < 0 {
                 return Err(std::io::Error::last_os_error());
@@ -96,12 +94,7 @@ impl WakeChannel {
         #[cfg(target_os = "linux")]
         unsafe {
             let mut val: u64 = 0;
-            while libc::read(
-                self.read_fd,
-                &mut val as *mut _ as *mut _,
-                8,
-            ) == 8
-            {
+            while libc::read(self.read_fd, &mut val as *mut _ as *mut _, 8) == 8 {
                 // Successfully drained a notification
                 // 成功排空一个通知
             }
@@ -110,12 +103,7 @@ impl WakeChannel {
         #[cfg(not(target_os = "linux"))]
         unsafe {
             let mut val: u8 = 0;
-            while libc::read(
-                self.read_fd,
-                &mut val as *mut _ as *mut _,
-                1,
-            ) == 1
-            {
+            while libc::read(self.read_fd, &mut val as *mut _ as *mut _, 1) == 1 {
                 // Successfully drained a notification
                 // 成功排空一个通知
             }
@@ -197,10 +185,7 @@ impl SchedulerHandle {
             self.wake.notify();
             Ok(())
         } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::WouldBlock,
-                "Scheduler queue is full",
-            ))
+            Err(std::io::Error::new(std::io::ErrorKind::WouldBlock, "Scheduler queue is full"))
         }
     }
 
@@ -238,10 +223,7 @@ impl SchedulerHandle {
         // Create a waker that will submit to the scheduler
         // 创建将提交到调度器的waker
         let handle_clone = self.clone();
-        let raw_waker = RawWaker::new(
-            Arc::into_raw(Arc::new(handle_clone)) as *const (),
-            &VTABLE,
-        );
+        let raw_waker = RawWaker::new(Arc::into_raw(Arc::new(handle_clone)) as *const (), &VTABLE);
         unsafe { std::task::Waker::from_raw(raw_waker) }
     }
 
@@ -256,12 +238,8 @@ impl SchedulerHandle {
 
 /// VTable for scheduler handle waker
 /// 调度器句柄waker的VTable
-static VTABLE: std::task::RawWakerVTable = std::task::RawWakerVTable::new(
-    clone_waker,
-    wake,
-    wake_by_ref,
-    drop_waker,
-);
+static VTABLE: std::task::RawWakerVTable =
+    std::task::RawWakerVTable::new(clone_waker, wake, wake_by_ref, drop_waker);
 
 unsafe fn clone_waker(data: *const ()) -> RawWaker {
     let handle = Arc::from_raw(data as *const SchedulerHandle);

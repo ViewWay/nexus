@@ -3,7 +3,7 @@
 //! This example demonstrates AOP (Aspect-Oriented Programming) usage in Nexus
 //! 此示例演示了 Nexus 中 AOP（面向切面编程）的使用
 
-use nexus_aop::{Aspect, Before, After, Around, Pointcut};
+use nexus_aop::{After, Around, Aspect, Before, Pointcut};
 
 // ============================================================================
 // Example 1: Basic Logging Aspect / 基础日志切面
@@ -50,11 +50,11 @@ impl TransactionAspect {
             Ok(result) => {
                 println!("✅ Committing transaction");
                 Ok(result)
-            }
+            },
             Err(e) => {
                 println!("❌ Rolling back transaction: {}", e);
                 Err(e)
-            }
+            },
         }
     }
 }
@@ -136,7 +136,11 @@ impl PerformanceMonitoringAspect {
         let duration = start.elapsed();
 
         if duration.as_millis() > 100 {
-            println!("⚠️ Slow method: {} took {}ms", join_point.method_name(), duration.as_millis());
+            println!(
+                "⚠️ Slow method: {} took {}ms",
+                join_point.method_name(),
+                duration.as_millis()
+            );
         } else {
             println!("⏱️ Method: {} took {}ms", join_point.method_name(), duration.as_millis());
         }
@@ -213,15 +217,15 @@ impl RetryAspect {
                         println!("🎉 Success after {} attempts", attempts);
                     }
                     return Ok(result);
-                }
+                },
                 Err(e) if attempts < max_retries => {
                     println!("⚠️ Attempt {}/{} failed, retrying...", attempts, max_retries);
                     std::thread::sleep(std::time::Duration::from_millis(100));
-                }
+                },
                 Err(e) => {
                     println!("❌ All {} attempts failed", max_retries);
                     return Err(e);
-                }
+                },
             }
         }
     }
@@ -298,10 +302,13 @@ struct AuditLoggingAspect;
 impl AuditLoggingAspect {
     /// Log all modifications
     /// 记录所有修改操作
-    #[After("execution(* com.example.service.*.update*(..)) || execution(* com.example.service.*.delete*(..))")]
+    #[After(
+        "execution(* com.example.service.*.update*(..)) || execution(* com.example.service.*.delete*(..))"
+    )]
     fn log_modifications(&self, join_point: &JoinPoint) {
         let user = get_current_user();
-        println!("📝 AUDIT: User {} performed {} at {}",
+        println!(
+            "📝 AUDIT: User {} performed {} at {}",
             user.username(),
             join_point.method_name(),
             chrono::Utc::now()

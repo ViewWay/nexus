@@ -40,15 +40,17 @@ async fn circuit_breaker_example() {
 
     // Simulate service calls / 模拟服务调用
     for i in 1..=10 {
-        let result = breaker.execute(|| async {
-            // Simulate failures / 模拟失败
-            if i <= 4 {
-                failure_count += 1;
-                Err::<(), _>(anyhow::anyhow!("Service unavailable"))
-            } else {
-                Ok(())
-            }
-        }).await;
+        let result = breaker
+            .execute(|| async {
+                // Simulate failures / 模拟失败
+                if i <= 4 {
+                    failure_count += 1;
+                    Err::<(), _>(anyhow::anyhow!("Service unavailable"))
+                } else {
+                    Ok(())
+                }
+            })
+            .await;
 
         match result {
             Ok(_) => println!("Call {} succeeded - State: {:?}", i, breaker.state()),
@@ -83,10 +85,10 @@ async fn rate_limiter_example() {
                 println!("Request {} allowed - Remaining: {}", i, permit.remaining());
                 // Simulate request processing / 模拟请求处理
                 sleep(Duration::from_millis(50)).await;
-            }
+            },
             Err(e) => {
                 println!("Request {} rate limited - Error: {}", i, e);
-            }
+            },
         }
     }
 
@@ -124,17 +126,19 @@ async fn retry_example() {
         .build();
 
     let mut attempt = 0;
-    let result = policy.execute(|| async {
-        attempt += 1;
-        println!("Attempt {}", attempt);
+    let result = policy
+        .execute(|| async {
+            attempt += 1;
+            println!("Attempt {}", attempt);
 
-        // Simulate failure until attempt 4 / 模拟失败直到第4次尝试
-        if attempt < 4 {
-            Err::<(), _>(anyhow::anyhow!("Service unavailable"))
-        } else {
-            Ok(())
-        }
-    }).await;
+            // Simulate failure until attempt 4 / 模拟失败直到第4次尝试
+            if attempt < 4 {
+                Err::<(), _>(anyhow::anyhow!("Service unavailable"))
+            } else {
+                Ok(())
+            }
+        })
+        .await;
 
     match result {
         Ok(_) => println!("\nSuccess after {} attempts!\n", attempt),
@@ -155,7 +159,7 @@ async fn service_discovery_example() {
         .service_name("user-service")
         .host("192.168.1.10")
         .port(8080)
-        .metadata(vec![("zone", "east"),("version", "1.0")])
+        .metadata(vec![("zone", "east"), ("version", "1.0")])
         .build();
 
     let instance2 = ServiceInstance::builder()
@@ -163,7 +167,7 @@ async fn service_discovery_example() {
         .service_name("user-service")
         .host("192.168.1.11")
         .port(8080)
-        .metadata(vec![("zone", "west"),("version", "1.0")])
+        .metadata(vec![("zone", "west"), ("version", "1.0")])
         .build();
 
     registry.register(instance1).await;
@@ -176,14 +180,15 @@ async fn service_discovery_example() {
         Some(instances) => {
             println!("\nDiscovered {} instances:", instances.len());
             for instance in instances {
-                println!("  - {}:{} (ID: {}, Zone: {:?})",
+                println!(
+                    "  - {}:{} (ID: {}, Zone: {:?})",
                     instance.host(),
                     instance.port(),
                     instance.id(),
                     instance.metadata().get("zone")
                 );
             }
-        }
+        },
         None => println!("No instances found"),
     }
 
@@ -198,8 +203,8 @@ async fn service_discovery_example() {
     match registry.get_instances("user-service").await {
         Some(instances) => {
             println!("Remaining instances: {}", instances.len());
-        }
-        None => {}
+        },
+        None => {},
     }
 
     println!();
@@ -211,15 +216,11 @@ async fn resilience_server_example() {
     println!("\n=== Resilience Server Example / 弹性服务器示例 ===\n");
 
     // Create circuit breakers for different services / 为不同服务创建熔断器
-    let user_breaker = Arc::new(CircuitBreaker::new(
-        "user-service",
-        CircuitBreakerConfig::default(),
-    ));
+    let user_breaker =
+        Arc::new(CircuitBreaker::new("user-service", CircuitBreakerConfig::default()));
 
-    let order_breaker = Arc::new(CircuitBreaker::new(
-        "order-service",
-        CircuitBreakerConfig::default(),
-    ));
+    let order_breaker =
+        Arc::new(CircuitBreaker::new("order-service", CircuitBreakerConfig::default()));
 
     // Create rate limiters / 创建限流器
     let api_limiter = Arc::new(RateLimiter::new(

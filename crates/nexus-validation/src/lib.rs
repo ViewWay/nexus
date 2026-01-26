@@ -85,7 +85,10 @@ pub enum ValidationRule {
     /// 非空 / Not empty
     NotEmpty,
     /// 长度范围 / Length range
-    Length { min: Option<usize>, max: Option<usize> },
+    Length {
+        min: Option<usize>,
+        max: Option<usize>,
+    },
     /// 数值范围 / Range
     Range { min: Option<i64>, max: Option<i64> },
     /// 邮箱 / Email
@@ -104,10 +107,10 @@ impl fmt::Display for ValidationRule {
             ValidationRule::NotEmpty => write!(f, "not_empty"),
             ValidationRule::Length { min, max } => {
                 write!(f, "length(min={:?}, max={:?})", min, max)
-            }
+            },
             ValidationRule::Range { min, max } => {
                 write!(f, "range(min={:?}, max={:?})", min, max)
-            }
+            },
             ValidationRule::Email => write!(f, "email"),
             ValidationRule::Url => write!(f, "url"),
             ValidationRule::Regex(pattern) => write!(f, "regex({})", pattern),

@@ -104,11 +104,9 @@ impl MultipartFile {
     /// Get the file extension
     /// 获取文件扩展名
     pub fn extension(&self) -> Option<&str> {
-        self.filename.as_ref().and_then(|name| {
-            Path::new(name)
-                .extension()
-                .and_then(|ext| ext.to_str())
-        })
+        self.filename
+            .as_ref()
+            .and_then(|name| Path::new(name).extension().and_then(|ext| ext.to_str()))
     }
 
     /// Save the file to a path
@@ -153,11 +151,7 @@ pub struct MultipartField {
 impl MultipartField {
     /// Create a new multipart field
     /// 创建新的 multipart 字段
-    pub fn new(
-        name: String,
-        filename: Option<String>,
-        content_type: Option<String>,
-    ) -> Self {
+    pub fn new(name: String, filename: Option<String>, content_type: Option<String>) -> Self {
         Self {
             name,
             filename,
@@ -225,11 +219,7 @@ mod tests {
 
     #[test]
     fn test_multipart_field() {
-        let field = MultipartField::new(
-            "name".to_string(),
-            None,
-            Some("text/plain".to_string()),
-        );
+        let field = MultipartField::new("name".to_string(), None, Some("text/plain".to_string()));
 
         assert_eq!(field.name(), "name");
         assert!(field.filename().is_none());
