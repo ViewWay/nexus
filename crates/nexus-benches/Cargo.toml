@@ -1,7 +1,7 @@
 [package]
 name = "nexus-benches"
-version = { workspace = true }
-edition = { workspace = true }
+versio{ workspace = true }
+editio{ workspace = true }
 publish = false
 
 [lib]
@@ -13,7 +13,8 @@ nexus-http = { path = "../nexus-http" }
 nexus-runtime = { path = "../nexus-runtime" }
 nexus-router = { path = "../nexus-router" }
 nexus-extractors = { path = "../nexus-extractors" }
-criterion = { workspace = true }
+
+criterio{ workspace = true }
 
 [[bench]]
 name = "http_server"

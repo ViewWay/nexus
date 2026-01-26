@@ -5,9 +5,9 @@ authors = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }
 description = """
-Common data types and utilities for Nexus framework.
-Nexus框架的通用数据类型和工具。
-Equivalent to: Spring Data Commons
+Common data types and utilities for Nexus data layer.
+Nexus数据层的通用类型和工具。
+Equivalent to: Spring Data Commons, Spring Data Core
 """
 homepage = { workspace = true }
 repository = { workspace = true }
@@ -25,22 +25,26 @@ workspace = true
 
 [dependencies]
 # Serialization / 序列化
+# Equivalent to: Spring Jackson JSON
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yml = { workspace = true }
+
+# Time / 时间
 chrono = { workspace = true }
 
-# Async trait / 异步trait
+# Async traits / 异步trait
 async-trait = { workspace = true }
 
 # Error handling / 错误处理
 thiserror = { workspace = true }
 
 # UUID / UUID
-uuid = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"] }
 
-# Hex encoding / 十六进制编码
+# Utilities / 工具
 hex = { workspace = true }
 
 [dev-dependencies]
+# Async runtime / 异步运行时
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

@@ -28,10 +28,10 @@ workspace = true
 bytes = { workspace = true }
 
 # Concurrency utilities / 并发工具 (Spring Task Executor)
-rustc-hash = { workspace = true }
-flume = { workspace = true }
-num_cpus = { workspace = true }
-crossbeam = { workspace = true }
+rustc-hash = "2.1"
+flume = "0.11"
+num_cpus = "1.16"
+crossbeam = "0.8"
 
 # Core container (IoC equivalent) / 核心容器（IoC等价）
 # Equivalent to: Spring Core Container, ApplicationContext
@@ -60,37 +60,37 @@ tracing-core = { workspace = true }
 
 # Platform-specific dependencies / 平台特定依赖
 [target.'cfg(target_os = "linux")'.dependencies]
-io-uring = { workspace = true }
+io-uring = "0.7.11"
 
 [target.'cfg(not(target_os = "linux"))'.dependencies]
-libc = { workspace = true }
+libc = "0.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # For kqueue support on macOS
-kqueue = { workspace = true }
+kqueue = "1.0"
 
 [target.'cfg(target_os = "freebsd")'.dependencies]
 # For kqueue support on FreeBSD
-kqueue = { workspace = true }
+kqueue = "1.0"
 
 [target.'cfg(target_os = "netbsd")'.dependencies]
 # For kqueue support on NetBSD
-kqueue = { workspace = true }
+kqueue = "1.0"
 
 [target.'cfg(target_os = "openbsd")'.dependencies]
 # For kqueue support on OpenBSD
-kqueue = { workspace = true }
+kqueue = "1.0"
 
 [target.'cfg(target_os = "dragonfly")'.dependencies]
 # For kqueue support on DragonFlyBSD
-kqueue = { workspace = true }
+kqueue = "1.0"
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)
-criterion = { workspace = true }
-quickcheck = { workspace = true }
-quickcheck_macros = { workspace = true }
-proptest = { workspace = true }
+criterio{ workspace = true }
+quickchec{ workspace = true }
+quickcheck_macro{ workspace = true }
+proptes{ workspace = true }
 
 # Async runtime for testing (Spring Test Context)
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }

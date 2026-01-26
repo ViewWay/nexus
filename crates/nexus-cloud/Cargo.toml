@@ -20,11 +20,8 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[features]
-default = ["consul"]
-consul = ["dep:consul"]
-etcd = ["dep:etcd-rs"]
-all = ["consul", "etcd"]
+[lints]
+workspace = true
 
 [dependencies]
 # Async runtime / 异步运行时
@@ -70,8 +67,11 @@ etcd-rs = { workspace = true, optional = true }
 # Use existing resilience crate
 nexus-resilience = { path = "../nexus-resilience" }
 
-[lints]
-workspace = true
+[features]
+default = ["consul"]
+consul = ["dep:consul"]
+etcd = ["dep:etcd-rs"]
+all = ["consul", "etcd"]
 
 [dev-dependencies]
 # Testing / 测试

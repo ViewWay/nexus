@@ -20,16 +20,8 @@ categories = { workspace = true }
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[features]
-default = ["http1", "json"]
-http1 = ["hyper?/http1"]
-http2 = ["hyper", "hyper-util", "dep:h2"]
-http3 = ["dep:h3", "dep:h3-quinn", "dep:quinn", "dep:futures-rustls", "dep:tokio-rustls"]
-server = ["hyper", "hyper-util/server"]
-client = ["hyper", "hyper-util/client"]
-tls = ["dep:tokio-rustls"]
-full = ["http1", "http2", "http3", "server", "client", "tls", "json"]
-json = ["dep:serde_json"]
+[lints]
+workspace = true
 
 [dependencies]
 # HTTP types / HTTP类型 (Spring Web HTTP)
@@ -76,15 +68,22 @@ pin-project-lite = { workspace = true }
 
 # Utilities / 工具
 once_cell = { workspace = true }
-regex = { workspace = true }
 
-[lints]
-workspace = true
+[features]
+default = ["http1", "json"]
+http1 = ["hyper?/http1"]
+http2 = ["hyper", "hyper-util", "dep:h2"]
+http3 = ["dep:h3", "dep:h3-quinn", "dep:quinn", "dep:futures-rustls", "dep:tokio-rustls"]
+server = ["hyper", "hyper-util/server"]
+client = ["hyper", "hyper-util/client"]
+tls = ["dep:tokio-rustls"]
+full = ["http1", "http2", "http3", "server", "client", "tls", "json"]
+json = ["dep:serde_json"]
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test, MockMvc)
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-criterion = { workspace = true }
+criterio{ workspace = true }
 
 # Benchmarks will be added in Phase 2
 # 基准测试将在第2阶段添加
