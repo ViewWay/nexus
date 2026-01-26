@@ -46,12 +46,24 @@
 use proc_macro::TokenStream;
 
 // ========================================================================
-// Aspect Annotations / Aspect 注解
+// Internal Modules / 内部模块
 // ========================================================================
+// Note: These modules are private because proc-macro crates can only export
+//       procedural macros, not regular modules or runtime types.
+//       Runtime types should be in a separate library crate.
+// 注意：这些模块是私有的，因为 proc-macro crate 只能导出过程宏，
+//       不能导出常规模块或运行时类型。
+//       运行时类型应该在单独的库 crate 中。
 
-pub mod advice;
-pub mod aspect;
-pub mod pointcut;
+mod advice;
+mod aspect;
+mod pointcut;
+
+// Runtime module is conditionally compiled for non-proc-macro contexts
+// In a proper split, this would be in a separate nexus-aop-runtime crate
+// 运行时模块针对非 proc-macro 上下文进行条件编译
+// 在正确的拆分中，这应该在一个单独的 nexus-aop-runtime crate 中
+#[cfg(not(proc_macro))]
 pub mod runtime;
 
 /// Marks a struct as an AOP aspect
@@ -153,16 +165,14 @@ pub fn pointcut(attr: TokenStream, item: TokenStream) -> TokenStream {
     pointcut::impl_pointcut(attr, item)
 }
 
-// ========================================================================
-// Re-exports / 重新导出
-// ========================================================================
-
-pub use advice::{after as After, around as Around, before as Before};
-pub use aspect::aspect as Aspect;
-pub use pointcut::pointcut as Pointcut;
-
 // ============================================================================
-// Runtime Re-exports / 运行时重新导出
+// Runtime Re-exports (conditionally compiled)
+// 运行时重新导出（条件编译）
 // ============================================================================
 
+// Note: Runtime types are only available when not building as proc-macro.
+// This is a workaround - ideally, runtime types should be in a separate crate.
+// 注意：运行时类型仅在非 proc-macro 构建时可用。
+//       这是一种变通方法 - 理想情况下，运行时类型应该在单独的 crate 中。
+#[cfg(not(proc_macro))]
 pub use runtime::{AdviceType, AspectRegistry, JoinPoint, PointcutExpression, global_registry};

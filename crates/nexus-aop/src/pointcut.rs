@@ -4,7 +4,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{ItemFn, LitStr, parse_macro_input};
-use syn::{ParseStream, Result as SynResult, parse::Parse};
+use syn::{parse::ParseStream, Result as SynResult, parse::Parse};
 
 /// Parses pointcut expression from @Pointcut annotation
 /// 解析 @Pointcut 注解中的切点表达式

@@ -34,11 +34,29 @@ proc-macro2 = { workspace = true }
 darling = { workspace = true }
 darling_core = { workspace = true }
 
+# Error handling / 错误处理
+thiserror = { workspace = true }
+
+# Serialization / 序列化
+serde = { workspace = true }
+serde_json = { workspace = true }
+
 # Async runtime / 异步运行时
 tokio = { workspace = true, features = ["sync"] }
+async-trait = { workspace = true }
 
 # Random / 随机数
 rand = { workspace = true }
+
+# Optional security dependency (for @PreAuthorize macro)
+# 安全依赖（用于 @PreAuthorize 宏）
+nexus-security = { path = "../nexus-security", optional = true }
+
+[features]
+default = []
+# Enable security integration for @PreAuthorize macro
+# 启用 @PreAuthorize 宏的安全集成
+security = ["nexus-security"]
 
 [dev-dependencies]
 trybuild = { workspace = true }

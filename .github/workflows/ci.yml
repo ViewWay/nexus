@@ -55,8 +55,17 @@ jobs:
       - name: Run clippy (enhanced)
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
+      # Check documentation for public APIs only.
+      # 检查公共API的文档。
+      #
+      # Note: --document-private-items is disabled due to rustdoc SIGABRT crash
+      #       with Rust 1.93 and complex workspaces using edition 2024.
+      #       Public API documentation is still validated with -D warnings.
+      # 注意：由于 Rust 1.93 和使用 edition 2024 的复杂工作空间导致
+      #       rustdoc SIGABRT 崩溃，--document-private-items 被禁用。
+      #       公共 API 文档仍使用 -D warnings 进行验证。
       - name: Check documentation
-        run: cargo doc --no-deps --all-features --document-private-items -- -D warnings
+        run: cargo doc --no-deps --all-features -- -D warnings
 
   # Build and test job / 构建和测试任务
   test:

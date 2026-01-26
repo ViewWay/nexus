@@ -42,6 +42,9 @@
 #![warn(unreachable_pub)]
 
 use proc_macro::TokenStream;
+use proc_macro2::{Ident, TokenStream as TokenStream2};
+use quote::{format_ident, quote};
+use syn::{parse_macro_input, DeriveInput};
 
 // ========================================================================
 // @Valid Attribute / @Valid 属性
@@ -99,8 +102,11 @@ pub fn derive_not_null(input: TokenStream) -> TokenStream {
     let fields = extract_fields_with_validation(&input);
 
     let validation_methods = fields.iter().map(|(field_name, field_type)| {
+        // Generate function name using format_ident for stable Rust compatibility
+        // 使用 format_ident 生成函数名以确保稳定版 Rust 兼容性
+        let validate_fn_name = format_ident!("validate_{}", field_name);
         quote! {
-            pub fn validate_#field_name(&self) -> Result<(), String> {
+            pub fn #validate_fn_name(&self) -> Result<(), String> {
                 if self.#field_name.is_empty() {
                     Err(concat!(stringify!(#field_name), " cannot be null"))
                 } else {
@@ -150,8 +156,9 @@ pub fn derive_email(input: TokenStream) -> TokenStream {
     let fields = extract_email_fields(&input);
 
     let validation_methods = fields.iter().map(|(field_name, _)| {
+        let validate_fn_name = format_ident!("validate_{}", field_name);
         quote! {
-            pub fn validate_#field_name(&self) -> Result<(), String> {
+            pub fn #validate_fn_name(&self) -> Result<(), String> {
                 // Simple email validation regex
                 // 简单的 email 验证正则
                 let email_regex = regex::Regex::new(
@@ -214,8 +221,9 @@ pub fn derive_size(input: TokenStream) -> TokenStream {
     let fields_with_size = extract_fields_with_size(&input);
 
     let validation_methods = fields_with_size.iter().map(|(field_name, min, max)| {
+        let validate_fn_name = format_ident!("validate_{}", field_name);
         quote! {
-            pub fn validate_#field_name(&self) -> Result<(), String> {
+            pub fn #validate_fn_name(&self) -> Result<(), String> {
                 let len = self.#field_name.len();
                 let min = #min;
                 let max = #max;
@@ -282,8 +290,9 @@ pub fn derive_min(input: TokenStream) -> TokenStream {
     let fields_with_min = extract_fields_with_min(&input);
 
     let validation_methods = fields_with_min.iter().map(|(field_name, min_value)| {
+        let validate_fn_name = format_ident!("validate_{}", field_name);
         quote! {
-            pub fn validate_#field_name(&self) -> Result<(), String> {
+            pub fn #validate_fn_name(&self) -> Result<(), String> {
                 if self.#field_name < #min_value {
                     Err(format!(
                         "{} must be at least {}, but got {}",
@@ -341,8 +350,9 @@ pub fn derive_max(input: TokenStream) -> TokenStream {
     let fields_with_max = extract_fields_with_max(&input);
 
     let validation_methods = fields_with_max.iter().map(|(field_name, max_value)| {
+        let validate_fn_name = format_ident!("validate_{}", field_name);
         quote! {
-            pub fn validate_#field_name(&self) -> Result<(), String> {
+            pub fn #validate_fn_name(&self) -> Result<(), String> {
                 if self.#field_name > #max_value {
                     Err(format!(
                         "{} must be at most {}, but got {}",
@@ -400,8 +410,9 @@ pub fn derive_pattern(input: TokenStream) -> TokenStream {
     let fields_with_pattern = extract_fields_with_pattern(&input);
 
     let validation_methods = fields_with_pattern.iter().map(|(field_name, regex_pattern)| {
+        let validate_fn_name = format_ident!("validate_{}", field_name);
         quote! {
-            pub fn validate_#field_name(&self) -> Result<(), String> {
+            pub fn #validate_fn_name(&self) -> Result<(), String> {
                 use regex::Regex;
                 let re = Regex::new(#regex_pattern).unwrap();
                 if !re.is_match(&self.#field_name) {
@@ -463,8 +474,9 @@ pub fn derive_length(input: TokenStream) -> TokenStream {
     let fields_with_length = extract_fields_with_length(&input);
 
     let validation_methods = fields_with_length.iter().map(|(field_name, min, max)| {
+        let validate_fn_name = format_ident!("validate_{}", field_name);
         quote! {
-            pub fn validate_#field_name(&self) -> Result<(), String> {
+            pub fn #validate_fn_name(&self) -> Result<(), String> {
                 let len = self.#field_name.len();
                 let min = #min;
                 let max = #max;
@@ -613,9 +625,14 @@ fn extract_fields_with_size(input: &syn::DeriveInput) -> Vec<(proc_macro2::Ident
 
 /// Parse value from meta item
 /// 从 meta 项中解析值
-fn parse_value_from_meta(meta: &syn::NestedMeta) -> Option<u32> {
+///
+/// Note: In syn 2.x, NestedMeta was replaced with Meta. We use darling's NestedMeta
+/// for compatibility with the attribute parsing macros.
+/// 注意：在 syn 2.x 中，NestedMeta 被 Meta 替换。我们使用 darling 的 NestedMeta
+///       以保持与属性解析宏的兼容性。
+fn parse_value_from_meta(meta: &darling::ast::NestedMeta) -> Option<u32> {
     match meta {
-        syn::NestedMeta::Lit(syn::Lit::Int(lit)) => {
+        darling::ast::NestedMeta::Lit(syn::Lit::Int(lit)) => {
             lit.base10_parse().ok()
         }
         _ => None,

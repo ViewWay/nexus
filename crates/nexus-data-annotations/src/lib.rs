@@ -57,17 +57,27 @@
 use proc_macro::TokenStream;
 
 // ========================================================================
-// Entity Annotations / 实体注解
+// Internal Modules / 内部模块
 // ========================================================================
+// Note: These modules are private because proc-macro crates can only export
+//       procedural macros, not regular modules or runtime types.
+//       Runtime types should be in a separate library crate.
+// 注意：这些模块是私有的，因为 proc-macro crate 只能导出过程宏，
+//       不能导出常规模块或运行时类型。
+//       运行时类型应该在单独的库 crate 中。
 
-pub mod column;
-pub mod entity;
-pub mod id;
-pub mod pre_authorize_macro;
-pub mod query;
-pub mod repository;
-pub mod transactional;
-pub mod transactional_macro;
+mod column;
+mod entity;
+mod id;
+mod query;
+mod repository;
+mod transactional;
+mod transactional_macro;
+
+// Pre-authorize macro module (conditionally compiled with security feature)
+// Pre-authorize 宏模块（使用 security feature 条件编译）
+#[cfg(feature = "security")]
+mod pre_authorize_macro;
 
 /// Marks a struct as a JPA entity
 /// 将结构体标记为 JPA 实体
@@ -328,27 +338,21 @@ pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
 // ========================================================================
 // Re-exports / 重新导出
 // ========================================================================
-
-pub use column::column as Column;
-pub use entity::{entity as Entity, table as Table};
-pub use id::{generated_value as GeneratedValue, id as Id};
-pub use query::{delete as Delete, insert as Insert, query as Query, update as Update};
-
-// ============================================================================
-// Transactional Runtime Re-exports / 事务运行时重新导出
-// ============================================================================
-
-pub use transactional::{
-    IsolationLevel as TransactionIsolationLevel, Propagation as TransactionPropagation,
-    TransactionError, TransactionManager, TransactionalConfig, TransactionalExecutor,
-};
-
-pub use transactional_macro::transactional as Transactional;
+// Note: In a proc-macro crate, only macros can be exported via
+// #[proc_macro_attribute] and #[proc_macro_derive] functions.
+// Runtime types cannot be exported from proc-macro crates.
+// 注意：在 proc-macro crate 中，只有宏可以通过 #[proc_macro_attribute]
+// 和 #[proc_macro_derive] 函数导出。运行时类型无法从 proc-macro crate 导出。
+//
+// For runtime types, users should depend on a separate library crate.
+// 对于运行时类型，用户应该依赖单独的库 crate。
 
 // ============================================================================
 // Security Annotations / 安全注解
 // ============================================================================
-
+// Security annotations are only available when the "security" feature is enabled.
+// 安全注解仅在启用 "security" feature 时可用。
+#[cfg(feature = "security")]
 /// Method-level security annotation
 /// 方法级安全注解
 ///
@@ -393,20 +397,16 @@ pub use transactional_macro::transactional as Transactional;
 ///     }
 /// }
 /// ```
+#[cfg(feature = "security")]
 #[proc_macro_attribute]
 pub fn pre_authorize(attr: TokenStream, item: TokenStream) -> TokenStream {
     pre_authorize_macro::pre_authorize(attr, item)
 }
 
-// ============================================================================
-// Repository Support / Repository 支持
-// ============================================================================
-
-pub use repository::{
-    CrudRepository, Page, PageRequest, PagingRepository, QueryCriteria, Sort, SortDirection,
-};
-
-pub use pre_authorize_macro::{
-    DefaultPermissionChecker, PermissionChecker, PreAuthorize as PreAuthorizeAnnotation,
-    SecurityExpression,
-};
+/// Alias for @PreAuthorize annotation
+/// @PreAuthorize 注解的别名
+#[cfg(feature = "security")]
+#[proc_macro_attribute]
+pub fn pre_authorize_macro_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
+    pre_authorize_macro::pre_authorize(attr, item)
+}
