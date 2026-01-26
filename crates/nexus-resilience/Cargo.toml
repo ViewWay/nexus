@@ -67,7 +67,7 @@ nacos = { version = "0.0", optional = true }
 tokio = { workspace = true }
 
 # Metrics / 指标 (Spring Cloud Circuit Breaker Metrics)
-prometheus = { version = "0.13", optional = true }
+prometheus = { version = "0.14", optional = true }
 metrics = { workspace = true }
 
 # Tower middleware support (Spring Web Filter equivalent)
