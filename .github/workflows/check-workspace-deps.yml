@@ -1,0 +1,108 @@
+# Workspace Dependencies Check
+# Workspace 依赖检查
+#
+# Ensures all crates use workspace dependencies instead of direct versions.
+# 确保所有 crates 使用 workspace 依赖而不是直接版本。
+
+name: Check Workspace Dependencies
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check-workspace-deps:
+    name: Check Workspace Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check for direct version specifications
+        run: |
+          echo "🔍 Checking for direct version specifications in crates..."
+
+          # Find all Cargo.toml files in crates directory
+          CRATES=$(find crates -name "Cargo.toml" -type f)
+          ERRORS=0
+
+          for file in $CRATES; do
+            echo "Checking $file..."
+
+            # Check for direct version specifications (excluding workspace = true)
+            # Pattern: version = "X.Y.Z" or version = "X.Y" but not { workspace = true }
+            if grep -E '^\s*[a-zA-Z0-9_-]+\s*=\s*\{?\s*version\s*=\s*"[0-9]' "$file" | grep -v "workspace = true" | grep -v "optional = true" | grep -v "# Note:" > /dev/null; then
+              echo "❌ Found direct version specification in $file:"
+              grep -E '^\s*[a-zA-Z0-9_-]+\s*=\s*\{?\s*version\s*=\s*"[0-9]' "$file" | grep -v "workspace = true" | grep -v "optional = true" | grep -v "# Note:" || true
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            # Check for old-style workspace syntax (dep.workspace = true)
+            if grep -E '\.workspace\s*=\s*true' "$file" > /dev/null; then
+              echo "❌ Found old-style workspace syntax in $file:"
+              grep -E '\.workspace\s*=\s*true' "$file" || true
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          if [ $ERRORS -gt 0 ]; then
+            echo ""
+            echo "❌ Found $ERRORS issue(s) with dependency specifications."
+            echo ""
+            echo "Please ensure:"
+            echo "1. All dependencies use { workspace = true } instead of direct versions"
+            echo "2. Use { workspace = true } instead of .workspace = true syntax"
+            echo "3. Add missing dependencies to workspace Cargo.toml if needed"
+            echo ""
+            echo "Example of correct format:"
+            echo '  serde = { workspace = true }'
+            echo '  tokio = { workspace = true, features = ["macros"] }'
+            exit 1
+          fi
+
+          echo "✅ All crates use workspace dependencies correctly!"
+
+      - name: Verify workspace dependency format
+        run: |
+          echo "🔍 Verifying workspace dependency format..."
+
+          # Check that all crates have proper package metadata
+          CRATES=$(find crates -name "Cargo.toml" -type f)
+
+          for file in $CRATES; do
+            # Skip benches crate as it has special structure
+            if [[ "$file" == *"nexus-benches"* ]]; then
+              continue
+            fi
+
+            # Check for required fields
+            if ! grep -q 'version = { workspace = true }' "$file"; then
+              echo "⚠️  Warning: $file may not use workspace version"
+            fi
+
+            if ! grep -q '\[package.metadata.docs.rs\]' "$file"; then
+              echo "⚠️  Warning: $file missing [package.metadata.docs.rs] section"
+            fi
+
+            if ! grep -q '\[lints\]' "$file"; then
+              echo "⚠️  Warning: $file missing [lints] section"
+            fi
+          done
+
+          echo "✅ Format verification complete!"
