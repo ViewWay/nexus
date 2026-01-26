@@ -1,18 +1,50 @@
 [package]
 name = "nexus-data-commons"
-version = "0.1.0-alpha"
-edition = "2024"
-rust-version = "1.93"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+description = """
+Common data types and utilities for Nexus data layer.
+Nexus数据层的通用类型和工具。
+Equivalent to: Spring Data Commons, Spring Data Core
+"""
+homepage = { workspace = true }
+repository = { workspace = true }
+readme = "./README.md"
+keywords = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[lints]
+workspace = true
 
 [dependencies]
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
-serde_yml = "0.0.12"
-chrono = { version = "0.4.43", features = ["serde"] }
-async-trait = "0.1.89"
-thiserror = "2.0.18"
-uuid = { version = "1.12", features = ["v4", "serde"] }
-hex = "0.4"
+# Serialization / 序列化
+# Equivalent to: Spring Jackson JSON
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yml = { workspace = true }
+
+# Time / 时间
+chrono = { workspace = true }
+
+# Async traits / 异步trait
+async-trait = { workspace = true }
+
+# Error handling / 错误处理
+thiserror = { workspace = true }
+
+# UUID / UUID
+uuid = { workspace = true, features = ["v4", "serde"] }
+
+# Utilities / 工具
+hex = { workspace = true }
 
 [dev-dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+# Async runtime / 异步运行时
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
