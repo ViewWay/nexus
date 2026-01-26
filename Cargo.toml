@@ -228,7 +228,7 @@ percent-encoding = "2.3"
 # Additional dependencies / 额外依赖
 mime = "0.3"
 mime_guess = "2.0"
-secp256k1 = "0.30"
+secp256k1 = "0.31"
 bip39 = "2.0"
 siphasher = "1.0"
 subtle = "2.5"
