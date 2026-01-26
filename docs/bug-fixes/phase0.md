@@ -479,13 +479,101 @@ error[E0119]: conflicting implementations of trait `bean::Bean` for type `TestBe
 
 ---
 
+## Bug #019: Direct version specifications in nexus-openapi
+
+## Bug #019: nexus-openapi 中的直接版本规范
+
+**Date / 日期**: 2026-01-26
+
+**Error / 错误**:
+
+```
+❌ Found direct version specification in crates/nexus-openapi/Cargo.toml:
+utoipa = { version = "4", features = ["chrono", "uuid", "decimal"] }
+utoipa-swagger-ui = { version = "4", features = ["actix-web", "axum"] }
+```
+
+**Location / 位置**: `crates/nexus-openapi/Cargo.toml` (lines 39-40)
+
+**Cause / 原因**: Dependencies were using direct version specifications instead of workspace dependencies. This violates the workspace dependency convention where all shared dependencies should be defined in the root `Cargo.toml` and referenced with `{ workspace = true }`.
+
+**Fix / 修复**:
+1. Added `utoipa` and `utoipa-swagger-ui` to workspace `[workspace.dependencies]` in root `Cargo.toml`
+2. Updated `nexus-openapi/Cargo.toml` to use `{ workspace = true }` for both dependencies
+
+**Files Modified / 修改的文件**:
+
+- `/Cargo.toml` (added utoipa dependencies)
+- `/crates/nexus-openapi/Cargo.toml` (changed to workspace = true)
+
+---
+
+## Bug #020: Direct version specifications in nexus-cloud
+
+## Bug #020: nexus-cloud 中的直接版本规范
+
+**Date / 日期**: 2026-01-26
+
+**Error / 错误**:
+
+```
+❌ Found direct version specification in crates/nexus-cloud/Cargo.toml:
+consul = { version = "0.4", optional = true }
+etcd-rs = { version = "1.0", optional = true }
+```
+
+**Location / 位置**: `crates/nexus-cloud/Cargo.toml` (lines 66-67)
+
+**Cause / 原因**: Dependencies were using direct version specifications instead of workspace dependencies. This violates the workspace dependency convention where all shared dependencies should be defined in the root `Cargo.toml` and referenced with `{ workspace = true }`.
+
+**Fix / 修复**:
+1. Added `consul` and `etcd-rs` to workspace `[workspace.dependencies]` in root `Cargo.toml`
+2. Updated `nexus-cloud/Cargo.toml` to use `{ workspace = true }` for both dependencies
+
+**Files Modified / 修改的文件**:
+
+- `/Cargo.toml` (added service discovery dependencies)
+- `/crates/nexus-cloud/Cargo.toml` (changed to workspace = true)
+
+---
+
+## Bug #021: Direct version specifications in nexus-resilience
+
+## Bug #021: nexus-resilience 中的直接版本规范
+
+**Date / 日期**: 2026-01-26
+
+**Error / 错误**:
+
+```
+❌ Found direct version specification in crates/nexus-resilience/Cargo.toml:
+consul = { version = "0.4", optional = true }
+etcd-rs = { version = "1.0", optional = true }
+nacos = { version = "0.0", optional = true }
+```
+
+**Location / 位置**: `crates/nexus-resilience/Cargo.toml` (lines 72-74)
+
+**Cause / 原因**: Dependencies were using direct version specifications instead of workspace dependencies. This violates the workspace dependency convention where all shared dependencies should be defined in the root `Cargo.toml` and referenced with `{ workspace = true }`.
+
+**Fix / 修复**:
+1. Added `consul`, `etcd-rs`, and `nacos` to workspace `[workspace.dependencies]` in root `Cargo.toml`
+2. Updated `nexus-resilience/Cargo.toml` to use `{ workspace = true }` for all three dependencies
+
+**Files Modified / 修改的文件**:
+
+- `/Cargo.toml` (added service discovery dependencies)
+- `/crates/nexus-resilience/Cargo.toml` (changed to workspace = true)
+
+---
+
 ## Summary / 总结
 
-**Total Bugs Fixed / 总修复 Bug 数**: 18
+**Total Bugs Fixed / 总修复 Bug 数**: 21
 
 **Categories / 类别**:
 
-- Configuration errors: 8 (配置错误)
+- Configuration errors: 11 (配置错误)
 - Missing files: 6 (缺失文件)
 - Syntax errors: 2 (语法错误)
 - Trait conflicts: 1 (trait冲突)

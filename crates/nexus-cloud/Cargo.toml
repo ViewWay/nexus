@@ -61,12 +61,10 @@ time = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
-# Consul / Consul (optional)
-# Note: consul and etcd-rs are not in workspace, keeping direct versions
-consul = { version = "0.4", optional = true }
-
-# Etcd / Etcd (optional)
-etcd-rs = { version = "1.0", optional = true }
+# Service Discovery / 服务发现
+# Equivalent to: Spring Cloud Service Discovery
+consul = { workspace = true, optional = true }
+etcd-rs = { workspace = true, optional = true }
 
 # Service discovery registration / 服务发现注册
 # Use existing resilience crate

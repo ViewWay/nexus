@@ -67,7 +67,23 @@
       "Bash(RUSTC=/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc /Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo build:*)",
       "Bash(RUSTC=/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc /Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo test:*)",
       "Bash(RUSTC=/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc /Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo doc:*)",
-      "Bash(/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/git status)"
+      "Bash(/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/git status)",
+      "Bash(~/.rustup/toolchains/stable/bin/cargo doc:*)",
+      "Bash(PATH=\"$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH\" cargo:*)",
+      "Bash(PATH=\"$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$HOME/.cargo/bin:$PATH\" rustc:*)",
+      "Bash(env PATH=\"$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$HOME/.cargo/bin:$PATH\" \"$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo\":*)",
+      "Bash(/bin/sh:*)",
+      "Bash(then echo 'Checking $toml...' if grep -E '= \\\\{ version = ' $toml)",
+      "Bash(then echo '❌ Found direct version specification in $toml:' grep -E '= \\\\{ version = ' $toml)",
+      "Bash($HOME/.cargo/bin/rustc:*)",
+      "Bash($HOME/.cargo/bin/cargo:*)",
+      "Bash(/Users/yimiliya/.cargo/bin/cargo check:*)",
+      "Bash(/Users/yimiliya/.cargo/bin/rustup run nightly cargo check:*)",
+      "Bash(/opt/homebrew/opt/rust/bin/cargo:*)",
+      "Bash(/Users/yimiliya/.rustup/rustup-install.sh:*)",
+      "Bash(/Users/yimiliya/.rustup/bin/rustup:*)",
+      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" cargo check:*)",
+      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" git add:*)"
     ]
   }
 }

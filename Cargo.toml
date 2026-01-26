@@ -230,6 +230,19 @@ clap = { version = "4.5", features = ["derive"] }
 # Equivalent to: Spring Boot Actuator system metrics
 sysinfo = "0.37.2"
 
+# OpenAPI/Swagger / OpenAPI/Swagger
+# Equivalent to: SpringDoc OpenAPI (Swagger 3)
+utoipa = { version = "4", features = ["chrono", "uuid", "decimal"] }
+utoipa-swagger-ui = { version = "4", features = ["actix-web", "axum"] }
+
+# Service Discovery / 服务发现
+# Equivalent to: Spring Cloud Service Discovery
+# Note: These are defined without optional here, individual crates set optional=true
+# 注意：这些在这里没有定义为 optional，各个 crate 设置 optional=true
+consul = "0.4"
+etcd-rs = "1.0"
+nacos = "0.0"
+
 # Testing / 测试
 # Equivalent to: Spring Test
 criterion = "0.8.1"

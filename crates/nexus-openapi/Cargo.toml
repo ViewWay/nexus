@@ -35,9 +35,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 # OpenAPI/Swagger / OpenAPI/Swagger
-# Note: utoipa and utoipa-swagger-ui are not in workspace, keeping direct versions
-utoipa = { version = "4", features = ["chrono", "uuid", "decimal"] }
-utoipa-swagger-ui = { version = "4", features = ["actix-web", "axum"] }
+# Equivalent to: SpringDoc OpenAPI (Swagger 3)
+utoipa = { workspace = true }
+utoipa-swagger-ui = { workspace = true }
 
 # Core types / 核心类型
 nexus-http = { path = "../nexus-http" }

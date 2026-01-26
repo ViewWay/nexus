@@ -67,11 +67,11 @@ pin-project-lite = { workspace = true }
 # Random / 随机 (jitter in backoff)
 rand = { workspace = true }
 
-# Service discovery / 服务发现 (Spring Cloud Service Discovery)
-# Note: consul, etcd-rs, and nacos are not in workspace, keeping direct versions
-consul = { version = "0.4", optional = true }
-etcd-rs = { version = "1.0", optional = true }
-nacos = { version = "0.0", optional = true }
+# Service Discovery / 服务发现
+# Equivalent to: Spring Cloud Service Discovery
+consul = { workspace = true, optional = true }
+etcd-rs = { workspace = true, optional = true }
+nacos = { workspace = true, optional = true }
 
 # Async runtime / 异步运行时
 tokio = { workspace = true }
