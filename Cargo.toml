@@ -139,6 +139,10 @@ quick_cache = "0.6"
 governor = "0.10.4"
 tower = "0.5"
 tower_governor = "0.8.0"
+tower-http = "0.6"
+async-compression = "0.4"
+csrf = "0.5"
+headers = "0.4"
 
 # Scheduled Tasks / 定时任务
 # Equivalent to: Spring Scheduling, @Scheduled
@@ -164,6 +168,7 @@ base64 = "0.22"
 hex = "0.4"
 getrandom = "0.3"
 sha3 = "0.10"
+sha2 = "0.10"
 
 # Template Engines / 模板引擎
 # Equivalent to: Spring Thymeleaf, FreeMarker
@@ -204,6 +209,12 @@ alloy-rpc-types = "1.4"
 # Equivalent to: Spring Shell
 clap = { version = "4.5", features = ["derive"] }
 
+# Service Discovery / 服务发现
+# Equivalent to: Spring Cloud Service Discovery
+consul = "0.4"
+etcd-rs = "1.0"
+nacos = "0.0"
+
 # System Info / 系统信息
 # Equivalent to: Spring Boot Actuator system metrics
 sysinfo = "0.37.2"
@@ -215,6 +226,8 @@ quickcheck = "1.0"
 quickcheck_macros = "1.0"
 proptest = "1.5"
 mockito = "1.6"
+trybuild = "1.0"
+tokio-test = "0.4"
 
 # Utilities / 工具
 itertools = "0.14"
@@ -246,6 +259,7 @@ metrics-exporter-prometheus = "0.16"
 tracing-core = "0.1"
 log = "0.4"
 slog = "2.8"
+env_logger = "0.11"
 bevy_reflect = "0.13"
 
 # ==============================================================================

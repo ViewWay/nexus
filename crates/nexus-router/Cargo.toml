@@ -49,7 +49,7 @@ itertools = { workspace = true }
 [dev-dependencies]
 # Testing / 测试 (Spring Test)
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-criterio{ workspace = true }
+criterion = { workspace = true }
 
 # Benchmarks will be added in Phase 2
 # 基准测试将在第2阶段添加

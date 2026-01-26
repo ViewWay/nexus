@@ -87,10 +87,10 @@ kqueue = "1.0"
 
 [dev-dependencies]
 # Testing / 测试 (Spring Test)
-criterio{ workspace = true }
-quickchec{ workspace = true }
-quickcheck_macro{ workspace = true }
-proptes{ workspace = true }
+criterion = { workspace = true }
+quickcheck = { workspace = true }
+quickcheck_macros = { workspace = true }
+proptest = { workspace = true }
 
 # Async runtime for testing (Spring Test Context)
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }

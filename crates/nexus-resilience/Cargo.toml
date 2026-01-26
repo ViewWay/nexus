@@ -88,7 +88,7 @@ full = ["circuit-breaker", "rate-limit", "retry", "timeout", "bulkhead", "fallba
 [dev-dependencies]
 # Testing / 测试 (Spring Test)
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-criterio{ workspace = true }
+criterion = { workspace = true }
 
 # Benchmarks will be added in Phase 4
 # 基准测试将在第4阶段添加
