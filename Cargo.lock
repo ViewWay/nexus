@@ -4825,6 +4825,7 @@ dependencies = [
  "once_cell",
  "pin-project-lite",
  "quinn",
+ "regex",
  "rustls 0.23.36",
  "serde",
  "serde_json",

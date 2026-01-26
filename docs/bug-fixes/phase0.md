@@ -677,3 +677,90 @@ error: `dependency.env_logger` was not found in `workspace.dependencies`
 - Feature implementation: 1 (功能实现)
 
 **Workspace Status / 工作区状态**: ✅ All bugs fixed, ready for compilation / ✅ 所有bug已修复，准备编译
+
+---
+
+## Bug #024: Missing regex dependency in nexus-http
+
+## Bug #024: nexus-http 中缺失 regex 依赖
+
+**Date / 日期**: 2026-01-26
+
+**Error / 错误**:
+
+```
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `regex`
+   --> crates/nexus-http/src/validation.rs:509:15
+    |
+509 |         match regex::Regex::new(pattern) {
+    |               ^^^^^ use of unresolved module or unlinked crate `regex`
+```
+
+**Location / 位置**: `crates/nexus-http/src/validation.rs:509`
+
+**Cause / 原因**: The `regex` crate was used in validation.rs but not included in nexus-http's Cargo.toml dependencies.
+
+**Fix / 修复**:
+1. Added `regex = { workspace = true }` to nexus-http/Cargo.toml dependencies
+2. Added `use regex;` import to validation.rs
+
+**Files Modified / 修改的文件**:
+
+- `/crates/nexus-http/Cargo.toml`
+- `/crates/nexus-http/src/validation.rs`
+
+---
+
+## Bug #025: Example code API incompatibility with new Handler signature
+
+## Bug #025: 示例代码与新 Handler 签名 API 不兼容
+
+**Date / 日期**: 2026-01-26
+
+**Error / 错误**:
+
+```
+error[E0271]: expected `{async block@examples/src/multipart_example.rs:325:39: 325:49}` to be a future that resolves to `Result<Response, Error>`, but it resolves to `Response`
+error[E0061]: this function takes 3 arguments but 1 argument was supplied
+error[E0593]: closure is expected to take 1 argument, but it takes 0 arguments
+```
+
+**Location / 位置**: `examples/src/multipart_example.rs`, `examples/src/validation_example.rs`
+
+**Cause / 原因**:
+1. Handler closures now return `Result<Response, Error>` instead of `Response`
+2. `Multipart::new` API changed from taking `Request` to taking `(content_type: &str, body: Bytes, max_file_size: usize)`
+3. Router handlers must accept `Request` parameter
+
+**Fix / 修复**:
+1. Updated all handler functions to return `Result<Response, Error>`
+2. Updated `Multipart::new` calls to extract content-type and body from Request
+3. Updated all router closures to return `Ok(Response)` wrapped responses
+4. Added `Bytes` import to multipart_example.rs
+5. Simplified validation_example.rs (validation framework still under development)
+6. Created missing upload_form.html file
+
+**Files Modified / 修改的文件**:
+
+- `/examples/src/multipart_example.rs` (fixed API usage)
+- `/examples/src/validation_example.rs` (simplified for in-progress development)
+- `/examples/src/upload_form.html` (created)
+- `/examples/Cargo.toml` (added derive feature for validator)
+- `/crates/nexus-http/Cargo.toml` (added regex dependency)
+
+---
+
+## Summary / 总结
+
+**Total Bugs Fixed / 总修复 Bug 数**: 25
+
+**Categories / 类别**:
+
+- Configuration errors: 13 (配置错误)
+- Missing files: 7 (缺失文件)
+- Syntax errors: 2 (语法错误)
+- Trait conflicts: 1 (trait冲突)
+- Feature implementation: 1 (功能实现)
+- API incompatibility: 1 (API不兼容)
+
+**Workspace Status / 工作区状态**: ✅ Core bugs fixed, examples updated for Phase 0 development / ✅ 核心bug已修复，示例已针对Phase0开发更新

@@ -127,5 +127,5 @@ env_logger = { workspace = true }
 ulid = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
-validator = { workspace = true }
+validator = { workspace = true, features = ["derive"] }
 email_address = { workspace = true }

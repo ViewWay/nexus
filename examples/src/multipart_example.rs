@@ -10,11 +10,12 @@
 // Equivalent to: Spring MultipartFile, Multer
 // 等价于：Spring MultipartFile, Multer
 
-use nexus_http::{Request, Response, StatusCode};
+use nexus_http::{Request, Response, Result, StatusCode};
 use nexus_multipart::{Multipart, MultipartData};
 use nexus_router::Router;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
+use bytes::Bytes;
 use std::io::Write;
 use std::path::Path;
 
@@ -36,7 +37,7 @@ struct UploadResponse {
 }
 
 /// Single file upload handler / 单文件上传处理程序
-async fn handle_single_file_upload(mut multipart: Multipart) -> Response {
+async fn handle_single_file_upload(mut multipart: Multipart) -> Result<Response> {
     println!("\n--- Single File Upload / 单文件上传 ---");
 
     let mut uploaded_files = Vec::new();
@@ -55,7 +56,7 @@ async fn handle_single_file_upload(mut multipart: Multipart) -> Response {
 
         // Validate file type / 验证文件类型
         if !is_allowed_file_type(&filename) {
-            return Response::builder()
+            return Ok(Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body(
                     serde_json::json!({
@@ -64,7 +65,7 @@ async fn handle_single_file_upload(mut multipart: Multipart) -> Response {
                     .to_string()
                     .into(),
                 )
-                .unwrap();
+                .unwrap());
         }
 
         // Read file data / 读取文件数据
@@ -73,7 +74,7 @@ async fn handle_single_file_upload(mut multipart: Multipart) -> Response {
         // Save file to disk / 保存文件到磁盘
         let save_path = format!("uploads/{}", filename);
         if let Err(e) = save_file(&save_path, &data) {
-            return Response::builder()
+            return Ok(Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(
                     serde_json::json!({
@@ -82,7 +83,7 @@ async fn handle_single_file_upload(mut multipart: Multipart) -> Response {
                     .to_string()
                     .into(),
                 )
-                .unwrap();
+                .unwrap());
         }
 
         uploaded_files.push(FileMetadata {
@@ -93,7 +94,7 @@ async fn handle_single_file_upload(mut multipart: Multipart) -> Response {
         });
     }
 
-    Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(
@@ -105,11 +106,11 @@ async fn handle_single_file_upload(mut multipart: Multipart) -> Response {
             .unwrap()
             .into(),
         )
-        .unwrap()
+        .unwrap())
 }
 
 /// Multiple file upload handler / 多文件上传处理程序
-async fn handle_multiple_files_upload(mut multipart: Multipart) -> Response {
+async fn handle_multiple_files_upload(mut multipart: Multipart) -> Result<Response> {
     println!("\n--- Multiple Files Upload / 多文件上传 ---");
 
     let mut uploaded_files = Vec::new();
@@ -124,14 +125,14 @@ async fn handle_multiple_files_upload(mut multipart: Multipart) -> Response {
 
         // Validate file / 验证文件
         if let Err(e) = validate_file(&filename, &data) {
-            return Response::builder()
+            return Ok(Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body(
                     serde_json::json!({"error": e.to_string()})
                         .to_string()
                         .into(),
                 )
-                .unwrap();
+                .unwrap());
         }
 
         // Save file / 保存文件
@@ -139,7 +140,7 @@ async fn handle_multiple_files_upload(mut multipart: Multipart) -> Response {
         let save_path = format!("uploads/{}", unique_filename);
 
         if let Err(e) = save_file(&save_path, &data) {
-            return Response::builder()
+            return Ok(Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(
                     serde_json::json!({
@@ -148,7 +149,7 @@ async fn handle_multiple_files_upload(mut multipart: Multipart) -> Response {
                     .to_string()
                     .into(),
                 )
-                .unwrap();
+                .unwrap());
         }
 
         uploaded_files.push(FileMetadata {
@@ -161,7 +162,7 @@ async fn handle_multiple_files_upload(mut multipart: Multipart) -> Response {
         total_size += data.len();
     }
 
-    Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(
@@ -177,11 +178,11 @@ async fn handle_multiple_files_upload(mut multipart: Multipart) -> Response {
             .unwrap()
             .into(),
         )
-        .unwrap()
+        .unwrap())
 }
 
 /// File upload with form data / 带表单数据的文件上传
-async fn handle_file_with_metadata(mut multipart: Multipart) -> Response {
+async fn handle_file_with_metadata(mut multipart: Multipart) -> Result<Response> {
     println!("\n--- File with Metadata / 带元数据的文件 ---");
 
     let mut title = String::new();
@@ -211,7 +212,7 @@ async fn handle_file_with_metadata(mut multipart: Multipart) -> Response {
                 let save_path = format!("uploads/{}", unique_filename);
 
                 if let Err(e) = save_file(&save_path, &data) {
-                    return Response::builder()
+                    return Ok(Response::builder()
                         .status(StatusCode::INTERNAL_SERVER_ERROR)
                         .body(
                             serde_json::json!({
@@ -220,7 +221,7 @@ async fn handle_file_with_metadata(mut multipart: Multipart) -> Response {
                             .to_string()
                             .into(),
                         )
-                        .unwrap();
+                        .unwrap());
                 }
 
                 uploaded_file = Some(FileMetadata {
@@ -236,7 +237,7 @@ async fn handle_file_with_metadata(mut multipart: Multipart) -> Response {
         }
     }
 
-    Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(
@@ -248,7 +249,7 @@ async fn handle_file_with_metadata(mut multipart: Multipart) -> Response {
             .to_string()
             .into(),
         )
-        .unwrap()
+        .unwrap())
 }
 
 /// Check if file type is allowed / 检查文件类型是否允许
@@ -318,26 +319,50 @@ async fn file_upload_server() {
     let app = Router::new()
         // Single file upload / 单文件上传
         .post("/api/upload/single", |req: Request| async move {
-            let multipart = Multipart::new(req);
-            handle_single_file_upload(multipart).await
+            let content_type = req.header("content-type").unwrap_or("");
+            let body_bytes = req.body().data().clone();
+            let max_file_size = 10 * 1024 * 1024; // 10MB
+            match Multipart::new(content_type, body_bytes, max_file_size) {
+                Ok(multipart) => handle_single_file_upload(multipart).await,
+                Err(e) => Ok(Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(format!("Invalid multipart request: {}", e).into())
+                    .unwrap()),
+            }
         })
         // Multiple files upload / 多文件上传
         .post("/api/upload/multiple", |req: Request| async move {
-            let multipart = Multipart::new(req);
-            handle_multiple_files_upload(multipart).await
+            let content_type = req.header("content-type").unwrap_or("");
+            let body_bytes = req.body().data().clone();
+            let max_file_size = 10 * 1024 * 1024; // 10MB
+            match Multipart::new(content_type, body_bytes, max_file_size) {
+                Ok(multipart) => handle_multiple_files_upload(multipart).await,
+                Err(e) => Ok(Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(format!("Invalid multipart request: {}", e).into())
+                    .unwrap()),
+            }
         })
         // File with metadata / 带元数据的文件
         .post("/api/upload/metadata", |req: Request| async move {
-            let multipart = Multipart::new(req);
-            handle_file_with_metadata(multipart).await
+            let content_type = req.header("content-type").unwrap_or("");
+            let body_bytes = req.body().data().clone();
+            let max_file_size = 10 * 1024 * 1024; // 10MB
+            match Multipart::new(content_type, body_bytes, max_file_size) {
+                Ok(multipart) => handle_file_with_metadata(multipart).await,
+                Err(e) => Ok(Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(format!("Invalid multipart request: {}", e).into())
+                    .unwrap()),
+            }
         })
         // Upload form page / 上传表单页面
-        .get("/upload", || async {
-            Response::builder()
+        .get("/upload", |_req: Request| async {
+            Ok(Response::builder()
                 .status(StatusCode::OK)
                 .header("content-type", "text/html")
                 .body(include_str!("upload_form.html").to_string().into())
-                .unwrap()
+                .unwrap())
         });
 
     println!("Server configured with file upload endpoints:");

@@ -16,6 +16,7 @@
 //! 类型安全的验证错误
 
 use crate::{body::HttpBody, error::Error, request::Request};
+use regex;
 use serde::Deserialize;
 use std::future::Future;
 use std::pin::Pin;

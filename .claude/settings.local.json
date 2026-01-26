@@ -87,7 +87,10 @@
       "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" git commit:*)",
       "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" git push:*)",
       "Bash(command -v:*)",
-      "Bash(yamllint:*)"
+      "Bash(yamllint:*)",
+      "Bash(git merge:*)",
+      "Bash(/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo check:*)",
+      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:/Users/yimiliya/.rustup/bin:$PATH\" cargo check:*)"
     ]
   }
 }
