@@ -83,7 +83,11 @@
       "Bash(/Users/yimiliya/.rustup/rustup-install.sh:*)",
       "Bash(/Users/yimiliya/.rustup/bin/rustup:*)",
       "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" cargo check:*)",
-      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" git add:*)"
+      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" git add:*)",
+      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" git commit:*)",
+      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:$PATH\" git push:*)",
+      "Bash(command -v:*)",
+      "Bash(yamllint:*)"
     ]
   }
 }

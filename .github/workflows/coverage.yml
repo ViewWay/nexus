@@ -1,7 +1,8 @@
-# 改进版：生成 tarpaulin 覆盖率并上传到 Codecov
-# - 修正了注释（rs ���件）
-# - 加了 cargo 缓存（加快 CI）
-# - 支持在 push 到 main 和 pull_request 时运行
+# Nexus Code Coverage
+# Nexus 代码覆盖率
+#
+# Generates coverage report using tarpaulin and uploads to Codecov.
+# 使用 tarpaulin 生成覆盖率报告并上传到 Codecov。
 
 name: Code Coverage
 
@@ -11,69 +12,59 @@ permissions:
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - '**/*.rs'                 # 只在 Rust 文件变更时触发
-      - '**/Cargo.toml'          # 或依赖更新
-      - '.github/workflows/**'   # 或 workflow 文件变更
+    branches: [main]
   pull_request:
-    branches:
-      - main
-    paths:
-      - '**/*.rs'                 # 只在 Rust 文件变更时触发
-      - '**/Cargo.toml'          # 或依赖更新
-      - '.github/workflows/**'   # 或 workflow 文件变更
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  cover:
-    strategy:
-      fail-fast: false
-      matrix:
-        version:
-          - stable
-
-    name: Coverage ${{ matrix.version }} - x86_64-unknown-linux-gnu
+  coverage:
+    name: Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-      - name: Cache cargo registry and target
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: dtolnay/rust-toolchain@master
+      - name: Cache cargo index
+        uses: actions/cache@v4
         with:
-          toolchain: ${{ matrix.version }}
-          components: rustfmt, clippy
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-coverage-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install cargo-tarpaulin
-        run: |
-          # --locked 更可复现；视情况加入 --force
-          cargo install --locked cargo-tarpaulin
+        run: cargo install --locked cargo-tarpaulin
 
-      - name: Generate coverage file
-        run: |
-          # 生成 cobertura.xml（tarpaulin 的 XML 输出）
-          cargo tarpaulin --all-features --out Xml
+      - name: Generate coverage report
+        run: cargo tarpaulin --workspace --all-features --out Xml
 
-      - name: Upload to codecov
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v4
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          file: cobertura.xml
+          files: ./cobertura.xml
           flags: unittests
-          name: codecov-${{ matrix.version }}
+          name: codecov-umbrella
           fail_ci_if_error: false
-          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Coverage Summary
@@ -84,6 +75,3 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 View Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Codecov Dashboard**: https://codecov.io/gh/${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "- **PR Comments**: Check the PR comments for detailed coverage diff" >> $GITHUB_STEP_SUMMARY
-          fi
