@@ -28,7 +28,6 @@ workspace = true
 # Equivalent to: Spring Jackson JSON
 serde = { workspace = true }
 serde_json = { workspace = true }
-serde_yml = { workspace = true }
 
 # Time / 时间
 chrono = { workspace = true }
