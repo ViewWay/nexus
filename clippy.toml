@@ -114,14 +114,5 @@ allow-expect-in-tests = true
 allow-unwrap-in-tests = true
 allow-dbg-in-tests = true
 
-# Suppress lints from dependencies / 抑制依赖项的lint
-suppress-lint = true
-
 # Maximum trait bounds / 最大trait边界
 max-trait-bounds = 3
-
-# Maximum function lines / 最大函数行数
-max-function-lines = 100
-
-# Maximum struct field visibility / 最大结构体字段可见性
-max-struct-field-visibility = "pub"

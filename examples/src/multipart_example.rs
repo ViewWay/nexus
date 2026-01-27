@@ -10,12 +10,12 @@
 // Equivalent to: Spring MultipartFile, Multer
 // 等价于：Spring MultipartFile, Multer
 
+use bytes::Bytes;
 use nexus_http::{Request, Response, Result, StatusCode};
 use nexus_multipart::Multipart;
 use nexus_router::Router;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
-use bytes::Bytes;
 use std::io::Write;
 use std::path::Path;
 
@@ -42,9 +42,11 @@ async fn handle_single_file_upload(mut multipart: Multipart) -> Result<Response>
 
     let mut uploaded_files = Vec::new();
 
-    while let Some(field) = multipart.next_field().await.map_err(|e| {
-        nexus_http::Error::InvalidRequest(format!("Failed to read field: {}", e))
-    })? {
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|e| nexus_http::Error::InvalidRequest(format!("Failed to read field: {}", e)))?
+    {
         let name = field.name().to_string();
         let filename = field.filename().unwrap_or("unknown").to_string();
         let content_type = field
@@ -118,9 +120,11 @@ async fn handle_multiple_files_upload(mut multipart: Multipart) -> Result<Respon
     let mut uploaded_files = Vec::new();
     let mut total_size = 0;
 
-    while let Some(field) = multipart.next_field().await.map_err(|e| {
-        nexus_http::Error::InvalidRequest(format!("Failed to read field: {}", e))
-    })? {
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|e| nexus_http::Error::InvalidRequest(format!("Failed to read field: {}", e)))?
+    {
         let filename = field.filename().unwrap_or("unknown").to_string();
         let content_type = field.content_type().unwrap_or("").to_string();
         let data = field.bytes().to_vec();
@@ -193,18 +197,26 @@ async fn handle_file_with_metadata(mut multipart: Multipart) -> Result<Response>
     let mut description = String::new();
     let mut uploaded_file = None;
 
-    while let Some(field) = multipart.next_field().await.map_err(|e| {
-        nexus_http::Error::InvalidRequest(format!("Failed to read field: {}", e))
-    })? {
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|e| nexus_http::Error::InvalidRequest(format!("Failed to read field: {}", e)))?
+    {
         let name = field.name().to_string();
 
         match name.as_str() {
             "title" => {
-                title = field.text().unwrap_or_else(|_| Ok(String::new())).unwrap_or(String::new());
+                title = field
+                    .text()
+                    .unwrap_or_else(|_| Ok(String::new()))
+                    .unwrap_or(String::new());
                 println!("Title: {}", title);
             },
             "description" => {
-                description = field.text().unwrap_or_else(|_| Ok(String::new())).unwrap_or(String::new());
+                description = field
+                    .text()
+                    .unwrap_or_else(|_| Ok(String::new()))
+                    .unwrap_or(String::new());
                 println!("Description: {}", description);
             },
             "file" => {

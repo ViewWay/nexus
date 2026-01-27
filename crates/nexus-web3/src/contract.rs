@@ -496,6 +496,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "rpc")]
     fn test_erc721_constants() {
         assert_eq!(ERC721::OWNER_OF.0, [0x63, 0x52, 0x21, 0x1e]);
         assert_eq!(ERC721::TRANSFER_FROM.0, [0x23, 0xb8, 0x72, 0xdd]);

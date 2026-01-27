@@ -58,8 +58,8 @@ pub use builder::{Uri, UriBuilder};
 pub use conn::{Connection, ConnectionState};
 pub use error::{Error, Result};
 pub use http2::{
-    ErrorCode, FrameType, Http2Config, Http2Error, Priority, SettingsParameter,
-    StreamId, StreamReset, StreamState,
+    ErrorCode, FrameType, Http2Config, Http2Error, Priority, SettingsParameter, StreamId,
+    StreamReset, StreamState,
 };
 // Re-export http2::ConnectionState with a different name to avoid conflict
 // 使用不同的名称重新导出 http2::ConnectionState 以避免冲突

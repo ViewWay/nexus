@@ -5,8 +5,7 @@
 //! 演示Nexus缓存注解的使用，等同于Spring的@Cacheable、@CachePut和@CacheEvict。
 
 use nexus_cache::{
-    Cache, CacheConfig, MemoryCache, cache_evict::CacheEvictExec, cache_put::CachePutExec,
-    cacheable::Cached,
+    Cache, CacheConfig, CacheEvictExec, CachePutExec, Cached, MemoryCache,
 };
 use std::sync::Arc;
 

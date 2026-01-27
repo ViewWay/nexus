@@ -269,6 +269,7 @@ pub struct WorkStealingHandle {
 impl WorkStealingHandle {
     /// Create a new work-stealing handle
     /// 创建新的工作窃取句柄
+    #[allow(dead_code)]
     pub(crate) fn new(queues: Vec<Arc<LocalQueue>>) -> Self {
         Self { queues }
     }

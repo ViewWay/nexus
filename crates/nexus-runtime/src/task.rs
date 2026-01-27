@@ -371,7 +371,7 @@ impl<T> Future for WaitForTask<T> {
                 self.inner = None;
                 Poll::Ready(Err(JoinError::TaskPanic))
             },
-            Some(TaskState::Running) | Some(TaskState::Waiting) => {
+            Some(TaskState::Running | TaskState::Waiting) => {
                 // Task still running, park this future
                 // 任务仍在运行，暂停此future
                 Poll::Pending
@@ -525,7 +525,8 @@ where
 {
     use std::pin::Pin;
     use std::sync::mpsc;
-    use std::task::{Context, Poll, Waker};
+    use std::task::{Context, Poll, RawWaker, Waker};
+    use std::{ptr, thread};
 
     // Channel to communicate the result
     // 通道用于通信结果
@@ -534,12 +535,12 @@ where
     // Create a no-op waker (we poll in a tight loop)
     // 创建一个无操作的waker（我们在紧密循环中轮询）
     let waker = unsafe {
-        Waker::from_raw(std::task::RawWaker::new(std::ptr::null(), &NOOP_RAW_WAKER_VTABLE))
+        Waker::from_raw(RawWaker::new(ptr::null(), &NOOP_RAW_WAKER_VTABLE))
     };
 
     // Spawn a thread to run the future
     // 生成一个线程来运行future
-    std::thread::spawn(move || {
+    thread::spawn(move || {
         let mut future = Box::pin(future);
         let mut cx = Context::from_waker(&waker);
 
@@ -557,7 +558,6 @@ where
                     // Continue polling (busy wait for simplicity)
                     // 继续轮询（为简单起见使用忙等待）
                     std::hint::spin_loop();
-                    continue;
                 },
             }
         }
@@ -572,11 +572,11 @@ where
 
 // No-op raw waker vtable for simple polling
 // 用于简单轮询的无操作raw waker vtable
-const NOOP_RAW_WAKER_VTABLE: std::task::RawWakerVTable = std::task::RawWakerVTable::new(
-    |_| std::task::RawWaker::new(std::ptr::null(), &NOOP_RAW_WAKER_VTABLE), // clone
-    |_| {},                                                                 // drop
-    |_| {},                                                                 // wake
-    |_| {},                                                                 // wake_by_ref
+const NOOP_RAW_WAKER_VTABLE: RawWakerVTable = RawWakerVTable::new(
+    |_| RawWaker::new(std::ptr::null(), &NOOP_RAW_WAKER_VTABLE), // clone
+    |_| {},                                                      // drop
+    |_| {},                                                      // wake
+    |_| {},                                                      // wake_by_ref
 );
 
 #[cfg(test)]

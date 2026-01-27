@@ -27,7 +27,7 @@ use std::sync::Arc;
 ///     void setAuthenticated(boolean isAuthenticated);
 /// }
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Authentication {
     /// Principal (user)
     /// 主体（用户）
@@ -144,7 +144,7 @@ impl Authentication {
 
 /// Authentication details
 /// 认证详情
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AuthDetails {
     /// Remote address
     /// 远程地址

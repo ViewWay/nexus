@@ -221,7 +221,7 @@ impl Future for ConnectFuture {
 
                     // Create socket and start connect
                     // 创建套接字并启动connect
-                    let fd: RawFd = self::create_socket(state.addr.is_ipv4());
+                    let fd: RawFd = create_socket(state.addr.is_ipv4());
 
                     if fd < 0 {
                         return Poll::Ready(Err(io::Error::last_os_error()));
@@ -229,19 +229,18 @@ impl Future for ConnectFuture {
 
                     // Start connect
                     // 启动connect
-                    let result = self::do_connect(fd, state.addr);
+                    let result = do_connect(fd, state.addr);
 
                     if result < 0 {
                         let err = io::Error::last_os_error();
-                        if err.kind() == io::ErrorKind::WouldBlock {
-                            // Async connect in progress
-                            // 异步connect进行中
-                            state.fd = Some(fd);
-                            return Poll::Pending;
-                        } else {
+                        if err.kind() != io::ErrorKind::WouldBlock {
                             unsafe { libc::close(fd) };
                             return Poll::Ready(Err(err));
                         }
+                        // Async connect in progress
+                        // 异步connect进行中
+                        state.fd = Some(fd);
+                        return Poll::Pending;
                     }
 
                     // Connected immediately
@@ -324,7 +323,7 @@ fn do_connect(fd: RawFd, addr: SocketAddr) -> i32 {
 
                 #[cfg(not(target_os = "linux"))]
                 let sockaddr = libc::sockaddr_in {
-                    sin_len: std::mem::size_of::<libc::sockaddr_in>() as u8,
+                    sin_len: size_of::<libc::sockaddr_in>() as u8,
                     sin_family: libc::AF_INET as u8,
                     sin_port: v4.port().to_be(),
                     sin_addr: libc::in_addr {
@@ -336,7 +335,7 @@ fn do_connect(fd: RawFd, addr: SocketAddr) -> i32 {
                 libc::connect(
                     fd,
                     &sockaddr as *const _ as *const libc::sockaddr,
-                    std::mem::size_of::<libc::sockaddr_in>() as libc::socklen_t,
+                    size_of::<libc::sockaddr_in>() as libc::socklen_t,
                 )
             } else {
                 -1
@@ -356,7 +355,7 @@ fn do_connect(fd: RawFd, addr: SocketAddr) -> i32 {
 
                 #[cfg(not(target_os = "linux"))]
                 let sockaddr = libc::sockaddr_in6 {
-                    sin6_len: std::mem::size_of::<libc::sockaddr_in6>() as u8,
+                    sin6_len: size_of::<libc::sockaddr_in6>() as u8,
                     sin6_family: libc::AF_INET6 as u8,
                     sin6_port: v6.port().to_be(),
                     sin6_flowinfo: v6.flowinfo(),
@@ -369,7 +368,7 @@ fn do_connect(fd: RawFd, addr: SocketAddr) -> i32 {
                 libc::connect(
                     fd,
                     &sockaddr as *const _ as *const libc::sockaddr,
-                    std::mem::size_of::<libc::sockaddr_in6>() as libc::socklen_t,
+                    size_of::<libc::sockaddr_in6>() as libc::socklen_t,
                 )
             } else {
                 -1
@@ -386,7 +385,7 @@ pub struct ReadFuture<'a, 'b> {
     pos: usize,
 }
 
-impl<'a, 'b> Future for ReadFuture<'a, 'b> {
+impl Future for ReadFuture<'_, '_> {
     type Output = io::Result<usize>;
 
     fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -448,7 +447,7 @@ pub struct WriteAllFuture<'a, 'b> {
     pos: usize,
 }
 
-impl<'a, 'b> Future for WriteAllFuture<'a, 'b> {
+impl Future for WriteAllFuture<'_, '_> {
     type Output = io::Result<()>;
 
     fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -561,7 +560,7 @@ impl TcpListener {
         #[cfg(unix)]
         unsafe {
             let mut addr: libc::sockaddr_storage = std::mem::zeroed();
-            let mut len = std::mem::size_of::<libc::sockaddr_storage>() as libc::socklen_t;
+            let mut len = size_of::<libc::sockaddr_storage>() as libc::socklen_t;
 
             if libc::getsockname(
                 self.as_raw_fd(),
@@ -621,7 +620,7 @@ impl Future for BindFuture {
             BindFuture::Binding(state) => {
                 // Create and bind socket
                 // 创建并绑定套接字
-                let fd = self::create_socket(state.addr.is_ipv4());
+                let fd = create_socket(state.addr.is_ipv4());
 
                 if fd < 0 {
                     return Poll::Ready(Err(io::Error::last_os_error()));
@@ -637,7 +636,7 @@ impl Future for BindFuture {
                         libc::SOL_SOCKET,
                         libc::SO_REUSEADDR,
                         &opt as *const _ as *const _,
-                        std::mem::size_of::<i32>() as libc::socklen_t,
+                        size_of::<i32>() as libc::socklen_t,
                     ) < 0
                     {
                         libc::close(fd);
@@ -646,7 +645,7 @@ impl Future for BindFuture {
 
                     // Bind
                     // 绑定
-                    let result = self::do_bind(fd, state.addr);
+                    let result = do_bind(fd, state.addr);
                     if result < 0 {
                         let err = io::Error::last_os_error();
                         libc::close(fd);
@@ -701,7 +700,7 @@ fn do_bind(fd: RawFd, addr: SocketAddr) -> i32 {
 
                 #[cfg(not(target_os = "linux"))]
                 let sockaddr = libc::sockaddr_in {
-                    sin_len: std::mem::size_of::<libc::sockaddr_in>() as u8,
+                    sin_len: size_of::<libc::sockaddr_in>() as u8,
                     sin_family: libc::AF_INET as u8,
                     sin_port: v4.port().to_be(),
                     sin_addr: libc::in_addr {
@@ -713,7 +712,7 @@ fn do_bind(fd: RawFd, addr: SocketAddr) -> i32 {
                 libc::bind(
                     fd,
                     &sockaddr as *const _ as *const libc::sockaddr,
-                    std::mem::size_of::<libc::sockaddr_in>() as libc::socklen_t,
+                    size_of::<libc::sockaddr_in>() as libc::socklen_t,
                 )
             } else {
                 -1
@@ -733,7 +732,7 @@ fn do_bind(fd: RawFd, addr: SocketAddr) -> i32 {
 
                 #[cfg(not(target_os = "linux"))]
                 let sockaddr = libc::sockaddr_in6 {
-                    sin6_len: std::mem::size_of::<libc::sockaddr_in6>() as u8,
+                    sin6_len: size_of::<libc::sockaddr_in6>() as u8,
                     sin6_family: libc::AF_INET6 as u8,
                     sin6_port: v6.port().to_be(),
                     sin6_flowinfo: v6.flowinfo(),
@@ -746,7 +745,7 @@ fn do_bind(fd: RawFd, addr: SocketAddr) -> i32 {
                 libc::bind(
                     fd,
                     &sockaddr as *const _ as *const libc::sockaddr,
-                    std::mem::size_of::<libc::sockaddr_in6>() as libc::socklen_t,
+                    size_of::<libc::sockaddr_in6>() as libc::socklen_t,
                 )
             } else {
                 -1
@@ -761,7 +760,7 @@ pub struct AcceptFuture<'a> {
     listener: &'a mut TcpListener,
 }
 
-impl<'a> Future for AcceptFuture<'a> {
+impl Future for AcceptFuture<'_> {
     type Output = io::Result<(TcpStream, SocketAddr)>;
 
     #[allow(unused_mut)]
@@ -769,7 +768,7 @@ impl<'a> Future for AcceptFuture<'a> {
         #[cfg(unix)]
         {
             let mut addr: libc::sockaddr_storage = unsafe { std::mem::zeroed() };
-            let mut len = std::mem::size_of::<libc::sockaddr_storage>() as libc::socklen_t;
+            let mut len = size_of::<libc::sockaddr_storage>() as libc::socklen_t;
 
             let fd = unsafe {
                 #[cfg(target_os = "linux")]
@@ -969,7 +968,7 @@ impl Future for BindUdpFuture {
             BindUdpFuture::Binding(state) => {
                 // Create and bind UDP socket
                 // 创建并绑定UDP套接字
-                let fd = self::create_udp_socket(state.addr.is_ipv4());
+                let fd = create_udp_socket(state.addr.is_ipv4());
 
                 if fd < 0 {
                     return Poll::Ready(Err(io::Error::last_os_error()));
@@ -977,7 +976,7 @@ impl Future for BindUdpFuture {
 
                 // Bind
                 // 绑定
-                let result = self::do_bind_udp(fd, state.addr);
+                let result = do_bind_udp(fd, state.addr);
                 if result < 0 {
                     let err = io::Error::last_os_error();
                     unsafe { libc::close(fd) };
@@ -1053,7 +1052,7 @@ fn do_bind_udp(fd: RawFd, addr: SocketAddr) -> i32 {
 
                 #[cfg(not(target_os = "linux"))]
                 let sockaddr = libc::sockaddr_in {
-                    sin_len: std::mem::size_of::<libc::sockaddr_in>() as u8,
+                    sin_len: size_of::<libc::sockaddr_in>() as u8,
                     sin_family: libc::AF_INET as u8,
                     sin_port: v4.port().to_be(),
                     sin_addr: libc::in_addr {
@@ -1065,7 +1064,7 @@ fn do_bind_udp(fd: RawFd, addr: SocketAddr) -> i32 {
                 libc::bind(
                     fd,
                     &sockaddr as *const _ as *const libc::sockaddr,
-                    std::mem::size_of::<libc::sockaddr_in>() as libc::socklen_t,
+                    size_of::<libc::sockaddr_in>() as libc::socklen_t,
                 )
             } else {
                 -1
@@ -1085,7 +1084,7 @@ fn do_bind_udp(fd: RawFd, addr: SocketAddr) -> i32 {
 
                 #[cfg(not(target_os = "linux"))]
                 let sockaddr = libc::sockaddr_in6 {
-                    sin6_len: std::mem::size_of::<libc::sockaddr_in6>() as u8,
+                    sin6_len: size_of::<libc::sockaddr_in6>() as u8,
                     sin6_family: libc::AF_INET6 as u8,
                     sin6_port: v6.port().to_be(),
                     sin6_flowinfo: v6.flowinfo(),
@@ -1098,7 +1097,7 @@ fn do_bind_udp(fd: RawFd, addr: SocketAddr) -> i32 {
                 libc::bind(
                     fd,
                     &sockaddr as *const _ as *const libc::sockaddr,
-                    std::mem::size_of::<libc::sockaddr_in6>() as libc::socklen_t,
+                    size_of::<libc::sockaddr_in6>() as libc::socklen_t,
                 )
             } else {
                 -1
@@ -1114,7 +1113,7 @@ pub struct RecvFromFuture<'a, 'b> {
     buf: &'b mut [u8],
 }
 
-impl<'a, 'b> Future for RecvFromFuture<'a, 'b> {
+impl Future for RecvFromFuture<'_, '_> {
     type Output = io::Result<(usize, SocketAddr)>;
 
     fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -1134,7 +1133,7 @@ impl<'a, 'b> Future for RecvFromFuture<'a, 'b> {
         #[cfg(unix)]
         {
             let mut addr: libc::sockaddr_storage = unsafe { std::mem::zeroed() };
-            let mut addr_len = std::mem::size_of::<libc::sockaddr_storage>() as libc::socklen_t;
+            let mut addr_len = size_of::<libc::sockaddr_storage>() as libc::socklen_t;
 
             let result = unsafe {
                 libc::recvfrom(
@@ -1185,7 +1184,7 @@ pub struct SendToFuture<'a, 'b> {
     buf: &'b [u8],
 }
 
-impl<'a, 'b> Future for SendToFuture<'a, 'b> {
+impl Future for SendToFuture<'_, '_> {
     type Output = io::Result<usize>;
 
     fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -1257,7 +1256,7 @@ impl Future for ConnectUdpFuture {
 
                         #[cfg(not(target_os = "linux"))]
                         let sockaddr = libc::sockaddr_in {
-                            sin_len: std::mem::size_of::<libc::sockaddr_in>() as u8,
+                            sin_len: size_of::<libc::sockaddr_in>() as u8,
                             sin_family: libc::AF_INET as u8,
                             sin_port: v4.port().to_be(),
                             sin_addr: libc::in_addr {
@@ -1269,7 +1268,7 @@ impl Future for ConnectUdpFuture {
                         libc::connect(
                             self.fd,
                             &sockaddr as *const _ as *const libc::sockaddr,
-                            std::mem::size_of::<libc::sockaddr_in>() as libc::socklen_t,
+                            size_of::<libc::sockaddr_in>() as libc::socklen_t,
                         )
                     },
                     SocketAddr::V6(v6) => {
@@ -1286,7 +1285,7 @@ impl Future for ConnectUdpFuture {
 
                         #[cfg(not(target_os = "linux"))]
                         let sockaddr = libc::sockaddr_in6 {
-                            sin6_len: std::mem::size_of::<libc::sockaddr_in6>() as u8,
+                            sin6_len: size_of::<libc::sockaddr_in6>() as u8,
                             sin6_family: libc::AF_INET6 as u8,
                             sin6_port: v6.port().to_be(),
                             sin6_flowinfo: v6.flowinfo(),
@@ -1299,7 +1298,7 @@ impl Future for ConnectUdpFuture {
                         libc::connect(
                             self.fd,
                             &sockaddr as *const _ as *const libc::sockaddr,
-                            std::mem::size_of::<libc::sockaddr_in6>() as libc::socklen_t,
+                            size_of::<libc::sockaddr_in6>() as libc::socklen_t,
                         )
                     },
                 }

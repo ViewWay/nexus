@@ -73,8 +73,7 @@ impl IntoHeaderVal for &'static str {
 /// 使用 `try_from` 为 String 实现（如果无效可能失败）
 impl IntoHeaderVal for String {
     fn into_header_val(self) -> HeaderValue {
-        HeaderValue::try_from(self)
-            .expect("Invalid header value string")
+        HeaderValue::try_from(self).expect("Invalid header value string")
     }
 }
 
@@ -82,8 +81,7 @@ impl IntoHeaderVal for String {
 /// 使用 `try_from` 为 `&String` 实现
 impl IntoHeaderVal for &String {
     fn into_header_val(self) -> HeaderValue {
-        HeaderValue::try_from(self.as_str())
-            .expect("Invalid header value string")
+        HeaderValue::try_from(self.as_str()).expect("Invalid header value string")
     }
 }
 
@@ -320,11 +318,7 @@ impl ResponseBuilder {
     ///     .body("{}", "[]")
     ///     .unwrap();
     /// ```
-    pub fn header(
-        self,
-        name: impl IntoHeaderName,
-        value: impl IntoHeaderVal,
-    ) -> Self {
+    pub fn header(self, name: impl IntoHeaderName, value: impl IntoHeaderVal) -> Self {
         let mut headers = self.headers;
         let header_name = name.into_header_name();
         let header_val = value.into_header_val();
@@ -352,11 +346,7 @@ impl ResponseBuilder {
     ///     .body("{}", "[]")
     ///     .unwrap();
     /// ```
-    pub fn header_static(
-        self,
-        name: impl IntoHeaderName,
-        value: &'static str,
-    ) -> Self {
+    pub fn header_static(self, name: impl IntoHeaderName, value: &'static str) -> Self {
         self.header(name, value)
     }
 

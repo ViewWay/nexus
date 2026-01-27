@@ -100,6 +100,7 @@ struct TimerEntry {
     waker: Option<Waker>,
     /// Whether this timer has been canceled
     /// 此定时器是否已取消
+    #[allow(dead_code)]
     canceled: Mutex<bool>,
 }
 
@@ -176,8 +177,10 @@ pub struct TimerWheel {
 #[derive(Clone, Copy, Debug)]
 struct TimerLocation {
     /// Wheel level (0-3)
+    #[allow(dead_code)]
     wheel_level: u8,
     /// Slot index within the wheel
+    #[allow(dead_code)]
     slot_index: usize,
 }
 

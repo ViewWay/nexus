@@ -356,13 +356,29 @@ macro_rules! properties_config {
 mod tests {
     use super::*;
 
+    // Test config type for registry tests
+    // 用于注册表测试的配置类型
+    #[derive(Debug, Clone)]
+    struct TestConfig {
+        value: String,
+    }
+
+    impl PropertiesConfig for TestConfig {
+        fn prefix() -> &'static str {
+            "test"
+        }
+    }
+
     #[test]
     fn test_registry() {
         let registry = PropertiesConfigRegistry::new();
         assert!(registry.is_empty());
 
-        registry.register("test_config");
-        assert!(registry.contains::<&str>());
+        let config = TestConfig {
+            value: "test_config".to_string(),
+        };
+        registry.register(config);
+        assert!(registry.contains::<TestConfig>());
         assert_eq!(registry.len(), 1);
 
         registry.clear();

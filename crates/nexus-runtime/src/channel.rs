@@ -102,6 +102,7 @@ impl std::error::Error for RecvError {}
 ///
 /// let (tx, rx) = unbounded::<i32>();
 /// ```
+#[must_use]
 pub fn unbounded<T>() -> (Sender<T>, Receiver<T>) {
     let shared = Arc::new(ChannelShared {
         buffer: Mutex::new(VecDeque::new()),
@@ -131,6 +132,7 @@ pub fn unbounded<T>() -> (Sender<T>, Receiver<T>) {
 ///
 /// let (tx, rx) = bounded::<i32>(16);
 /// ```
+#[must_use]
 pub fn bounded<T>(cap: usize) -> (Sender<T>, Receiver<T>) {
     let shared = Arc::new(ChannelShared {
         buffer: Mutex::new(VecDeque::with_capacity(cap)),
@@ -188,8 +190,15 @@ impl<T> Sender<T> {
     /// Send a value synchronously to the channel
     /// 向通道同步发送值
     ///
-    /// Returns an error if the receiver has been dropped.
-    /// 如果接收器已丢弃则返回错误。
+    /// # Errors
+    ///
+    /// Returns `SendError::Closed` if the receiver has been dropped.
+    /// 如果接收器已丢弃则返回 `SendError::Closed`。
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal mutex is poisoned (should never happen in normal operation).
+    /// 如果内部互斥锁被污染则恐慌（正常操作中不应发生）。
     pub fn send(&self, value: T) -> Result<(), SendError<T>> {
         if !self.shared.is_receiver_alive.load(Ordering::Acquire) {
             return Err(SendError::Closed(value));
@@ -255,10 +264,18 @@ impl<T> Receiver<T> {
     /// Try to receive a value without blocking
     /// 尝试接收值而不阻塞
     ///
-    /// Returns `Ok(value)` if a value is available,
-    /// `Err(RecvError::Closed)` if the channel is empty and all senders are dropped.
-    /// 如果有可用值则返回 `Ok(value)`，
+    /// # Errors
+    ///
+    /// Returns `Err(RecvError::Closed)` if the channel is empty and all senders are dropped.
     /// 如果通道为空且所有发送器已丢弃则返回 `Err(RecvError::Closed)`。
+    ///
+    /// Returns `Err(RecvError::Empty)` if the channel is empty but senders still exist.
+    /// 如果通道为空但发送器仍然存在则返回 `Err(RecvError::Empty)`。
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal mutex is poisoned (should never happen in normal operation).
+    /// 如果内部互斥锁被污染则恐慌（正常操作中不应发生）。
     pub fn try_recv(&mut self) -> Result<T, RecvError> {
         let mut buffer = self.shared.buffer.lock().unwrap();
 
@@ -277,6 +294,11 @@ impl<T> Receiver<T> {
 
     /// Get the number of messages in the channel buffer
     /// 获取通道缓冲区中的消息数量
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal mutex is poisoned (should never happen in normal operation).
+    /// 如果内部互斥锁被污染则恐慌（正常操作中不应发生）。
     #[must_use]
     pub fn len(&self) -> usize {
         self.shared.buffer.lock().unwrap().len()
@@ -313,20 +335,20 @@ pub struct RecvFuture<'a, T> {
 
 impl<'a, T> RecvFuture<'a, T> {
     /// Create a new receive future
-    fn new(_receiver: &'a mut Receiver<T>) -> Self {
+    fn new(receiver: &'a mut Receiver<T>) -> Self {
         // We extract the Arc since the receiver only holds it
         // This is safe because the future borrows the receiver mutably
         Self {
-            shared: Arc::clone(&_receiver.shared),
+            shared: Arc::clone(&receiver.shared),
             _marker: std::marker::PhantomData,
         }
     }
 }
 
-unsafe impl<'a, T: Send> Send for RecvFuture<'a, T> {}
-unsafe impl<'a, T: Sync> Sync for RecvFuture<'a, T> {}
+unsafe impl<T: Send> Send for RecvFuture<'_, T> {}
+unsafe impl<T: Sync> Sync for RecvFuture<'_, T> {}
 
-impl<'a, T> Future for RecvFuture<'a, T> {
+impl<T> Future for RecvFuture<'_, T> {
     type Output = Option<T>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {

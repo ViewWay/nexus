@@ -1,21 +1,21 @@
-// Validation Example / 验证示例
-//
-// Demonstrates Nexus's validation features:
-// 演示 Nexus 的验证功能：
-// - Request validation / 请求验证
-// - Field validation rules / 字段验证规则
-// - Custom validators / 自定义验证器
-// - Validation error handling / 验证错误处理
-//
-// Equivalent to: Spring Validation, Hibernate Validator, Bean Validation
-// 等价于：Spring Validation, Hibernate Validator, Bean Validation
+//! Validation Example / 验证示例
+//!
+//! Demonstrates Nexus's validation features:
+//! 演示 Nexus 的验证功能：
+//! - Request validation / 请求验证
+//! - Field validation rules / 字段验证规则
+//! - Custom validators / 自定义验证器
+//! - Validation error handling / 验证错误处理
+//!
+//! Equivalent to: Spring Validation, Hibernate Validator, Bean Validation
+//! 等价于：Spring Validation, Hibernate Validator, Bean Validation
 
-use nexus_http::{Request, Response, Result, StatusCode};
-use nexus_router::Router;
+#![allow(dead_code)]
+
+use nexus_http::{Response, Result, StatusCode};
 // Note: Validation framework is under development
 // The nexus_validation module structure is being finalized
 // 注：验证框架正在开发中，nexus_validation 模块结构正在最终确定
-use nexus_validation::{ValidationError, Validate};
 use serde::{Deserialize, Serialize};
 
 /// User registration request / 用户注册请求
@@ -62,23 +62,23 @@ fn manual_validation_example() {
 }
 
 /// Request validation in HTTP handlers / HTTP处理程序中的请求验证
+#[allow(clippy::unwrap_used)]
 async fn validate_request_handler(_req: RegisterUserRequest) -> Result<Response> {
     // TODO: Implement automatic request validation
     // TODO：实现自动请求验证
+    let body = serde_json::json!({
+        "message": "User registration - validation under development"
+    })
+    .to_string();
     Ok(Response::builder()
         .status(StatusCode::OK)
-        .body(
-            serde_json::json!({
-                "message": "User registration - validation under development"
-            })
-            .to_string()
-            .into(),
-        )
+        .body(body.into())
         .unwrap())
 }
 
 /// Product validation example / 产品验证示例
-async fn product_validation_example() {
+#[allow(clippy::unused_async)]
+fn product_validation_example() {
     println!("\n=== Product Validation Example / 产品验证示例 ===\n");
     println!("Product validation is under development");
     println!("产品验证正在开发中");
@@ -86,7 +86,8 @@ async fn product_validation_example() {
 }
 
 /// Order validation example / 订单验证示例
-async fn order_validation_example() {
+#[allow(clippy::unused_async)]
+fn order_validation_example() {
     println!("\n=== Order Validation Example / 订单验证示例 ===\n");
     println!("Order validation is under development");
     println!("订单验证正在开发中");
@@ -94,7 +95,8 @@ async fn order_validation_example() {
 }
 
 /// HTTP server with validation / 带验证的HTTP服务器
-async fn validation_server_example() {
+#[allow(clippy::unused_async)]
+fn validation_server_example() {
     println!("\n=== Validation Server Example / 验证服务器示例 ===\n");
 
     // Note: The router now requires Request type in handlers
@@ -119,10 +121,9 @@ fn main() {
 
     manual_validation_example();
 
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    rt.block_on(product_validation_example());
-    rt.block_on(order_validation_example());
-    rt.block_on(validation_server_example());
+    product_validation_example();
+    order_validation_example();
+    validation_server_example();
 
     println!("╔═══════════════════════════════════════════════════════════════╗");
     println!("║   All validation examples completed!                          ║");

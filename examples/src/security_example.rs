@@ -1,23 +1,19 @@
-// Security Example / 安全示例
-//
-// Demonstrates Nexus's security features:
-// 演示 Nexus 的安全功能：
-// - JWT (JSON Web Tokens) authentication / JWT 认证
-// - Password hashing with bcrypt / bcrypt 密码哈希
-// - Token generation and validation / 令牌生成和验证
-// - Protected routes / 受保护的路由
-//
-// Equivalent to: Spring Security, JWT, BCrypt
-// 等价于：Spring Security, JWT, BCrypt
+//! Security Example / 安全示例
+//!
+//! Demonstrates Nexus's security features:
+//! 演示 Nexus 的安全功能：
+//! - JWT (JSON Web Tokens) authentication / JWT 认证
+//! - Password hashing with bcrypt / bcrypt 密码哈希
+//! - Token generation and validation / 令牌生成和验证
+//! - Protected routes / 受保护的路由
+//!
+//! Equivalent to: Spring Security, JWT, BCrypt
+//! 等价于：Spring Security, JWT, BCrypt
 
-use nexus_http::{Request, Response, StatusCode};
+use nexus_http::{Request, Response, Result, StatusCode};
 use nexus_router::Router;
-use nexus_security::{
-    jwt::{JwtClaims, JwtDecoder, JwtEncoder},
-    password::{PasswordEncoder, PasswordHasher},
-};
+use nexus_security::{Authority, BcryptPasswordEncoder, JwtUtil, PasswordEncoder, Role};
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 /// User model / 用户模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,33 +24,24 @@ struct User {
     password: String, // Hashed password / 哈希密码
 }
 
-/// JWT Claims / JWT 声明
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct Claims {
-    sub: String,  // Subject (user ID) / 主题（用户ID）
-    name: String, // Username / 用户名
-    exp: usize,   // Expiration time / 过期时间
-    iat: usize,   // Issued at / 签发时间
-}
-
 /// Password hashing example / 密码哈希示例
 fn password_hashing_example() {
     println!("\n=== Password Hashing Example / 密码哈希示例 ===\n");
 
     let password = "SecurePassword123!";
-    let hasher = PasswordHasher::default();
+    let encoder = BcryptPasswordEncoder::default();
 
     // Hash password / 哈希密码
     println!("Original password: {}", password);
-    let hashed = hasher.hash(password);
+    let hashed = encoder.encode(password);
     println!("Hashed password: {}", hashed);
 
     // Verify password / 验证密码
-    let is_valid = hasher.verify(password, &hashed);
+    let is_valid = encoder.matches(password, &hashed);
     println!("Password verification: {}", is_valid);
 
     // Try wrong password / 尝试错误密码
-    let is_valid = hasher.verify("WrongPassword", &hashed);
+    let is_valid = encoder.matches("WrongPassword", &hashed);
     println!("Wrong password verification: {}\n", is_valid);
 }
 
@@ -62,23 +49,10 @@ fn password_hashing_example() {
 fn jwt_generation_example() {
     println!("\n=== JWT Token Generation Example / JWT 令牌生成示例 ===\n");
 
-    let secret = "your-secret-key-here"; // Use environment variable in production / 生产环境使用环境变量
-    let encoder = JwtEncoder::new(secret);
+    // Use environment variable in production / 生产环境使用环境变量
+    let _secret = "your-secret-key-here"; // JwtUtil uses internal secret / JwtUtil使用内部密钥
 
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-
-    let claims = Claims {
-        sub: "user-123".to_string(),
-        name: "John Doe".to_string(),
-        exp: (now + 3600) as usize, // Expire in 1 hour / 1小时后过期
-        iat: now as usize,
-    };
-
-    // Generate token / 生成令牌
-    match encoder.encode(&claims) {
+    match JwtUtil::create_token("user-123", "John Doe", &[Authority::Role(Role::User)]) {
         Ok(token) => {
             println!("Generated JWT Token:");
             println!("{}\n", token);
@@ -86,9 +60,11 @@ fn jwt_generation_example() {
             // Token structure breakdown / 令牌结构分解
             let parts: Vec<&str> = token.split('.').collect();
             println!("Token parts: {}", parts.len());
-            println!("Header: {}...", &parts[0].chars().take(20).collect::<String>());
-            println!("Payload: {}...", &parts[1].chars().take(20).collect::<String>());
-            println!("Signature: {}...\n", &parts[2].chars().take(20).collect::<String>());
+            if parts.len() >= 3 {
+                println!("Header: {}...", &parts[0].chars().take(20).collect::<String>());
+                println!("Payload: {}...", &parts[1].chars().take(20).collect::<String>());
+                println!("Signature: {}...\n", &parts[2].chars().take(20).collect::<String>());
+            }
         },
         Err(e) => println!("Error generating token: {}\n", e),
     }
@@ -98,33 +74,18 @@ fn jwt_generation_example() {
 fn jwt_validation_example() {
     println!("\n=== JWT Token Validation Example / JWT 令牌验证示例 ===\n");
 
-    let secret = "your-secret-key-here";
-    let encoder = JwtEncoder::new(secret);
-    let decoder = JwtDecoder::new(secret);
+    // JwtUtil uses internal secret from environment / JwtUtil使用环境变量中的内部密钥
 
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-
-    let claims = Claims {
-        sub: "user-456".to_string(),
-        name: "Jane Smith".to_string(),
-        exp: (now + 3600) as usize,
-        iat: now as usize,
-    };
-
-    // Generate and validate token / 生成并验证令牌
-    match encoder.encode(&claims) {
+    match JwtUtil::create_token("user-456", "Jane Smith", &[Authority::Role(Role::User), Authority::Role(Role::Admin)]) {
         Ok(token) => {
             println!("Validating token...");
 
-            match decoder.decode::<Claims>(&token) {
-                Ok(decoded_claims) => {
+            match JwtUtil::verify_token(&token) {
+                Ok(claims) => {
                     println!("Token is valid!");
-                    println!("User ID: {}", decoded_claims.sub);
-                    println!("Username: {}", decoded_claims.name);
-                    println!("Expires at: {}\n", decoded_claims.exp);
+                    println!("User ID: {}", claims.sub);
+                    println!("Username: {}", claims.username);
+                    println!("Authorities: {:?}\n", claims.authorities);
                 },
                 Err(e) => println!("Token validation failed: {}\n", e),
             }
@@ -135,9 +96,9 @@ fn jwt_validation_example() {
     // Test invalid token / 测试无效令牌
     println!("Testing invalid token...");
     let invalid_token = "invalid.token.here";
-    match decoder.decode::<Claims>(invalid_token) {
+    match JwtUtil::verify_token(invalid_token) {
         Ok(_) => println!("Unexpectedly valid!\n"),
-        Err(e) => println!("Correctly rejected invalid token: {}\n", e),
+        Err(_) => println!("Correctly rejected invalid token\n"),
     }
 }
 
@@ -145,18 +106,20 @@ fn jwt_validation_example() {
 async fn auth_flow_example() {
     println!("\n=== Authentication Flow Example / 认证流程示例 ===\n");
 
+    let encoder = BcryptPasswordEncoder::default();
+
     let users = vec![
         User {
             id: "1".to_string(),
             username: "alice".to_string(),
             email: "alice@example.com".to_string(),
-            password: PasswordHasher::default().hash("password123"),
+            password: encoder.encode("password123"),
         },
         User {
             id: "2".to_string(),
             username: "bob".to_string(),
             email: "bob@example.com".to_string(),
-            password: PasswordHasher::default().hash("password456"),
+            password: encoder.encode("password456"),
         },
     ];
 
@@ -172,36 +135,21 @@ async fn auth_flow_example() {
 
     match users.iter().find(|u| u.username == username) {
         Some(user) => {
-            let hasher = PasswordHasher::default();
-            if hasher.verify(password, &user.password) {
+            if encoder.matches(password, &user.password) {
                 println!("Login successful for {}", username);
 
                 // Generate JWT token / 生成JWT令牌
-                let secret = "your-secret-key-here";
-                let encoder = JwtEncoder::new(secret);
+                // JwtUtil uses internal secret from environment / JwtUtil使用环境变量中的内部密钥
 
-                let now = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs();
-
-                let claims = Claims {
-                    sub: user.id.clone(),
-                    name: user.username.clone(),
-                    exp: (now + 3600) as usize,
-                    iat: now as usize,
-                };
-
-                match encoder.encode(&claims) {
+                match JwtUtil::create_token(&user.id, &user.username, &[Authority::Role(Role::User)]) {
                     Ok(token) => {
-                        println!("Generated token for {}: {}...", username, &token[..50]);
+                        println!("Generated token for {}: {}...", username, &token[..50.min(token.len())]);
 
                         // Verify token / 验证令牌
-                        let decoder = JwtDecoder::new(secret);
-                        match decoder.decode::<Claims>(&token) {
-                            Ok(decoded) => {
-                                println!("Token verified for: {}", decoded.name);
-                                println!("Token expires at: {}", decoded.exp);
+                        match JwtUtil::verify_token(&token) {
+                            Ok(claims) => {
+                                println!("Token verified for: {}", claims.username);
+                                println!("Token expires at: {:?}", claims.exp);
                             },
                             Err(e) => println!("Token verification failed: {}", e),
                         }
@@ -224,39 +172,46 @@ async fn auth_server_example() {
 
     // Public routes / 公共路由
     let public_router = Router::new()
-        .get("/", || async {
-            Response::builder()
-                .status(StatusCode::OK)
-                .body(r#"{"message":"Welcome to Nexus API"}"#.into())
-                .unwrap()
+        .get("/", |_req: Request| async {
+            Ok::<_, nexus_http::Error>(
+                Response::builder()
+                    .status(StatusCode::OK)
+                    .body(r#"{"message":"Welcome to Nexus API"}"#.into())
+                    .unwrap(),
+            )
         })
-        .post("/auth/login", |req: Request| async move {
+        .post("/auth/login", |_req: Request| async move {
             // Parse credentials from request body / 从请求体解析凭据
             // In production: Use proper request parsing / 生产环境：使用适当的请求解析
-            Response::builder()
-                .status(StatusCode::OK)
-                .body(r#"{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}"#.into())
-                .unwrap()
+            Ok::<_, nexus_http::Error>(
+                Response::builder()
+                    .status(StatusCode::OK)
+                    .body(r#"{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}"#.into())
+                    .unwrap(),
+            )
         });
 
     // Protected routes / 受保护的路由
-    let protected_router = Router::new().get("/api/users/me", || async {
-        Response::builder()
-            .status(StatusCode::OK)
-            .body(
-                r#"{"id":"1","username":"alice","email":"alice@example.com"}#
-                        .into(),
-                )
-                .unwrap()
-        })
-        .get("/api/orders", || async {
-            Response::builder()
-                .status(StatusCode::OK)
-                .body(r#"{"orders":[]}"#
-                    .into(),
+    let protected_router = Router::new()
+        .get("/api/users/me", |_req: Request| async {
+            Ok::<_, nexus_http::Error>(
+                Response::builder()
+                    .status(StatusCode::OK)
+                    .body(
+                        r#"{"id":"1","username":"alice","email":"alice@example.com"}#
+                            .into(),
+                    )
+                    .unwrap(),
             )
-            .unwrap()
-    });
+        })
+        .get("/api/orders", |_req: Request| async {
+            Ok::<_, nexus_http::Error>(
+                Response::builder()
+                    .status(StatusCode::OK)
+                    .body(r#"{"orders":[]}"#.into())
+                    .unwrap(),
+            )
+        });
 
     println!("Server configured with:");
     println!("  - Public routes: /, /auth/login");
@@ -264,6 +219,10 @@ async fn auth_server_example() {
     println!("  - Authentication: JWT required for protected routes");
     println!("  - Password hashing: bcrypt");
     println!("\nServer ready! Use JWT token to access protected routes.\n");
+
+    // Suppress unused variable warnings
+    let _ = public_router;
+    let _ = protected_router;
 }
 
 fn main() {

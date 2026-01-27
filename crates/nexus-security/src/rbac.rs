@@ -28,8 +28,8 @@
 use crate::{Authority, Role, SecurityError, SecurityResult};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -847,9 +847,9 @@ mod tests {
     async fn test_cache() {
         let manager = RbacManager::new(
             RbacConfig::default()
-                .enable_audit(true)
-                .with_audit_logger(Arc::new(ConsoleAuditLogger)),
-        );
+                .enable_audit(true),
+        )
+        .with_audit_logger(Arc::new(ConsoleAuditLogger));
 
         manager
             .add_user_role(UserRole {

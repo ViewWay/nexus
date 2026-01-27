@@ -925,7 +925,7 @@ mod tests {
             .to(to)
             .value(1000000000000000u128)
             .nonce(0)
-            .chain_id(1)
+            .chain_id(1u64)
             .build()
             .unwrap();
 
@@ -940,7 +940,7 @@ mod tests {
             .to(to)
             .value(1000000000000000u128)
             .nonce(0)
-            .chain_id(1)
+            .chain_id(1u64)
             .gas_price(1000000000u128)
             .build()
             .unwrap();

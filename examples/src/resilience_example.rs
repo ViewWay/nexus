@@ -8,9 +8,7 @@
 // 等价于：Spring Cloud Circuit Breaker, Resilience4j
 
 use nexus_http::{Request, Response, Result, StatusCode};
-use nexus_resilience::{
-    circuit::{CircuitBreaker, CircuitBreakerConfig, CircuitState},
-};
+use nexus_resilience::circuit::{CircuitBreaker, CircuitBreakerConfig, CircuitState};
 use nexus_router::Router;
 use std::sync::Arc;
 use std::time::Duration;

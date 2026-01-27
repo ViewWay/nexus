@@ -54,7 +54,7 @@ mod user;
 pub use auth::{Authentication, AuthenticationManager};
 pub use authority::{Authority, GrantedAuthority};
 pub use context::SecurityContext;
-pub use encoder::PasswordEncoder;
+pub use encoder::{BcryptPasswordEncoder, NoOpPasswordEncoder, PasswordEncoder, Pbkdf2PasswordEncoder, StandardPasswordEncoder};
 pub use error::{SecurityError, SecurityResult};
 pub use jwt::{JwtAuthentication, JwtClaims, JwtTokenProvider, JwtUtil};
 pub use pre_authorize::{PreAuthorize, SecurityExpression};
@@ -65,7 +65,7 @@ pub use rbac::{
 pub use request_ext::{SecurityContextExt, get_authentication_from_request};
 pub use role::{Permission, Role, Role as RoleEnum, Roles};
 pub use secured::{Secured, SecuredHelper, SecurityMetadata};
-pub use user::{User, UserDetails, UserService};
+pub use user::{InMemoryUserService, User, UserDetails, UserService};
 
 /// Re-exports of commonly used types
 /// 常用类型的重新导出
