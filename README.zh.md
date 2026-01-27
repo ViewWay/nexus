@@ -340,19 +340,19 @@ cargo clippy --workspace -- -D warnings
 
 > **⚠️ Alpha 版本**
 >
-> Nexus 目前处于 **第1阶段：运行时核心**（已完成）和 **注解系统开发**（90% 完成）。异步运行时已完全可用，支持 io-uring/epoll/kqueue。Spring Boot 风格注解系统已基本完成。
+> Nexus 目前处于 **第7阶段：生产就绪**（进行中，50% 完成）。阶段 0-6 已完成，包括自定义异步运行时、HTTP 服务器、中间件系统、弹性模式、可观测性和 Web3 支持。Spring Boot 风格注解系统已基本完成（90%）。
 
 | 阶段 | 状态 | 描述 |
 |------|------|------|
 | Phase 0 | ✅ 已完成 | 基础设施 |
 | Phase 1 | ✅ 已完成 | 运行时核心 |
+| Phase 2 | ✅ 已完成 | HTTP服务器 |
+| Phase 3 | ✅ 已完成 | 路由和中间件 |
+| Phase 4 | ✅ 已完成 | 弹性 |
+| Phase 5 | ✅ 已完成 | 可观测性 |
+| Phase 6 | ✅ 已完成 | Web3集成 |
 | **注解系统** | 🎉 **90% 完成** | **Spring Boot 风格注解** |
-| Phase 2 | 🔄 进行中 | HTTP服务器 |
-| Phase 3 | 📋 计划中 | 路由和中间件 |
-| Phase 4 | 📋 计划中 | 弹性 |
-| Phase 5 | 📋 计划中 | 可观测性 |
-| Phase 6 | 📋 计划中 | Web3集成 |
-| Phase 7 | 📋 计划中 | 性能和加固 |
+| Phase 7 | 🔄 进行中 | 性能和加固 |
 
 ### 🎊 注解系统进度 / Annotations Progress
 

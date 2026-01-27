@@ -90,7 +90,8 @@
       "Bash(yamllint:*)",
       "Bash(git merge:*)",
       "Bash(/Users/yimiliya/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo check:*)",
-      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:/Users/yimiliya/.rustup/bin:$PATH\" cargo check:*)"
+      "Bash(PATH=\"/Users/yimiliya/.cargo/bin:/Users/yimiliya/.rustup/bin:$PATH\" cargo check:*)",
+      "Bash(claude mcp add:*)"
     ]
   }
 }
