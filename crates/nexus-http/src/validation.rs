@@ -391,10 +391,12 @@ impl ValidationHelpers {
     ///
     /// ```rust
     /// use nexus_http::validation::ValidationHelpers;
+    /// use nexus_http::ValidationError;
     ///
-    /// if ValidationHelpers::require_non_empty("username", &username) {
-    ///         errors.add(ValidationError::new("username", "Username is required"));
-    ///     }
+    /// let username = "";
+    /// if let Some(err) = ValidationHelpers::require_non_empty("username", username) {
+    ///     println!("Validation error: {:?}", err);
+    /// }
     /// ```
     pub fn require_non_empty(field: &str, value: &str) -> Option<ValidationError> {
         if value.trim().is_empty() {
@@ -411,13 +413,11 @@ impl ValidationHelpers {
     ///
     /// ```rust
     /// use nexus_http::validation::ValidationHelpers;
+    /// use nexus_http::ValidationError;
     ///
-    /// if let Some(error) = ValidationHelpers::require_min_length(
-    ///     "username",
-    ///     &username,
-    ///     3
-    /// ) {
-    ///     errors.add(error);
+    /// let username = "ab"; // Too short
+    /// if let Some(err) = ValidationHelpers::require_min_length("username", username, 3) {
+    ///     println!("Validation error: {:?}", err);
     /// }
     /// ```
     pub fn require_min_length(field: &str, value: &str, min: usize) -> Option<ValidationError> {
@@ -497,13 +497,15 @@ impl ValidationHelpers {
     ///
     /// ```rust
     /// use nexus_http::validation::ValidationHelpers;
+    /// use nexus_http::ValidationError;
     ///
-    /// if let Some(error) = ValidationHelpers::require_pattern(
+    /// let username = "user@123"; // Contains invalid character
+    /// if let Some(err) = ValidationHelpers::require_pattern(
     ///     "username",
-    ///     &username,
+    ///     username,
     ///     r"^[a-zA-Z0-9_]+$"
     /// ) {
-    ///     errors.add(error);
+    ///     println!("Validation error: {:?}", err);
     /// }
     /// ```
     pub fn require_pattern(field: &str, value: &str, pattern: &str) -> Option<ValidationError> {
