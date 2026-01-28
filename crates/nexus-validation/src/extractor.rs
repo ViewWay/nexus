@@ -98,6 +98,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ValidationErrors;
     use serde::Deserialize;
 
     #[derive(Debug, Clone, Deserialize)]
@@ -107,12 +108,13 @@ mod tests {
     }
 
     // Implement our Validate trait for tests
+    // 为测试实现我们的 Validate trait
     impl NexusValidate for TestUser {
-        fn validate(&self) -> Result<(), ValidationError> {
+        fn validate(&self) -> Result<(), ValidationErrors> {
             if self.username.len() < 3 {
-                let mut err = ValidationError::new();
-                err.add_field_error("username", "Username must be at least 3 characters");
-                return Err(err);
+                let mut errors = ValidationErrors::new();
+                errors.add("username", "Username must be at least 3 characters");
+                return Err(errors);
             }
             Ok(())
         }
@@ -127,19 +129,6 @@ mod tests {
 
         let result = Valid::validate(user);
         assert!(result.is_ok());
-    }
-
-    // Implement our Validate trait for tests
-    impl NexusValidate for TestUser {
-        fn validate(&self) -> Result<(), ValidationError> {
-            if self.username.len() < 3 {
-                return Err(ValidationError::new(
-                    "username",
-                    "Username must be at least 3 characters",
-                ));
-            }
-            Ok(())
-        }
     }
 
     #[test]

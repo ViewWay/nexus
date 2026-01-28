@@ -127,7 +127,8 @@ mod tests {
         container.register_factory("TestBean", TestBeanFactory);
 
         let bean = container.create_bean_by_name("TestBean").unwrap();
-        // Just verify we got something
-        assert!(!bean.type_name().is_empty());
+        // Verify we got a Reflect trait object (it's not null)
+        // bevy_reflect::Reflect provides type_id() method
+        assert_ne!(bean.type_id(), std::any::TypeId::of::<()>());
     }
 }

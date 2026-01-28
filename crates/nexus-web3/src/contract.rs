@@ -490,6 +490,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "rpc")]
     fn test_erc20_constants() {
         assert_eq!(ERC20::BALANCE_OF.0, [0x70, 0xa0, 0x82, 0x31]);
         assert_eq!(ERC20::TRANSFER.0, [0xa9, 0x05, 0x9c, 0xbb]);
