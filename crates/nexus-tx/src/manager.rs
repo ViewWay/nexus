@@ -230,6 +230,16 @@ impl SimpleTransactionManager {
     pub fn with_name(name: impl Into<String>) -> Self {
         Self { name: name.into() }
     }
+
+    /// Build a transaction definition
+    /// 构建事务定义
+    pub fn build_definition(&self, name: impl Into<String>) -> TransactionDefinition {
+        TransactionDefinition::new(name)
+            .propagation(Propagation::Required)
+            .isolation(IsolationLevel::ReadCommitted)
+            .timeout_secs(crate::DEFAULT_TX_TIMEOUT_SECS)
+            .read_only(false)
+    }
 }
 
 impl Default for SimpleTransactionManager {

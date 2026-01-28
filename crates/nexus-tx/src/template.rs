@@ -228,7 +228,11 @@ mod tests {
         let template = TransactionTemplate::new(manager);
 
         let result = template
-            .execute(|| Box::pin(async { Err::<(), _>("error".into()) }))
+            .execute(|| Box::pin(async {
+                Err::<(), TransactionError>(TransactionError::CommitFailed(
+                    "error".to_string(),
+                ))
+            }))
             .await;
 
         assert!(result.is_err());

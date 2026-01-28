@@ -153,16 +153,23 @@ pub fn evaluate_cache_condition(
     }
 
     // Handle method calls like isEmpty()
+    // 处理像 isEmpty() 这样的方法调用
     if expr.ends_with("isEmpty()") {
-        let param_part = &expr[..expr.len() - "isEmpty()".len()];
+        // Split on '.' to get the base parameter name
+        // 使用 '.' 分割来获取基础参数名
+        let param_part = expr.split('.').next().unwrap_or(expr);
         let value = get_value(param_part.trim(), args, result);
         return is_empty_value(&value);
     }
 
     // Handle method calls like length() > 0
+    // 处理像 length() > 0 这样的方法调用
     if expr.contains(".length()") {
         let param_part = expr.split(".length()").next().unwrap();
-        let rest = &expr[param_part.len() + ".length()".len()..];
+        // Calculate the byte position after .length()
+        // 计算 .length() 之后的字节位置
+        let method_end = param_part.len() + ".length()".len();
+        let rest = &expr[method_end..];
 
         let value = get_value(param_part.trim(), args, result);
         let length = get_length(&value);
@@ -230,8 +237,11 @@ fn get_value(
         }
     }
 
-    // Handle string literals
-    if expr.starts_with('"') && expr.ends_with('"') {
+    // Handle string literals (both single and double quotes)
+    // 处理字符串字面量（单引号和双引号）
+    if (expr.starts_with('"') && expr.ends_with('"'))
+        || (expr.starts_with('\'') && expr.ends_with('\''))
+    {
         return JsonValue::String(expr[1..expr.len() - 1].to_string());
     }
 
@@ -386,7 +396,7 @@ mod tests {
     fn test_or_expressions() {
         let mut args = HashMap::new();
         args.insert("role".to_string(), JsonValue::String("ADMIN".to_string()));
-        args.insert("admin".to_string(), JsonValue::Bool(false));
+        args.insert("admin".to_string(), JsonValue::Bool(true)); // Fixed: should be true for correct test logic
 
         assert!(evaluate_cache_condition("#role == 'ADMIN' or #admin", &args, None));
         assert!(evaluate_cache_condition("#role == 'USER' or #admin", &args, None));

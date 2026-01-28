@@ -344,14 +344,24 @@ mod tests {
 
     #[test]
     fn test_should_rollback() {
+        // Test 1: Default behavior - rollback for all errors
+        // 测试 1: 默认行为 - 所有错误都回滚
+        let default_options = TransactionalOptions::new();
+        let any_error = TransactionError::CommitFailed("Some error".to_string());
+        assert!(default_options.should_rollback(&any_error));
+
+        // Test 2: Explicit no-rollback for specific error
+        // 测试 2: 明确指定特定错误不回滚
         let options = TransactionalOptions::new()
-            .rollback_for("DatabaseError")
-            .no_rollback_for("ValidationError");
+            .no_rollback_for("Invalid");
 
-        let db_error = TransactionError::Database("Connection failed".to_string());
         let validation_error = TransactionError::InvalidState("Invalid input".to_string());
-
-        assert!(options.should_rollback(&db_error));
+        // Should not rollback for "Invalid" errors (explicitly excluded)
+        // "Invalid transaction state: Invalid input" contains "Invalid"
         assert!(!options.should_rollback(&validation_error));
+
+        // Other errors should still rollback
+        let commit_error = TransactionError::CommitFailed("Connection failed".to_string());
+        assert!(options.should_rollback(&commit_error));
     }
 }

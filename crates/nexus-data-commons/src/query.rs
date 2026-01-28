@@ -778,11 +778,33 @@ impl Specification {
         }
     }
 
+    /// Create a greater-than-or-equal predicate
+    /// 创建大于等于谓词
+    pub fn ge(field: &str, value: impl ToValue) -> Self {
+        Self {
+            predicate: Some(Predicate::Ge {
+                field: field.to_string(),
+                value: value.to_value(),
+            }),
+        }
+    }
+
     /// Create a less-than predicate
     /// 创建小于谓词
     pub fn lt(field: &str, value: impl ToValue) -> Self {
         Self {
             predicate: Some(Predicate::Lt {
+                field: field.to_string(),
+                value: value.to_value(),
+            }),
+        }
+    }
+
+    /// Create a less-than-or-equal predicate
+    /// 创建小于等于谓词
+    pub fn le(field: &str, value: impl ToValue) -> Self {
+        Self {
+            predicate: Some(Predicate::Le {
                 field: field.to_string(),
                 value: value.to_value(),
             }),
