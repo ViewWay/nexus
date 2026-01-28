@@ -42,8 +42,11 @@ syn = { workspace = true }
 darling = { workspace = true }
 
 # Attribute parsing / 属性解析
-proc-macro-error = { workspace = true }
-proc-macro-error-attr = { workspace = true }
+# 移除了未使用的 proc-macro-error 依赖
+# Rust 1.81+ 内置了更好的编译错误诊断功能
+# proc-macro-error is unmaintained - removed, unused in code
+# proc-macro-error = { workspace = true }
+# proc-macro-error-attr = { workspace = true }
 
 # HTTP types / HTTP类型 (Spring Web HTTP)
 http = { workspace = true }

@@ -23,6 +23,10 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 default = ["trace", "log", "metrics", "nexus-format"]
 trace = ["dep:opentelemetry", "dep:opentelemetry_sdk"]
+# DEPRECATED: jaeger 特性已弃用 - opentelemetry-jaeger 包不再维护
+# 建议使用 otlp 特性替代，它连接到 OpenTelemetry Collector
+# DEPRECATED: jaeger feature is unmaintained - use otlp instead
+# The otlp feature connects to OpenTelemetry Collector which supports Jaeger export
 jaeger = ["trace", "dep:opentelemetry-jaeger"]
 otlp = ["trace", "dep:opentelemetry-otlp"]
 zipkin = ["trace"]
@@ -43,6 +47,9 @@ tracing-opentelemetry = { workspace = true }
 # OpenTelemetry / OpenTelemetry (Spring Cloud Observability)
 opentelemetry = { workspace = true, optional = true }
 opentelemetry_sdk = { workspace = true, optional = true }
+# 注意: opentelemetry-jaeger 已不再维护 (RUSTSEC-2025-0123)
+# 建议使用 OTLP 协议连接到 OpenTelemetry Collector
+# Note: opentelemetry-jaeger is unmaintained, consider using otlp instead
 opentelemetry-jaeger = { workspace = true, optional = true }
 opentelemetry-otlp = { workspace = true, optional = true }
 # opentelemetry-prometheus is discontinued - removed due to security vulnerabilities
