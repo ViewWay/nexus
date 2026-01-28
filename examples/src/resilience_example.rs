@@ -1,142 +1,192 @@
-// Resilience Patterns Example / 弹性模式示例
-//
-// Demonstrates Nexus's resilience and fault-tolerance patterns:
-// 演示 Nexus 的弹性和容错模式：
-// - Circuit Breaker / 熔断器
-//
-// Equivalent to: Spring Cloud Circuit Breaker, Resilience4j
-// 等价于：Spring Cloud Circuit Breaker, Resilience4j
+//! Nexus Resilience Example / Nexus弹性示例
+//!
+//! Demonstrates high availability patterns for backend applications.
+//! 演示后端应用的高可用模式。
+//!
+//! # Equivalent to Spring Boot / 等价于 Spring Boot
+//!
+//! - `CircuitBreaker` → Resilience4j CircuitBreaker
+//! - `RateLimiter` → Resilience4j RateLimiter
+//! - `RetryPolicy` → Resilience4j Retry
+//! - `ServiceDiscovery` → Spring Cloud Service Discovery
 
-use nexus_http::{Request, Response, Result, StatusCode};
-use nexus_resilience::circuit::{CircuitBreaker, CircuitBreakerConfig, CircuitState};
-use nexus_router::Router;
+use nexus_resilience::{
+    CircuitBreaker, CircuitBreakerConfig, CircuitState,
+    RetryPolicy,
+};
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::time::sleep;
-
-/// Circuit breaker example / 熔断器示例
-async fn circuit_breaker_example() {
-    println!("\n=== Circuit Breaker Example / 熔断器示例 ===\n");
-
-    // Configure circuit breaker / 配置熔断器
-    let config = CircuitBreakerConfig::new()
-        .with_error_threshold(0.5) // 50% error rate / 50%错误率
-        .with_min_requests(3) // After 3 requests / 3次请求后
-        .with_open_duration(Duration::from_secs(5)); // Reset timeout / 重置超时
-
-    let breaker = Arc::new(CircuitBreaker::new("api-service", config));
-    let mut failure_count = 0;
-
-    // Simulate service calls / 模拟服务调用
-    for i in 1..=10 {
-        let result = simulate_service_call(&breaker, i, &mut failure_count).await;
-
-        match result {
-            Ok(_) => println!("Call {} succeeded - State: {:?}", i, breaker.state()),
-            Err(e) => println!("Call {} failed - State: {:?} - Error: {}", i, breaker.state(), e),
-        }
-
-        // Small delay between calls / 调用之间的小延迟
-        sleep(Duration::from_millis(100)).await;
-    }
-
-    println!("\nFinal circuit state: {:?}\n", breaker.state());
-}
-
-/// Simulate a service call with circuit breaker protection
-/// 模拟带熔断器保护的服务调用
-async fn simulate_service_call(
-    breaker: &CircuitBreaker,
-    i: usize,
-    failure_count: &mut usize,
-) -> Result<(), anyhow::Error> {
-    // Check if circuit is open / 检查熔断器是否打开
-    if !breaker.is_request_permitted() {
-        return Err(anyhow::anyhow!("Circuit is open"));
-    }
-
-    // Simulate failures / 模拟失败
-    if i <= 4 {
-        *failure_count += 1;
-        Err(anyhow::anyhow!("Service unavailable"))
-    } else {
-        Ok(())
-    }
-}
-
-/// Complete HTTP server with circuit breaker / 包含熔断器的HTTP服务器
-async fn resilience_server_example() {
-    println!("\n=== Resilience Server Example / 弹性服务器示例 ===\n");
-
-    // Create circuit breakers for different services / 为不同服务创建熔断器
-    let user_breaker =
-        Arc::new(CircuitBreaker::new("user-service", CircuitBreakerConfig::default()));
-
-    let order_breaker =
-        Arc::new(CircuitBreaker::new("order-service", CircuitBreakerConfig::default()));
-
-    // Build router with circuit breaker protection / 构建带有熔断器保护的路由器
-    let _app = Router::new()
-        // Public endpoint / 公共端点
-        .get("/api/health", |_req: Request| async {
-            Ok::<_, nexus_http::Error>(Response::builder()
-                .status(StatusCode::OK)
-                .body(r#"{"status":"healthy"}"#.into())
-                .unwrap())
-        })
-        // Users endpoint with circuit breaker / 带熔断器的用户端点
-        .get("/api/users", move |_req: Request| {
-            let breaker = user_breaker.clone();
-            async move {
-                if !breaker.is_request_permitted() {
-                    return Ok::<_, nexus_http::Error>(Response::builder()
-                        .status(StatusCode::SERVICE_UNAVAILABLE)
-                        .body(r#"{"error":"Circuit breaker is open"}"#.into())
-                        .unwrap());
-                }
-
-                // Simulate user service call / 模拟用户服务调用
-                Ok::<_, nexus_http::Error>(Response::builder()
-                    .status(StatusCode::OK)
-                    .body(r#"{"users":[]}"#.into())
-                    .unwrap())
-            }
-        })
-        // Orders endpoint with circuit breaker / 带熔断器的订单端点
-        .post("/api/orders", move |_req: Request| {
-            let breaker = order_breaker.clone();
-            async move {
-                if !breaker.is_request_permitted() {
-                    return Ok::<_, nexus_http::Error>(Response::builder()
-                        .status(StatusCode::SERVICE_UNAVAILABLE)
-                        .body(r#"{"error":"Circuit breaker is open"}"#.into())
-                        .unwrap());
-                }
-
-                // Simulate order service call / 模拟订单服务调用
-                Ok::<_, nexus_http::Error>(Response::builder()
-                    .status(StatusCode::CREATED)
-                    .body(r#"{"order":"created"}"#.into())
-                    .unwrap())
-            }
-        });
-
-    println!("Resilience server configured with:");
-    println!("  - Circuit Breakers: user-service, order-service");
-    println!("\nServer ready to handle requests with resilience!\n");
-}
 
 #[tokio::main]
-async fn main() {
-    println!("\n╔═══════════════════════════════════════════════════════════════╗");
-    println!("║   Nexus Resilience Patterns Example / 弹性模式示例            ║");
-    println!("╚═══════════════════════════════════════════════════════════════╝");
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("=== Nexus Resilience Example / Nexus弹性示例 ===\n");
 
-    // Run all examples / 运行所有示例
+    // 1. Circuit Breaker / 熔断器
+    println!("1. Circuit Breaker / 熔断器 (类似 Resilience4j)");
+    println!("---");
     circuit_breaker_example().await;
-    resilience_server_example().await;
+    println!();
 
-    println!("╔═══════════════════════════════════════════════════════════════╗");
-    println!("║   All resilience examples completed!                          ║");
-    println!("╚═══════════════════════════════════════════════════════════════╝\n");
+    // 2. Retry Policy / 重试策略
+    println!("2. Retry Policy / 重试策略");
+    println!("---");
+    retry_policy_example();
+    println!();
+
+    // 3. Combined Patterns / 组合模式
+    println!("3. Combined Patterns / 组合模式");
+    println!("---");
+    combined_patterns_example();
+    println!();
+
+    println!("=== Example Complete / 示例完成 ===");
+    Ok(())
+}
+
+/// Circuit breaker example / 熔断器示例
+///
+/// Demonstrates circuit breaker pattern for fault tolerance.
+/// 演示用于容错的熔断器模式。
+///
+/// Equivalent to Resilience4j's CircuitBreaker.
+/// 等价于 Resilience4j 的熔断器。
+async fn circuit_breaker_example() {
+    println!("  Creating circuit breaker:");
+    println!("    Failure threshold: 5 failures");
+    println!("    Success threshold: 3 successes");
+    println!("    Timeout: 30 seconds");
+    println!("    Half-open timeout: 10 seconds");
+
+    let config = CircuitBreakerConfig::new();
+
+    let breaker = Arc::new(CircuitBreaker::new("user-service", config));
+
+    println!();
+    println!("  Circuit states:");
+    println!("    CLOSED    -> Requests pass through (normal operation)");
+    println!("    OPEN      -> Requests fail immediately (circuit tripped)");
+    println!("    HALF_OPEN -> Testing if service has recovered");
+    println!();
+    println!("  Current state: {:?}", breaker.state());
+    println!();
+    println!("  Spring equivalent:");
+    println!("    @CircuitBreaker(name = \"userService\", ");
+    println!("        fallbackMethod = \"getUserFallback\")");
+
+    // Simulate some calls / 模拟一些调用
+    println!();
+    println!("  Simulating calls:");
+    for i in 1..=5 {
+        if breaker.is_request_permitted() {
+            println!("    Call {}: Allowed - State: {:?}", i, breaker.state());
+        } else {
+            println!("    Call {}: Blocked - Circuit is OPEN", i);
+        }
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+
+    println!();
+    println!("  Circuit breakers protect services from cascading failures.");
+    println!("  熔断器保护服务免受级联故障。");
+}
+
+/// Retry policy example / 重试策略示例
+///
+/// Demonstrates retry logic with backoff strategies.
+/// 演示带退避策略的重试逻辑。
+fn retry_policy_example() {
+    println!("  Backoff strategies:");
+    println!();
+
+    // Fixed delay / 固定延迟
+    println!("  1. Fixed Delay (固定延迟):");
+    let _fixed_retry = RetryPolicy::new();
+    println!("     -> Retry after fixed delay, up to max attempts");
+
+    // Exponential backoff / 指数退避
+    println!();
+    println!("  2. Exponential Backoff (指数退避):");
+    println!("     -> 100ms, 200ms, 400ms, 800ms, 5s (max)");
+    println!("     -> Each retry waits longer than the last");
+
+    // Linear backoff / 线性退避
+    println!();
+    println!("  3. Linear Backoff (线性退避):");
+    println!("     -> 100ms, 150ms, 200ms, 2s (max)");
+    println!("     -> Delay increases by fixed amount each time");
+
+    println!();
+    println!("  Spring equivalent:");
+    println!("    @Retryable(retryFor = {{ SQLException.class }}, ");
+    println!("        backoff = @Backoff(delay = 100, multiplier = 2))");
+}
+
+/// Combined patterns example / 组合模式示例
+///
+/// Demonstrates using multiple resilience patterns together.
+/// 演示组合使用多种弹性模式。
+fn combined_patterns_example() {
+    println!("  Combining patterns for production-grade resilience:");
+    println!();
+    println!("  API call with:");
+    println!("    1. Circuit Breaker - Fails fast when service is down");
+    println!("    2. Retry - Handles transient failures");
+    println!("    3. Timeout - Prevents hanging requests");
+    println!();
+    println!("  Spring Boot + Resilience4j equivalent:");
+    println!("    @CircuitBreaker");
+    println!("    @Retry");
+    println!("    @TimeLimiter");
+    println!("    public User getUser(String id) {{ ... }}");
+}
+
+// ============================================================================
+// Backend API Examples / 后端API示例
+// ============================================================================
+
+/// Example: Protected API endpoint with resilience
+/// 示例：带弹性保护的API端点
+///
+/// Demonstrates how to protect an external API call.
+/// 演示如何保护外部API调用。
+struct UserService {
+    circuit_breaker: Arc<CircuitBreaker>,
+}
+
+impl UserService {
+    fn new() -> Self {
+        let cb_config = CircuitBreakerConfig::new();
+
+        Self {
+            circuit_breaker: Arc::new(CircuitBreaker::new("user-api", cb_config)),
+        }
+    }
+
+    /// Get user with resilience protection / 获取用户（带弹性保护）
+    ///
+    /// This demonstrates a production-ready service call with:
+    /// - Circuit breaking to fail fast when service is down
+    ///
+    /// Spring equivalent:
+    /// ```java
+    /// @CircuitBreaker(name = "userService", fallbackMethod = "getUserFallback")
+    /// public User getUser(String id) {
+    ///     return restTemplate.getForObject("/users/" + id, User.class);
+    /// }
+    ///
+    /// public User getUserFallback(String id, Exception e) {
+    ///     return new User(id, "Unknown", "unknown@example.com");
+    /// }
+    /// ```
+    fn get_user_protected(&self, _id: &str) -> Result<String, String> {
+        // Check circuit breaker / 检查熔断器
+        let state = self.circuit_breaker.state();
+        if state == CircuitState::Open {
+            return Err("Circuit breaker is OPEN - service unavailable".to_string());
+        }
+
+        // In production, would make actual API call here
+        // 在生产环境中，这里会进行实际的API调用
+        Ok(r#"{"id": "1", "name": "Alice", "email": "alice@example.com"}"#.to_string())
+    }
 }

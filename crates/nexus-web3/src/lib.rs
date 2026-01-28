@@ -21,7 +21,7 @@ pub mod wallet;
 pub use chain::{Block, BlockNumber, ChainConfig, ChainId, Eip155Chain};
 pub use contract::{CallParams, ContractError, FunctionSelector};
 pub use rpc::RpcError;
-pub use tx::{Transaction, TransactionBuilder, TxHash};
+pub use tx::{Transaction, TransactionBuilder, TxHash, TxType};
 pub use wallet::{Address, LocalWallet, Wallet};
 
 #[cfg(feature = "rpc")]

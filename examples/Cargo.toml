@@ -14,118 +14,44 @@ Equivalent to: Spring Boot Samples, Spring PetClinic
 [lints]
 workspace = true
 
+# Binary targets / 二进制目标
 [[bin]]
-name = "hello_world"
-path = "src/hello_world.rs"
+name = "core_example"
+path = "src/core_example.rs"
 
 [[bin]]
-name = "router_demo"
-path = "src/router_demo.rs"
+name = "http_example"
+path = "src/http_example.rs"
 
 [[bin]]
-name = "middleware_demo"
-path = "src/middleware_demo.rs"
-
-[[bin]]
-name = "json_api"
-path = "src/json_api.rs"
-
-[[bin]]
-name = "ioc_container_example"
-path = "ioc_container_example.rs"
-
-[[bin]]
-name = "config_example"
-path = "config_example.rs"
-
-[[bin]]
-name = "cache_example"
-path = "cache_example.rs"
-
-[[bin]]
-name = "spring_boot_logging_demo"
-path = "spring_boot_logging_demo.rs"
-
-[[bin]]
-name = "spring_style_example"
-path = "spring_style_example.rs"
-
-[[bin]]
-name = "logging_example"
-path = "logging_example.rs"
-
-[[bin]]
-name = "web3_example"
-path = "src/web3_example.rs"
+name = "router_example"
+path = "src/router_example.rs"
 
 [[bin]]
 name = "resilience_example"
 path = "src/resilience_example.rs"
 
 [[bin]]
-name = "security_example"
-path = "src/security_example.rs"
-
-[[bin]]
 name = "validation_example"
 path = "src/validation_example.rs"
 
-[[bin]]
-name = "multipart_example"
-path = "src/multipart_example.rs"
-
-[[bin]]
-name = "schedule_example"
-path = "src/schedule_example.rs"
-
-[[bin]]
-name = "exceptions_example"
-path = "src/exceptions_example.rs"
-
-[[bin]]
-name = "actuator_example"
-path = "src/actuator_example.rs"
-
 [dependencies]
 # Core framework / 核心框架
-nexus-runtime = { path = "../crates/nexus-runtime" }
 nexus-core = { path = "../crates/nexus-core" }
 nexus-http = { path = "../crates/nexus-http", features = ["full"] }
 nexus-router = { path = "../crates/nexus-router" }
-nexus-extractors = { path = "../crates/nexus-extractors", features = ["full"] }
-nexus-response = { path = "../crates/nexus-response", features = ["full"] }
-nexus-middleware = { path = "../crates/nexus-middleware", features = ["full"] }
-nexus-resilience = { path = "../crates/nexus-resilience", features = ["full"] }
-nexus-observability = { path = "../crates/nexus-observability", features = ["full"] }
-nexus-config = { path = "../crates/nexus-config" }
-nexus-cache = { path = "../crates/nexus-cache" }
-nexus-web3 = { path = "../crates/nexus-web3", features = ["rpc"] }
-nexus-macros = { path = "../crates/nexus-macros", features = ["full"] }
-nexus-security = { path = "../crates/nexus-security" }
+nexus-resilience = { path = "../crates/nexus-resilience" }
 nexus-validation = { path = "../crates/nexus-validation" }
-nexus-multipart = { path = "../crates/nexus-multipart" }
-nexus-schedule = { path = "../crates/nexus-schedule" }
-nexus-exceptions = { path = "../crates/nexus-exceptions" }
-nexus-actuator = { path = "../crates/nexus-actuator" }
 
 # Async runtime / 异步运行时
 tokio = { workspace = true, features = ["full"] }
 
-# Logging / 日志 (Spring Boot Logging)
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-
-# Serialization / 序列化 (Spring Jackson)
+# Serialization / 序列化
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-# Utilities / 工具
-uuid = { workspace = true }
-chrono = { workspace = true }
-parking_lot = { workspace = true }
+# Logging / 日志
 env_logger = { workspace = true }
-ulid = { workspace = true }
+
+# Utilities / 工具
 anyhow = { workspace = true }
-thiserror = { workspace = true }
-validator = { workspace = true, features = ["derive"] }
-email_address = { workspace = true }
