@@ -45,7 +45,8 @@ opentelemetry = { workspace = true, optional = true }
 opentelemetry_sdk = { workspace = true, optional = true }
 opentelemetry-jaeger = { workspace = true, optional = true }
 opentelemetry-otlp = { workspace = true, optional = true }
-opentelemetry-prometheus = { workspace = true, optional = true }
+# opentelemetry-prometheus is discontinued - removed due to security vulnerabilities
+# Use custom metrics export or opentelemetry-prometheus-text-exporter instead
 
 # Metrics / 指标 (Spring Boot Actuator Metrics, Micrometer)
 prometheus = { workspace = true, optional = true }
