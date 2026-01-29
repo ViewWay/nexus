@@ -161,7 +161,9 @@ tokio-postgres = "0.7"
 
 # Security / 安全
 # Equivalent to: Spring Security
-jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
+# Note: Not using rust_crypto feature due to rsa crate Marvin Attack vulnerability (RUSTSEC-2023-0071)
+# Using default crypto backend instead
+jsonwebtoken = "10.2.0"
 bcrypt = "0.18.0"
 rand = "0.9.2"
 hmac = "0.12"
@@ -198,13 +200,13 @@ futures-rustls = "0.26"
 
 # Web3 / 区块链
 # Equivalent to: Spring Web3 (community projects)
-# Note: Using latest stable versions (1.4.x) compatible with serde 1.0
-alloy = { version = "1.4", features = ["network", "rpc", "rpc-types"] }
-alloy-consensus = { version = "1.4", default-features = false }
-alloy-primitives = "1.4"
-alloy-transport = "1.4"
-alloy-network = "1.4"
-alloy-rpc-types = "1.4"
+# Note: Using 1.5.x versions which include fixes for ruint vulnerability (RUSTSEC-2025-0137)
+alloy = { version = "1.5", features = ["network", "rpc", "rpc-types"] }
+alloy-consensus = { version = "1.5", default-features = false }
+alloy-primitives = "1.5"
+alloy-transport = "1.5"
+alloy-network = "1.5"
+alloy-rpc-types = "1.5"
 
 # CLI / 命令行
 # Equivalent to: Spring Shell
