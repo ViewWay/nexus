@@ -35,6 +35,14 @@ path = "src/resilience_example.rs"
 name = "validation_example"
 path = "src/validation_example.rs"
 
+[[bin]]
+name = "starter_example"
+path = "src/starter_example.rs"
+
+[[bin]]
+name = "logging_demo"
+path = "src/logging_demo.rs"
+
 [dependencies]
 # Core framework / 核心框架
 nexus-core = { path = "../crates/nexus-core" }
@@ -42,6 +50,13 @@ nexus-http = { path = "../crates/nexus-http", features = ["full"] }
 nexus-router = { path = "../crates/nexus-router" }
 nexus-resilience = { path = "../crates/nexus-resilience" }
 nexus-validation = { path = "../crates/nexus-validation" }
+
+# Nexus Starter / 自动配置启动器
+nexus-starter = { path = "../crates/nexus-starter", features = ["core", "web"] }
+nexus-macros = { path = "../crates/nexus-macros" }
+
+# Observability / 可观测性
+nexus-observability = { path = "../crates/nexus-observability", features = ["nexus-format"] }
 
 # Async runtime / 异步运行时
 tokio = { workspace = true, features = ["full"] }
@@ -52,6 +67,7 @@ serde_json = { workspace = true }
 
 # Logging / 日志
 env_logger = { workspace = true }
+tracing = "0.1"
 
 # Utilities / 工具
 anyhow = { workspace = true }

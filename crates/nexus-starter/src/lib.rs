@@ -1,0 +1,145 @@
+//! Nexus Starter - Spring Boot风格的自动配置
+//! Nexus Starter - Spring Boot-style Auto-Configuration
+//!
+//! 这个 crate 提供了类似 Spring Boot Starter 的自动配置能力。
+//! This crate provides Spring Boot Starter-like auto-configuration capabilities.
+//!
+//! # 功能特性 / Features
+//!
+//! - **自动配置** - 根据类路径和配置自动装配组件
+//! - **条件装配** - 基于条件注解的智能装配
+//! - **依赖注入** - IoC 容器和依赖注入
+//! - **组件扫描** - 自动发现和注册组件
+//! - **配置管理** - 多层配置加载和覆盖
+//!
+//! # 使用示例 / Usage Examples
+//!
+//! ## 最简单的应用 / Minimal Application
+//!
+//! ```rust,no_run,ignore
+//! use nexus_starter::prelude::*;
+//!
+//! #[nexus_main]
+//! struct MyApp;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     MyApp::run()
+//! }
+//! ```
+//!
+//! ## 完整应用 / Full Application
+//!
+//! ```rust,no_run,ignore
+//! use nexus_starter::prelude::*;
+//!
+//! #[nexus_main]
+//! #[component_scan]
+//! struct Application;
+//!
+//! #[controller]
+//! struct HelloController;
+//!
+//! #[get("/")]
+//! fn hello() -> &'static str {
+//!     "Hello, Nexus!"
+//! }
+//! ```
+
+#![warn(missing_docs)]
+#![warn(unreachable_pub)]
+#![allow(dead_code)] // TODO: 移除，在实现完成后
+
+// ============================================================================
+// 核心模块导出 / Core Module Exports
+// ============================================================================
+
+/// 自动配置核心
+pub mod core;
+
+/// 配置管理
+pub mod config;
+
+// ============================================================================
+// 功能模块导出（通过 feature 控制） / Feature Modules
+// ============================================================================
+
+/// Web 自动配置
+#[cfg(feature = "web")]
+pub mod web;
+
+/// Security 自动配置
+#[cfg(feature = "security")]
+pub mod security;
+
+/// Data 自动配置
+#[cfg(feature = "data")]
+pub mod data;
+
+/// Cache 自动配置
+#[cfg(feature = "cache")]
+pub mod cache;
+
+/// Schedule 自动配置
+#[cfg(feature = "schedule")]
+pub mod schedule;
+
+/// Actuator 自动配置
+#[cfg(feature = "actuator")]
+pub mod actuator;
+
+// ============================================================================
+// 重新导出常用类型 / Re-exports
+// ============================================================================
+
+/// 预导入模块 - 包含所有常用类型
+pub mod prelude;
+
+// 核心类型导出
+pub use core::{
+    ApplicationContext,
+    AutoConfiguration,
+    BeanDefinition,
+    ComponentRegistry,
+};
+
+// 配置类型导出
+pub use config::{
+    ConfigurationLoader,
+    ConfigurationProperties,
+    Environment,
+};
+
+// ============================================================================
+// 常用 trait 和类型的重新导出 / Common Re-exports
+// ============================================================================
+
+pub use std::sync::Arc;
+pub use anyhow::Result as NexusResult;
+
+/// 应用启动结果类型
+pub type ApplicationResult = Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>;
+
+// ============================================================================
+// 常量 / Constants
+// ============================================================================
+
+/// Nexus Starter 版本
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// 默认服务器端口
+pub const DEFAULT_SERVER_PORT: u16 = 8080;
+
+/// 默认服务器地址
+pub const DEFAULT_SERVER_HOST: &str = "127.0.0.1";
+
+/// 默认工作线程数
+pub const DEFAULT_WORKER_THREADS: usize = 4; // TODO: Use num_cpus when available
+
+/// 应用配置文件名
+pub const APP_CONFIG_FILE: &str = "application";
+
+/// 环境变量前缀
+pub const ENV_VAR_PREFIX: &str = "NEXUS";
+
+/// Profile 环境变量名
+pub const PROFILE_ENV_VAR: &str = "NEXUS_PROFILE";

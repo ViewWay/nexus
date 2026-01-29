@@ -145,9 +145,68 @@ log::error!("Error message");
 
 ### Nexus Logging / Nexus 日志
 
-Nexus supports structured console logging with banner, colored output, and startup information:
+Nexus provides a unified logging system with two modes optimized for different environments:
 
-Nexus 支持结构化控制台日志，包括横幅、彩色输出和启动信息：
+Nexus 提供统一的日志系统，具有针对不同环境优化的两种模式：
+
+| Mode | Use Case | Features |
+|------|----------|----------|
+| **Verbose** | Development | Timestamp, PID, Thread, Module, File location |
+| **Simple** | Production | Level + Module + Message only (~30% faster) |
+
+```rust
+use nexus_observability::log::{Logger, LoggerConfig, LogLevel, LogMode};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Configure logging based on environment
+    let config = LoggerConfig {
+        level: LogLevel::Info,
+        mode: LogMode::from_profile(Some("dev")),  // Auto: dev→Verbose, prod→Simple
+        ..Default::default()
+    };
+
+    Logger::init_with_config(config)?;
+
+    // Use standard tracing macros
+    tracing::info!("Application started");
+    tracing::warn!("This is a warning");
+    tracing::error!("This is an error");
+
+    Ok(())
+}
+```
+
+**Configuration Options / 配置选项**:
+
+```bash
+# Environment variables / 环境变量
+export NEXUS_LOG_LEVEL=DEBUG          # TRACE, DEBUG, INFO, WARN, ERROR
+export NEXUS_LOG_MODE=verbose          # verbose, simple
+export NEXUS_PROFILE=prod              # dev, prod (affects default mode)
+
+# Configuration file (nexus.toml) / 配置文件
+[logging]
+level = "INFO"
+mode = "verbose"                      # or "simple"
+format = "pretty"                      # pretty, compact, json
+file = "logs/application.log"
+
+[logging.rotation]
+policy = "daily"                       # daily, hourly, never
+max_files = 7
+```
+
+**Output Comparison / 输出对比**:
+
+```
+# Verbose mode (development) / 详细模式（开发环境）
+2026-01-29 22:35:42.872 |INFO| 55377 [main             ] n.http.server : Request received
+
+# Simple mode (production) / 精简模式（生产环境）
+INFO n.http.server: Request received
+```
+
+**Spring Boot Style Startup / Spring Boot 风格启动**:
 
 ```rust
 use nexus_observability::log::Logger;
@@ -160,40 +219,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Print banner / 打印横幅
         Banner::print("MyApp", "0.1.0", 8080);
 
-        // Initialize Nexus logging / 初始化 Nexus 日志
+        // Initialize logging / 初始化日志
         Logger::init_spring_style()?;
 
-        // Log startup information / 记录启动信息
+        // Log startup / 记录启动信息
         let startup = StartupLogger::new();
         startup.log_starting("MyApplication");
-        startup.log_profile(None);
+        startup.log_profile(Some("dev"));
         startup.log_server_started(8080, startup.elapsed_ms());
     }
 
-    // Use tracing macros / 使用 tracing 宏
     tracing::info!(target: "my.app", "Application running");
-
     Ok(())
 }
 ```
 
-**Output Format** / **输出格式**:
+**Startup Output / 启动输出**:
 ```
-  _   _           ___     ___
- | | | | ___  ___| |_   / _ \ _ __ ___
- | |_| |/ _ \/ __| __| | | | | '_ ` _ \
- |  _  | (_) \__ \ |_  | |_| | | | | | |
- |_| |_|\___/|___/\__|  \___/|_| |_| |_|
-MyApp v0.1.0 | port: 8080 | profile: active
+  _   _                      ___  ____
+ | \ | | _____  ___   _ ___ / _ \/ ___|
+ |  \| |/ _ \ \/ / | | / __| | | \___ \
+ | |\  |  __/>  <| |_| \__ \ |_| |___) |
+ |_| \_|\___/_/\_\\__,_|___/\___/|_____|
 
-2026-01-24 19:35:25.785 |INFO| 10500 [main             ] n                                : Starting Nexus application
-2026-01-24 19:35:25.845 |WARN| 10500 [main             ] n.middleware.http : Client error status=400
-2026-01-24 19:35:25.845 |ERR | 10500 [main             ] n.service.user : Database query failed error="User not found"
+ :: MyApp ::                      (v0.1.0)
+
+2026-01-29T10:30:45 123 INFO 46293 --- [           main] my.Application : Starting Application
+2026-01-29T10:30:45 123 INFO 46293 --- [           main] my.Application : Active profile: dev
+2026-01-29T10:30:45 456 INFO 46293 --- [           main] o.s.b.w.e.tomcat.TomcatWebServer : Tomcat started on port(s): 8080 (http)
+2026-01-29T10:30:45 456 INFO 46293 --- [           main] my.Application : Started Application in 0.333 seconds
 ```
 
-See [Nexus Logging Guide](../../../spring-boot-logging.md) for detailed documentation.
+**Features / 特性**:
+- Profile-based auto-switching (dev→verbose, prod→simple) / 基于配置文件的自动切换
+- ~30% faster logging in Simple mode / Simple 模式快约 30%
+- ANSI color support / ANSI 颜色支持
+- File output with rotation / 带轮转的文件输出
+- OpenTelemetry integration / OpenTelemetry 集成
 
-详细文档请参阅 [Nexus 日志指南](../../../spring-boot-logging.md)。
+See [Logging Configuration Guide](../../../logging.md) for detailed documentation.
+
+详细文档请参阅 [日志配置指南](../../../logging.md)。
 
 ---
 

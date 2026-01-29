@@ -93,7 +93,9 @@
       "Bash(PATH=\"/Users/yimiliya/.cargo/bin:/Users/yimiliya/.rustup/bin:$PATH\" cargo check:*)",
       "Bash(claude mcp add:*)",
       "Bash(gh api:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(NEXUS_PROFILE=dev cargo run:*)",
+      "Bash(NEXUS_PROFILE=prod cargo run:*)"
     ]
   }
 }

@@ -4720,6 +4720,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "nexus-data-rdbc"
+version = "0.1.0-alpha"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "futures",
+ "futures-util",
+ "nexus-data-commons",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "nexus-examples"
 version = "0.1.0-alpha"
 dependencies = [
@@ -4727,12 +4745,16 @@ dependencies = [
  "env_logger 0.11.8",
  "nexus-core",
  "nexus-http",
+ "nexus-macros",
+ "nexus-observability",
  "nexus-resilience",
  "nexus-router",
+ "nexus-starter",
  "nexus-validation",
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -4872,6 +4894,7 @@ dependencies = [
  "log",
  "metrics",
  "metrics-exporter-prometheus",
+ "nexus-config",
  "nexus-runtime",
  "once_cell",
  "opentelemetry 0.31.0",
@@ -5036,6 +5059,33 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "nexus-starter"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "nexus-actuator",
+ "nexus-cache",
+ "nexus-config",
+ "nexus-data-rdbc",
+ "nexus-http",
+ "nexus-macros",
+ "nexus-middleware",
+ "nexus-observability",
+ "nexus-router",
+ "nexus-runtime",
+ "nexus-schedule",
+ "nexus-security",
+ "nexus-tx",
+ "num_cpus",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

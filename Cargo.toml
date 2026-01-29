@@ -21,6 +21,7 @@ members = [
     "crates/nexus-actuator",
     "crates/nexus-web3",  # Enabled: using alloy 1.4 compatible with serde 1.0
     "crates/nexus-macros",
+    "crates/nexus-starter",
     "crates/nexus-benches",
     "crates/nexus-data-commons",
     "examples",

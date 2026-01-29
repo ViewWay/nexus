@@ -23,6 +23,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 default = ["trace", "log", "metrics", "nexus-format"]
 trace = ["dep:opentelemetry", "dep:opentelemetry_sdk"]
+config = ["dep:nexus-config"]
 # DEPRECATED: jaeger 特性已弃用 - opentelemetry-jaeger 包不再维护
 # 建议使用 otlp 特性替代，它连接到 OpenTelemetry Collector
 # DEPRECATED: jaeger feature is unmaintained - use otlp instead
@@ -35,7 +36,7 @@ log = []
 nexus-format = []
 json = ["tracing-subscriber/json"]
 actuator = ["metrics", "log"]
-full = ["trace", "jaeger", "otlp", "metrics", "log", "json", "actuator", "nexus-format"]
+full = ["trace", "jaeger", "otlp", "metrics", "log", "json", "actuator", "nexus-format", "config"]
 
 [dependencies]
 # Tracing / 追踪 (Spring Cloud Sleuth, Distributed Tracing)
@@ -70,6 +71,7 @@ chrono = { workspace = true }
 
 # Runtime / 运行时
 nexus-runtime = { path = "../nexus-runtime" }
+nexus-config = { path = "../nexus-config", optional = true }
 
 # HTTP types / HTTP类型
 http = { workspace = true }

@@ -251,26 +251,51 @@ async fn handle_request(req: nexus_http::Request) -> Result<Response, nexus_http
 
 ### Nexus Logging
 
+Nexus provides a unified logging system with two modes: **Verbose** (development) and **Simple** (production).
+
 ```rust
-use nexus_observability::log::Logger;
-#[cfg(feature = "nexus-format")]
-use nexus_observability::{Banner, StartupLogger};
+use nexus_observability::log::{Logger, LoggerConfig, LogLevel, LogMode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    #[cfg(feature = "nexus-format")]
-    {
-        Banner::print("MyApp", "0.1.0", 8080);
-        Logger::init_spring_style()?;
+    // Automatic mode selection based on profile
+    let config = LoggerConfig {
+        level: LogLevel::Info,
+        mode: LogMode::from_profile(Some("dev")),  // dev→Verbose, prod→Simple
+        ..Default::default()
+    };
 
-        let startup = StartupLogger::new();
-        startup.log_starting("MyApplication");
-        startup.log_server_started(8080, startup.elapsed_ms());
-    }
+    Logger::init_with_config(config)?;
 
-    tracing::info!(target: "my.app", "Application running");
+    tracing::info!("Application started");
     Ok(())
 }
 ```
+
+**Configuration via Environment Variables:**
+```bash
+# Set log level
+export NEXUS_LOG_LEVEL=DEBUG
+
+# Set log mode explicitly
+export NEXUS_LOG_MODE=simple  # or "verbose"
+
+# Set profile (affects default mode)
+export NEXUS_PROFILE=prod  # dev→verbose, prod→simple
+```
+
+**Output Comparison:**
+
+| Mode | Format |
+|------|--------|
+| Verbose (dev) | `2026-01-29 22:35:42.872 \|INFO\| 55377 [main] n.http.server : Request received` |
+| Simple (prod) | `INFO n.http.server: Request received` |
+
+**Features:**
+- Profile-based auto-switching (dev → verbose, prod → simple)
+- ~30% faster logging in Simple mode
+- Spring Boot-style startup logs
+- ANSI color support
+- File output with rotation
 
 ## 🚀 Performance
 

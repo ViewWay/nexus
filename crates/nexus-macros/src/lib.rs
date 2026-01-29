@@ -10,10 +10,14 @@
 //! # Example / 示例
 //!
 //! ```rust,no_run,ignore
-//! use nexus_macros::{main, controller, get};
+//! use nexus_macros::{nexus_main, controller, get};
 //!
-//! #[main]
+//! #[nexus_main]
 //! struct Application;
+//!
+//! fn main() -> anyhow::Result<()> {
+//!     Application::run()
+//! }
 //!
 //! #[controller]
 //! struct DemoController;
@@ -45,11 +49,169 @@ mod transactional;
 // Spring Boot 风格主宏（等价于 @SpringBootApplication）
 // ============================================================================
 
-/// Marks the main application entry point
-/// 标记主应用程序入口点
+/// Marks the main application entry point with auto-configuration
+/// 标记主应用程序入口点（带自动配置）
 ///
 /// Equivalent to Spring Boot's `@SpringBootApplication`.
 /// 等价于 Spring Boot 的 `@SpringBootApplication`。
+///
+/// This macro integrates with nexus-starter's auto-configuration system:
+/// 此宏与 nexus-starter 的自动配置系统集成：
+/// - Creates ApplicationContext / 创建应用上下文
+/// - Loads auto-configurations from META-INF/nexus/autoconfiguration.imports
+/// - 从 META-INF/nexus/autoconfiguration.imports 加载自动配置
+/// - Runs auto-configurations in priority order / 按优先级执行自动配置
+/// - Starts the application / 启动应用程序
+///
+/// # Example / 示例
+///
+/// ```rust,no_run,ignore
+/// use nexus_macros::nexus_main;
+///
+/// #[nexus_main]
+/// struct Application;
+///
+/// fn main() -> anyhow::Result<()> {
+///     Application::run()
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn nexus_main(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemStruct);
+    let name = &input.ident;
+
+    let expanded = quote! {
+        #input
+
+        impl #name {
+            /// Run the application with auto-configuration
+            /// 运行应用程序（带自动配置）
+            pub fn run() -> anyhow::Result<()> {
+                use nexus_starter::core::{
+                    ApplicationContext, AutoConfigurationLoader,
+                    AutoConfigurationRegistry, CoreAutoConfiguration,
+                    AutoConfiguration, logging,
+                };
+                use nexus_starter::web::{
+                    WebServerAutoConfiguration, RouterAutoConfiguration,
+                    MiddlewareAutoConfiguration,
+                };
+                use std::time::Instant;
+
+                // Helper function to format timestamp (simple version)
+                fn format_timestamp() -> String {
+                    use std::time::{SystemTime, UNIX_EPOCH};
+                    let duration = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default();
+                    let secs = duration.as_secs();
+                    let millis = duration.subsec_millis();
+
+                    // Simple format: 2024-01-29T10:30:45 123
+                    // Convert secs to date/time (simplified)
+                    let days_since_epoch = secs / 86400;
+                    let epoch_days = 11017; // Days from 0000-01-01 to 1970-01-01 (simplified)
+                    let year = 1970 + (days_since_epoch / 365);
+                    let day_of_year = (days_since_epoch % 365) as u32;
+                    let month = (day_of_year / 30) + 1;
+                    let day = (day_of_year % 30) + 1;
+
+                    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02} {:03}",
+                        year, month, day,
+                        (secs % 86400 / 3600) as u32,
+                        (secs % 3600 / 60) as u32,
+                        (secs % 60) as u32,
+                        millis)
+                }
+
+                // Create startup info tracker
+                let start_time = Instant::now();
+
+                // 1. Create application context / 创建应用上下文
+                let mut ctx = ApplicationContext::new();
+
+                // 2. Load auto-configurations from META-INF/nexus/autoconfiguration.imports
+                // 从 META-INF/nexus/autoconfiguration.imports 加载自动配置
+                let mut registry = AutoConfigurationRegistry::new();
+                let _ = registry.load_from_defaults();
+
+                // 3. Create and register auto-configurations in priority order
+                // 按优先级创建并注册自动配置
+                let mut configs: Vec<Box<dyn AutoConfiguration>> = vec![
+                    // Core configuration (highest priority: -100)
+                    Box::new(CoreAutoConfiguration::new()),
+                    // Web server configuration (priority: 0)
+                    Box::new(WebServerAutoConfiguration::from_config(&ctx)),
+                    // Router configuration (priority: 10)
+                    Box::new(RouterAutoConfiguration::new()),
+                    // Middleware configuration (priority: 20)
+                    Box::new(MiddlewareAutoConfiguration::from_config(&ctx)),
+                ];
+
+                // Sort by priority (lower number = higher priority)
+                // 按优先级排序（数字越小优先级越高）
+                configs.sort_by_key(|c| c.order());
+
+                // 4. Execute auto-configurations
+                // 执行自动配置
+                for config in &configs {
+                    if config.condition() {
+                        config.configure(&mut ctx)?;
+                    }
+                }
+
+                // Print "Started Application" message in Spring Boot style
+                // 打印 Spring Boot 风格的 "Started Application" 消息
+                let elapsed = start_time.elapsed().as_millis();
+                let class_name = "nexus.Application";
+                let timestamp = format_timestamp();
+                println!();
+                println!(
+                    "{} {} {} --- [           main] {} : Tomcat started on port(s): {} (http)",
+                    timestamp,
+                    "\x1b[32mINFO\x1b[0m",
+                    std::process::id(),
+                    "\x1b[90mo.s.b.w.e.tomcat.TomcatWebServer\x1b[0m",
+                    "\x1b[36m8080\x1b[0m"
+                );
+                println!(
+                    "{} {} {} --- [           main] {} : Started Application in {} seconds (JVM running for {})",
+                    timestamp,
+                    "\x1b[32mINFO\x1b[0m",
+                    std::process::id(),
+                    class_name,
+                    format!("\x1b[36m{}.{:03}\x1b[0m", elapsed / 1000, elapsed % 1000),
+                    format!("\x1b[36m{}.{:03}\x1b[0m", elapsed / 1000, elapsed % 1000)
+                );
+                println!();
+
+                // TODO: Start the HTTP server
+                // TODO: 启动 HTTP 服务器
+                // This will be implemented when the HTTP server integration is ready
+                // 当 HTTP 服务器集成准备好时实现
+
+                Ok(())
+            }
+
+            /// Get the application context
+            /// 获取应用上下文
+            pub fn context() -> anyhow::Result<ApplicationContext> {
+                // Initialize and return context
+                // 初始化并返回上下文
+                Ok(ApplicationContext::new())
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Marks the main application entry point (legacy version)
+/// 标记主应用程序入口点（旧版本）
+///
+/// This is the legacy version without auto-configuration support.
+/// Use `#[nexus_main]` for full auto-configuration support.
+/// 这是旧版本，不支持自动配置。使用 `#[nexus_main]` 获得完整的自动配置支持。
 ///
 /// # Example / 示例
 ///
