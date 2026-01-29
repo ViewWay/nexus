@@ -6,7 +6,7 @@
 //! This module provides row mapping from database results to Rust types.
 //! 本模块提供从数据库结果到 Rust 类型的行映射。
 
-use crate::R2dbcError;
+use crate::{R2dbcError, R2dbcResult};
 
 /// Database row
 /// 数据库行
@@ -222,7 +222,9 @@ impl Row {
                 ColumnValue::I32(i) => serde_json::Value::Number((*i).into()),
                 ColumnValue::I64(i) => serde_json::Value::Number((*i).into()),
                 ColumnValue::F64(f) => {
-                    serde_json::Number::from_f64(*f).unwrap_or(serde_json::Number::new(0))
+                    serde_json::Number::from_f64(*f)
+                        .map(serde_json::Value::Number)
+                        .unwrap_or_else(|| serde_json::json!(0))
                 },
                 ColumnValue::String(s) => serde_json::Value::String(s.clone()),
                 ColumnValue::Bytes(b) => serde_json::Value::Array(
@@ -263,7 +265,9 @@ impl Row {
                     ColumnValue::I32(i) => serde_json::Value::Number((*i).into()),
                     ColumnValue::I64(i) => serde_json::Value::Number((*i).into()),
                     ColumnValue::F64(f) => {
-                        serde_json::Number::from_f64(*f).unwrap_or(serde_json::Number::new(0))
+                        serde_json::Number::from_f64(*f)
+                            .map(serde_json::Value::Number)
+                            .unwrap_or_else(|| serde_json::json!(0))
                     },
                     ColumnValue::String(s) => serde_json::Value::String(s.clone()),
                     ColumnValue::Bytes(b) => serde_json::Value::Array(
@@ -549,7 +553,6 @@ pub trait DeriveRowMapper: Sized {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
 
     #[test]
     fn test_row_new() {
@@ -584,14 +587,16 @@ mod tests {
     #[test]
     fn test_from_column_bool() {
         assert_eq!(FromColumn::from_column(&ColumnValue::Bool(true)), Some(true));
-        assert_eq!(FromColumn::from_column::<bool>(&ColumnValue::Null), None);
+        let result: Option<bool> = FromColumn::from_column(&ColumnValue::Null);
+        assert_eq!(result, None);
     }
 
     #[test]
     fn test_from_column_i32() {
         assert_eq!(FromColumn::from_column(&ColumnValue::I32(42)), Some(42));
         assert_eq!(FromColumn::from_column(&ColumnValue::I64(42)), Some(42));
-        assert_eq!(FromColumn::from_column::<i32>(&ColumnValue::Null), None);
+        let result: Option<i32> = FromColumn::from_column(&ColumnValue::Null);
+        assert_eq!(result, None);
     }
 
     #[test]

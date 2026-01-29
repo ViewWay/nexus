@@ -1,0 +1,20 @@
+[package]
+name = "nexus-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+# Dependencies for fuzz targets
+nexus-http = { path = "../crates/nexus-http" }
+nexus-router = { path = "../crates/nexus-router" }
+nexus-middleware = { path = "../crates/nexus-middleware" }
+nexus-runtime = { path = "../crates/nexus-runtime" }
+
+# Prevent dependency on workspace packages
+[workspace]

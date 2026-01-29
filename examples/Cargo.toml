@@ -43,6 +43,14 @@ path = "src/starter_example.rs"
 name = "logging_demo"
 path = "src/logging_demo.rs"
 
+[[bin]]
+name = "techempower_benchmark"
+path = "src/techempower_benchmark.rs"
+
+[[bin]]
+name = "stress_test"
+path = "src/stress_test.rs"
+
 [dependencies]
 # Core framework / 核心框架
 nexus-core = { path = "../crates/nexus-core" }
@@ -71,3 +79,6 @@ tracing = "0.1"
 
 # Utilities / 工具
 anyhow = { workspace = true }
+
+# HTTP client for stress tests / 压力测试的 HTTP 客户端
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
