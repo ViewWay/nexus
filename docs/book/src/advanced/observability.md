@@ -1,7 +1,7 @@
 # Observability / 可观测性
 
-> **Status**: Phase 5 In Progress 🔄  
-> **状态**: 第5阶段进行中 🔄
+> **Status**: Phase 5 Complete ✅
+> **状态**: 第5阶段完成 ✅
 
 Nexus provides comprehensive observability including distributed tracing, metrics, and structured logging.
 
