@@ -4881,6 +4881,7 @@ dependencies = [
  "nexus-http",
  "nexus-router",
  "nexus-runtime",
+ "nexus-security",
  "pin-project-lite",
  "thiserror 2.0.18",
  "time",

@@ -44,6 +44,7 @@ http = { workspace = true }
 nexus-core = { path = "../nexus-core" }
 nexus-http = { path = "../nexus-http" }
 nexus-router = { path = "../nexus-router" }
+nexus-security = { path = "../nexus-security" }
 
 # Runtime / 运行时
 nexus-runtime = { path = "../nexus-runtime" }

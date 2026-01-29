@@ -20,8 +20,7 @@
 
 pub mod compression;
 pub mod cors;
-// TODO: Fix jwt_auth to match current Middleware trait signature
-// pub mod jwt_auth;
+pub mod jwt_auth;
 pub mod logger;
 pub mod middleware;
 pub mod static_files;
@@ -43,8 +42,7 @@ pub type Result<T> = nexus_http::Result<T>;
 // 重新导出中间件类型
 pub use compression::CompressionMiddleware;
 pub use cors::{CorsConfig, CorsMiddleware};
-// TODO: Fix jwt_auth to match current Middleware trait signature
-// pub use jwt_auth::{JwtAuthenticationMiddleware, JwtRequestExt};
+pub use jwt_auth::{JwtAuthenticationMiddleware, JwtRequestExt};
 pub use logger::LoggerMiddleware;
 pub use middleware::MiddlewareStack;
 pub use static_files::StaticFiles;

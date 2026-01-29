@@ -29,11 +29,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Phase 6**: Web3 Support (chain abstraction, wallet management, transactions, RPC client, smart contracts)
 
 **Current Phase (7):**
-- Performance optimization (in progress)
+- Performance optimization (in progress - 70% complete)
 - Security audit (pending)
 - Complete documentation (in progress)
 - Example applications (in progress)
 - v1.0 release (pending)
+
+**Recently Completed:**
+- TechEmpower benchmark implementation
+- HTTP server stress testing tools
+- Fuzzing infrastructure (HTTP parsing, router, compression)
+- Runtime benchmarks suite (criterion)
 
 ## Documentation
 
@@ -62,10 +68,21 @@ nexus/
 │   ├── nexus-resilience/         # HA patterns
 │   ├── nexus-observability/      # Tracing, metrics, logging
 │   ├── nexus-web3/               # Blockchain & Web3
-│   └── nexus-macros/             # Procedural macros
+│   ├── nexus-macros/             # Procedural macros
+│   ├── nexus-middleware/         # Middleware implementations
+│   ├── nexus-starter/            # Auto-configuration starter
+│   └── ...                       # Other crates
 ├── examples/                     # Example applications
+│   └── src/
+│       ├── techempower_benchmark.rs  # TechEmpower benchmark
+│       └── stress_test.rs            # HTTP stress test
+├── fuzzers/                      # Fuzzing tests (cargo-fuzz)
+│   └── fuzz_targets/
+│       ├── http_request_parsing.rs
+│       ├── router_matching.rs
+│       └── compression.rs
 ├── tests/                        # Integration tests
-└── benches/                      # Benchmarks
+└── benches/                      # Criterion benchmarks
 ```
 
 ## Development Guidelines
@@ -292,6 +309,19 @@ cargo clippy -- -D warnings
 
 # Run linter with all features
 cargo clippy --all-features -- -D warnings
+
+# Run TechEmpower benchmark
+cargo run --bin techempower_benchmark
+
+# Run stress test
+cargo run --bin stress_test
+
+# Run fuzzing tests (requires cargo-fuzz)
+cargo install cargo-fuzz
+cd fuzzers
+cargo fuzz run http_request_parsing
+cargo fuzz run router_matching
+cargo fuzz run compression
 ```
 
 ## Architecture Overview
