@@ -220,7 +220,7 @@ nacos = "0.0"
 
 # System Info / 系统信息
 # Equivalent to: Spring Boot Actuator system metrics
-sysinfo = "0.37.2"
+sysinfo = "0.38.0"
 
 # Testing / 测试
 # Equivalent to: Spring Test
@@ -244,7 +244,7 @@ percent-encoding = "2.3"
 # Additional dependencies / 额外依赖
 mime = "0.3"
 mime_guess = "2.0"
-secp256k1 = "0.30"
+secp256k1 = "0.31"
 bip39 = "2.0"
 siphasher = "1.0"
 subtle = "2.5"
@@ -253,12 +253,12 @@ matchit = "0.9.1"
 serde_yaml = "0.9"
 proc-macro-error = "1.0"
 proc-macro-error-attr = "1.0"
-tracing-opentelemetry = "0.29"
-opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
+tracing-opentelemetry = "0.32"
+opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic"] }
 # opentelemetry-prometheus is discontinued - removed due to security vulnerabilities
 # Use custom metrics export or opentelemetry-prometheus-text-exporter instead
 prometheus = "0.14"
-metrics-exporter-prometheus = "0.16"
+metrics-exporter-prometheus = "0.18"
 tracing-core = "0.1"
 log = "0.4"
 slog = "2.8"
