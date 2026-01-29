@@ -35,7 +35,7 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use crate::{Error, Result};
+use crate::Error;
 
 /// HTTP/2 frame types
 /// HTTP/2 帧类型

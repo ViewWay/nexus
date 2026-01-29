@@ -150,7 +150,7 @@ where
                 .or_else(|| req.header("X-Real-IP"))
                 .map(|s| s.to_string());
 
-            let user_agent = req.header("User-Agent").map(|s| s.to_string());
+            let _user_agent = req.header("User-Agent").map(|s| s.to_string());
 
             let start = Instant::now();
 

@@ -78,6 +78,30 @@ impl Response {
         self
     }
 
+    /// Take the body out of the response
+    /// 取出响应body
+    pub fn take_body(&mut self) -> Body {
+        std::mem::replace(&mut self.body, Body::empty())
+    }
+
+    /// Set a new body
+    /// 设置新body
+    pub fn set_body(&mut self, body: Body) {
+        self.body = body;
+    }
+
+    /// Insert a header
+    /// 插入header
+    pub fn insert_header(&mut self, name: impl Into<String>, value: impl Into<String>) {
+        self.headers.insert(name.into(), value.into());
+    }
+
+    /// Remove a header
+    /// 移除header
+    pub fn remove_header(&mut self, name: impl AsRef<str>) {
+        self.headers.remove(name.as_ref());
+    }
+
     /// Create a JSON response
     /// 创建JSON响应
     pub fn json<T: serde::Serialize>(value: &T) -> Self {

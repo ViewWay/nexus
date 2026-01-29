@@ -95,16 +95,8 @@ proptest = { workspace = true }
 # Async runtime for testing (Spring Test Context)
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }
 
-# Benchmarks will be added in Phase 1
-# 基准测试将在第1阶段添加
-# [[bench]]
-# name = "runtime"
-# harness = false
-#
-# [[bench]]
-# name = "scheduler"
-# harness = false
-#
-# [[bench]]
-# name = "io"
-# harness = false
+# Benchmark suite
+# 基准测试套件
+[[bench]]
+name = "runtime_bench"
+harness = false

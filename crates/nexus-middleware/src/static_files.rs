@@ -207,7 +207,7 @@ impl StaticFiles {
             let name = entry.file_name().to_string_lossy().to_string();
             let is_dir = entry
                 .file_type()
-                .map(|ft: std::fs::FileType| ft.is_dir())
+                .map(|ft| ft.is_dir())
                 .unwrap_or(false);
 
             let suffix = if is_dir { "/" } else { "" };

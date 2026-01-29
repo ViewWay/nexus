@@ -167,7 +167,12 @@ pub enum SelectMultipleOutput<T> {
 /// Internal helper for select macro binding
 /// select宏绑定的内部辅助
 pub struct SelectMultipleBinding<T> {
+    /// Index of the completed future
+    /// 完成的future的索引
     pub index: usize,
+
+    /// Output value from the future
+    /// 来自future的输出值
     pub output: Option<T>,
 }
 

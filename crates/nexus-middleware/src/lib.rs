@@ -34,6 +34,9 @@ pub use nexus_router::{Middleware, Next};
 
 // Re-export result type
 // 重新导出结果类型
+///
+/// Result type for middleware operations
+/// 中间件操作的Result类型
 pub type Result<T> = nexus_http::Result<T>;
 
 // Re-export middleware types

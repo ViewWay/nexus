@@ -4,8 +4,6 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use super::{Request, Response};
-
 /// Extension trait for Request
 /// Request的扩展trait
 pub trait RequestExt {

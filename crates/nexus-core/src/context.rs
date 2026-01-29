@@ -38,15 +38,26 @@ pub struct RequestContext {
 
 /// Shared state
 /// 共享状态
+///
+/// This can be used to share data across the request lifecycle.
+/// 这可以用于在请求生命周期中共享数据。
 #[derive(Clone, Default)]
 pub struct State {
+    /// Inner state data
+    /// 内部状态数据
+    #[allow(dead_code)]
     inner: Arc<state::Inner>,
 }
 
 mod state {
+    /// Inner state representation
+    /// 内部状态表示
     #[derive(Default)]
-    pub struct Inner {
-        pub data: std::sync::RwLock<super::Extensions>,
+    pub(crate) struct Inner {
+        /// Shared data storage
+        /// 共享数据存储
+        #[allow(dead_code)]
+        pub(crate) data: std::sync::RwLock<super::Extensions>,
     }
 }
 
