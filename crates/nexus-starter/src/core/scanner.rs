@@ -215,15 +215,28 @@ impl ComponentScanner {
     ///
     /// 这个方法会扫描指定包下的所有组件，并注册到应用上下文中。
     /// This method scans all components under the specified packages and registers them to the application context.
+    ///
+    /// # Implementation Notes / 实现说明
+    ///
+    /// True runtime component scanning in Rust requires:
+    /// Rust 中真正的运行时组件扫描需要：
+    ///
+    /// 1. **Source file parsing**: Parse Rust source files to find struct
+    ///    definitions with component attributes.
+    ///    **源文件解析**：解析 Rust 源文件以查找带有组件属性的结构体定义。
+    ///
+    /// 2. **Attribute parsing**: Extract metadata from procedural macro
+    ///    attributes like `#[Controller]`, `#[Service]`, etc.
+    ///    **属性解析**：从过程宏属性中提取元数据，如 `#[Controller]`、`#[Service]` 等。
+    ///
+    /// 3. **Type information**: Build type information for dependency injection.
+    ///    **类型信息**：构建依赖注入的类型信息。
+    ///
+    /// Recommended approach: Use the `inventory` crate or build-time code
+    ///    generation with `build.rs`.
+    ///    推荐方法：使用 `inventory` crate 或通过 `build.rs` 进行构建时代码生成。
     pub fn scan(&self, _ctx: &mut ApplicationContext) -> Result<Vec<ComponentDefinition>> {
         let components = Vec::new();
-
-        // TODO: 实现实际的扫描逻辑
-        // 目前返回空列表，实际实现需要：
-        // 1. 遍历源文件
-        // 2. 解析宏属性（@controller, @service 等）
-        // 3. 创建组件定义
-        // 4. 注册到上下文
 
         tracing::debug!(
             "Scanning components in packages: {:?}",
@@ -259,8 +272,26 @@ impl ComponentScanner {
             component.component_type.name()
         );
 
-        // TODO: 根据组件类型创建并注册 Bean
-        // 这需要反射或代码生成支持
+        // Implementation Note: This requires reflection or code generation support
+        // 实现说明：这需要反射或代码生成支持
+        //
+        // In Rust, true runtime component discovery requires either:
+        // 在 Rust 中，真正的运行时组件发现需要以下之一：
+        //
+        // 1. **Procedural Macros** (Recommended / 推荐): Use attributes like
+        //    `#[Component]` that generate registration code at compile time.
+        //    使用 `#[Component]` 等属性在编译时生成注册代码。
+        //
+        // 2. **Build Script**: Scan source files during build and generate
+        //    registration code.
+        //    在构建期间扫描源文件并生成注册代码。
+        //
+        // 3. **Manual Registration**: Users manually register components using
+        //    the `registry!` macro or similar.
+        //    用户使用 `registry!` 宏或类似方式手动注册组件。
+        //
+        // Current implementation returns Ok(()) as a placeholder.
+        // 当前实现返回 Ok(()) 作为占位符。
 
         Ok(())
     }

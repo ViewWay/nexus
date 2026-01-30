@@ -7,6 +7,12 @@ use crate::core::{AutoConfiguration, ApplicationContext};
 use crate::core::logging::{self, StartupInfo};
 use anyhow::Result;
 
+/// Get the number of available CPU cores
+/// 获取可用的 CPU 核心数
+fn available_parallelism() -> usize {
+    num_cpus::get()
+}
+
 // ============================================================================
 // CoreAutoConfiguration / 核心自动配置
 // ============================================================================
@@ -66,7 +72,7 @@ impl CoreAutoConfiguration {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            worker_threads: num_cpus::get(),
+            worker_threads: available_parallelism(),
         }
     }
 

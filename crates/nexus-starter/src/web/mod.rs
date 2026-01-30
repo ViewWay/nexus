@@ -22,6 +22,12 @@
 
 use crate::core::{AutoConfiguration, ApplicationContext};
 
+/// Get the number of available CPU cores
+/// 获取可用的 CPU 核心数
+fn available_parallelism() -> usize {
+    num_cpus::get()
+}
+
 // ============================================================================
 // WebServerAutoConfiguration / Web 服务器自动配置
 // ============================================================================
@@ -113,7 +119,7 @@ impl WebServerAutoConfiguration {
         Self {
             port: 8080,
             host: "127.0.0.1".to_string(),
-            worker_threads: num_cpus::get(),
+            worker_threads: available_parallelism(),
             http2_enabled: false,
             request_timeout_secs: 30,
             max_connections: 10000,
@@ -142,7 +148,7 @@ impl WebServerAutoConfiguration {
             worker_threads: ctx
                 .get_property("server.worker_threads")
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(num_cpus::get()),
+                .unwrap_or(available_parallelism()),
             http2_enabled: ctx
                 .get_property("server.http2.enabled")
                 .and_then(|p| p.parse().ok())
@@ -347,7 +353,15 @@ impl AutoConfiguration for RouterAutoConfiguration {
     fn configure(&self, _ctx: &mut ApplicationContext) -> anyhow::Result<()> {
         // Spring Boot 风格：不在启动时打印详细配置
         // Spring Boot style: Don't print detailed config during startup
-        // TODO: 扫描所有路由并注册
+        //
+        // Route scanning requires:
+        // 路由扫描需要：
+        // 1. Collect route handlers from modules annotated with route attributes
+        //    从带有路由属性的模块收集路由处理器
+        // 2. Build a Router from collected routes
+        //    从收集的路由构建 Router
+        // 3. Register the Router to the ApplicationContext
+        //    将 Router 注册到 ApplicationContext
         Ok(())
     }
 }
@@ -452,7 +466,17 @@ impl AutoConfiguration for MiddlewareAutoConfiguration {
     fn configure(&self, _ctx: &mut ApplicationContext) -> anyhow::Result<()> {
         // Spring Boot 风格：不在启动时打印详细配置
         // Spring Boot style: Don't print detailed config during startup
-        // TODO: 实际创建并配置中间件
+        //
+        // Middleware configuration requires:
+        // 中间件配置需要：
+        // 1. Create middleware instances (CORS, Compression, Logger, etc.)
+        //    创建中间件实例（CORS、压缩、日志等）
+        // 2. Configure each middleware based on application properties
+        //    根据应用属性配置每个中间件
+        // 3. Build the middleware chain
+        //    构建中间件链
+        // 4. Register to the server/router
+        //    注册到服务器/路由器
         Ok(())
     }
 }

@@ -232,28 +232,108 @@ impl ConfigurationLoader {
     }
 
     /// 解析 TOML 配置
+    /// Parse TOML configuration
     fn parse_toml(&mut self, content: &str) -> Result<()> {
-        // 简单的 TOML 解析（TODO: 使用 toml crate）
-        for line in content.lines() {
-            let line = line.trim();
-            // 跳过注释和空行
-            if line.is_empty() || line.starts_with('#') {
-                continue;
-            }
-            // 解析 key = value
-            if let Some(eq_pos) = line.find('=') {
-                let key = line[..eq_pos].trim();
-                let value = line[eq_pos + 1..].trim().trim_matches('"');
-                self.properties.insert(key.to_string(), value.to_string());
-            }
-        }
+        // 使用 toml crate 解析 / Parse using toml crate
+        let value: toml::Value = toml::from_str(content)
+            .map_err(|e| anyhow::anyhow!("Failed to parse TOML: {}", e))?;
+
+        // 递归解析 TOML 值并展平为点分隔的键
+        // Recursively parse TOML value and flatten to dot-separated keys
+        self.insert_toml_value(String::new(), &value);
         Ok(())
     }
 
+    /// 递归插入 TOML 值
+    /// Recursively insert TOML value
+    fn insert_toml_value(&mut self, prefix: String, value: &toml::Value) {
+        match value {
+            toml::Value::String(s) => {
+                self.properties.insert(prefix, s.clone());
+            }
+            toml::Value::Integer(i) => {
+                self.properties.insert(prefix.clone(), i.to_string());
+            }
+            toml::Value::Float(f) => {
+                self.properties.insert(prefix.clone(), f.to_string());
+            }
+            toml::Value::Boolean(b) => {
+                self.properties.insert(prefix.clone(), b.to_string());
+            }
+            toml::Value::Array(arr) => {
+                for (i, item) in arr.iter().enumerate() {
+                    let key = format!("{}[{}]", prefix, i);
+                    self.insert_toml_value(key, item);
+                }
+            }
+            toml::Value::Table(table) => {
+                for (k, v) in table {
+                    let key = if prefix.is_empty() {
+                        k.clone()
+                    } else {
+                        format!("{}.{}", prefix, k)
+                    };
+                    self.insert_toml_value(key, v);
+                }
+            }
+            toml::Value::Datetime(dt) => {
+                self.properties.insert(prefix, dt.to_string());
+            }
+        }
+    }
+
     /// 解析 YAML 配置
-    fn parse_yaml(&mut self, _content: &str) -> Result<()> {
-        // TODO: 实现 YAML 解析
+    /// Parse YAML configuration
+    fn parse_yaml(&mut self, content: &str) -> Result<()> {
+        // 使用 serde_yaml 解析 / Parse using serde_yaml
+        let value: serde_yaml::Value = serde_yaml::from_str(content)
+            .map_err(|e| anyhow::anyhow!("Failed to parse YAML: {}", e))?;
+
+        // 递归解析 YAML 值并展平为点分隔的键
+        // Recursively parse YAML value and flatten to dot-separated keys
+        self.insert_yaml_value(String::new(), &value);
         Ok(())
+    }
+
+    /// 递归插入 YAML 值
+    /// Recursively insert YAML value
+    fn insert_yaml_value(&mut self, prefix: String, value: &serde_yaml::Value) {
+        match value {
+            serde_yaml::Value::String(s) => {
+                self.properties.insert(prefix, s.clone());
+            }
+            serde_yaml::Value::Number(n) => {
+                self.properties.insert(prefix.clone(), n.to_string());
+            }
+            serde_yaml::Value::Bool(b) => {
+                self.properties.insert(prefix.clone(), b.to_string());
+            }
+            serde_yaml::Value::Null => {
+                // 跳过 null 值 / Skip null values
+            }
+            serde_yaml::Value::Sequence(arr) => {
+                for (i, item) in arr.iter().enumerate() {
+                    let key = format!("{}[{}]", prefix, i);
+                    self.insert_yaml_value(key, item);
+                }
+            }
+            serde_yaml::Value::Mapping(map) => {
+                for (k, v) in map {
+                    if let Some(key_str) = k.as_str() {
+                        let key = if prefix.is_empty() {
+                            key_str.to_string()
+                        } else {
+                            format!("{}.{}", prefix, key_str)
+                        };
+                        self.insert_yaml_value(key, v);
+                    }
+                }
+            }
+            // Tagged values are handled as their underlying value
+            serde_yaml::Value::Tagged(tagged) => {
+                self.insert_yaml_value(prefix, &tagged.value);
+            }
+        }
     }
 
     /// 解析 JSON 配置

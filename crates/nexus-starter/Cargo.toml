@@ -98,6 +98,10 @@ tracing-subscriber = { workspace = true, features = ["fmt"] }
 once_cell = { workspace = true }
 num_cpus = "1.16"
 
+# 配置解析
+toml = "0.8"
+serde_yaml = "0.9"
+
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }
 

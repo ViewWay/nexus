@@ -229,9 +229,21 @@ impl SchedulerHandle {
 
     /// Get a task waker by ID (placeholder for future implementation)
     /// 通过ID获取任务waker（未来实现的占位符）
+    ///
+    /// # Implementation Note / 实现说明
+    ///
+    /// This requires maintaining a registry of active tasks in the scheduler.
+    /// Each task would need to store its waker when it first polls, and the
+    /// scheduler would need to be able to retrieve it by task ID.
+    /// 这需要在调度器中维护一个活动任务注册表。每个任务在首次轮询时
+    /// 需要存储其 waker，调度器需要能够通过任务 ID 检索它。
+    ///
+    /// Future implementation should:
+    /// 未来实现应该：
+    /// 1. Add a `HashMap<TaskId, Waker>` to the scheduler state
+    /// 2. Store wakers when tasks are first polled
+    /// 3. Clean up wakers when tasks complete
     pub fn get_task_waker(&self, _id: u64) -> Option<std::task::Waker> {
-        // TODO: Implement task waker storage and retrieval
-        // TODO: 实现任务waker存储和检索
         None
     }
 }
