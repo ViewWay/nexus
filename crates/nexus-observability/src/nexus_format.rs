@@ -264,11 +264,23 @@ fn shorten_target(target: &str) -> String {
 /// HTTP request log format helper
 /// HTTP 请求日志格式辅助工具
 pub struct RequestLogFormat {
+    /// HTTP method (GET, POST, etc.)
+    /// HTTP 方法（GET、POST 等）
     pub method: String,
+    /// Request path
+    /// 请求路径
     pub path: String,
+    /// HTTP status code
+    /// HTTP 状态码
     pub status: Option<u16>,
+    /// Request duration in milliseconds
+    /// 请求持续时间（毫秒）
     pub duration_ms: u128,
+    /// User agent string
+    /// 用户代理字符串
     pub user_agent: Option<String>,
+    /// Client IP address
+    /// 客户端 IP 地址
     pub client_ip: Option<String>,
 }
 

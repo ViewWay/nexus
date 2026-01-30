@@ -33,12 +33,8 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::marker::PhantomData;
 
-use crate::chain::BlockNumber;
-use crate::tx::{TransactionBuilder, TxHash, TxType};
 use crate::wallet::Address;
 
 /// Contract error

@@ -3,7 +3,6 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use std::fmt;
 use std::hash::Hash;
 use std::sync::Arc;
 use std::time::Duration;
@@ -11,7 +10,7 @@ use std::time::Duration;
 /// Cache entry with metadata
 /// 带元数据的缓存条目
 #[derive(Debug, Clone)]
-pub struct CacheEntry<V> {
+pub(crate) struct CacheEntry<V> {
     /// The cached value
     /// 缓存的值
     pub value: V,
@@ -40,7 +39,7 @@ pub struct CacheEntry<V> {
 impl<V> CacheEntry<V> {
     /// Create a new cache entry
     /// 创建新的缓存条目
-    pub fn new(value: V) -> Self {
+    pub(crate) fn new(value: V) -> Self {
         let now = Utc::now();
         Self {
             value,
@@ -54,7 +53,7 @@ impl<V> CacheEntry<V> {
 
     /// Create a new cache entry with TTL
     /// 创建带TTL的新缓存条目
-    pub fn with_ttl(value: V, ttl_secs: u64) -> Self {
+    pub(crate) fn with_ttl(value: V, ttl_secs: u64) -> Self {
         let now = Utc::now();
         let expires_at = now + chrono::Duration::seconds(ttl_secs as i64);
         Self {
@@ -69,7 +68,7 @@ impl<V> CacheEntry<V> {
 
     /// Check if the entry has expired
     /// 检查条目是否已过期
-    pub fn is_expired(&self) -> bool {
+    pub(crate) fn is_expired(&self) -> bool {
         if let Some(expires) = self.expires_at {
             Utc::now() > expires
         } else {
@@ -79,7 +78,7 @@ impl<V> CacheEntry<V> {
 
     /// Record a hit
     /// 记录一次命中
-    pub fn hit(&mut self) {
+    pub(crate) fn hit(&mut self) {
         self.hits += 1;
         self.last_access = Utc::now();
     }
@@ -492,4 +491,4 @@ where
 
 /// Simple type alias for String-keyed cache
 /// String键缓存的简单类型别名
-pub type StringCache<V> = MemoryCache<String, V>;
+pub(crate) type StringCache<V> = MemoryCache<String, V>;

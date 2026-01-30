@@ -32,7 +32,7 @@ use syn::{Expr, ItemFn, parse_macro_input};
 ///     // Transaction logic
 /// }
 /// ```
-pub fn transactional_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub(crate) fn transactional_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Parse attribute if not empty
     // 解析属性（如果不为空）
     let options = if attr.is_empty() {

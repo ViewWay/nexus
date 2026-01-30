@@ -102,10 +102,10 @@ impl JwtClaims {
 
     /// Get time until expiration
     /// 获取剩余有效时间
-    pub fn time_until_expiration(&self) -> chrono::Duration {
+    pub fn time_until_expiration(&self) -> Duration {
         let now = Utc::now().timestamp();
         let seconds_left = self.exp - now;
-        chrono::Duration::seconds(seconds_left)
+        Duration::seconds(seconds_left)
     }
 
     /// Convert authorities to Authority enum
@@ -236,7 +236,7 @@ impl JwtUtil {
     pub fn verify_token(token: &str) -> SecurityResult<JwtClaims> {
         let secret = Self::get_secret();
         let decoding_key = DecodingKey::from_secret(secret.as_ref());
-        let mut validation = Validation::new(jsonwebtoken::Algorithm::HS256);
+        let validation = Validation::new(jsonwebtoken::Algorithm::HS256);
 
         decode::<JwtClaims>(token, &decoding_key, &validation)
             .map(|data| {

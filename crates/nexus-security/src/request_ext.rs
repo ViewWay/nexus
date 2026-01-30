@@ -158,7 +158,7 @@ pub async fn get_authentication_from_request(req: &Request) -> Option<Authentica
 /// 便捷函数：将认证设置到Request
 pub fn set_authentication_to_request(
     req: &mut Request,
-    auth: Authentication,
+    _auth: Authentication,
 ) -> Arc<SecurityContextExt> {
     let ctx = SecurityContextExt::set_to_request(req);
     // Note: This is a synchronous function, so we can't await

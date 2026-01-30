@@ -181,7 +181,7 @@ impl KeyGenerator for HashKeyGenerator {
 /// Equivalent to Spring's SpEL expressions in @Cacheable.
 /// 等价于Spring在@Cacheable中的SpEL表达式。
 #[derive(Debug, Clone)]
-pub struct SpelKeyGenerator {
+pub(crate) struct SpelKeyGenerator {
     /// Key expression (e.g., "#id", "#user.id", "#p0")
     /// Key表达式（例如 #id, #user.id, #p0）
     expression: String,
@@ -190,7 +190,7 @@ pub struct SpelKeyGenerator {
 impl SpelKeyGenerator {
     /// Create a new SpEL-style key generator
     /// 创建新的SpEL风格key生成器
-    pub fn new(expression: impl Into<String>) -> Self {
+    pub(crate) fn new(expression: impl Into<String>) -> Self {
         Self {
             expression: expression.into(),
         }
@@ -198,7 +198,7 @@ impl SpelKeyGenerator {
 
     /// Parse expression and generate key from params
     /// 解析表达式并从参数生成key
-    pub fn generate_from_params(&self, params: &[&dyn KeyParam]) -> String {
+    pub(crate) fn generate_from_params(&self, params: &[&dyn KeyParam]) -> String {
         let expr = self.expression.trim();
 
         if expr.starts_with("#p") {
@@ -238,7 +238,7 @@ impl KeyGenerator for SpelKeyGenerator {
 /// Equivalent to Spring's KeyGenerator for custom key construction.
 /// 等价于Spring的用于自定义key构建的KeyGenerator。
 #[derive(Debug, Clone, Default)]
-pub struct KeyBuilder {
+pub(crate) struct KeyBuilder {
     parts: Vec<String>,
     separator: String,
 }
@@ -246,7 +246,7 @@ pub struct KeyBuilder {
 impl KeyBuilder {
     /// Create a new key builder
     /// 创建新的key构建器
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             parts: Vec::new(),
             separator: ":".to_string(),
@@ -255,14 +255,14 @@ impl KeyBuilder {
 
     /// Add a part to the key
     /// 向key添加部分
-    pub fn add(mut self, part: impl Into<String>) -> Self {
+    pub(crate) fn add(mut self, part: impl Into<String>) -> Self {
         self.parts.push(part.into());
         self
     }
 
     /// Add multiple parts
     /// 添加多个部分
-    pub fn add_many(mut self, parts: &[impl AsRef<str>]) -> Self {
+    pub(crate) fn add_many(mut self, parts: &[impl AsRef<str>]) -> Self {
         for part in parts {
             self.parts.push(part.as_ref().to_string());
         }
@@ -271,27 +271,27 @@ impl KeyBuilder {
 
     /// Set separator
     /// 设置分隔符
-    pub fn separator(mut self, sep: impl Into<String>) -> Self {
+    pub(crate) fn separator(mut self, sep: impl Into<String>) -> Self {
         self.separator = sep.into();
         self
     }
 
     /// Build the key
     /// 构建key
-    pub fn build(self) -> String {
+    pub(crate) fn build(self) -> String {
         self.parts.join(&self.separator)
     }
 }
 
 /// Generate a simple cache key
 /// 生成简单的缓存key
-pub fn simple_key(parts: &[&str]) -> String {
+pub(crate) fn simple_key(parts: &[&str]) -> String {
     parts.join(":")
 }
 
 /// Generate a hash-based cache key
 /// 生成基于哈希的缓存key
-pub fn hash_key(data: &str) -> String {
+pub(crate) fn hash_key(data: &str) -> String {
     use std::collections::hash_map::DefaultHasher;
 
     let mut hasher = DefaultHasher::new();

@@ -21,7 +21,7 @@
 //! ```
 
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 /// Circuit state
@@ -199,7 +199,7 @@ impl CircuitBreaker {
     /// 通过断路器执行函数
     pub async fn execute<F, T, E>(&self, f: F) -> Result<T, CircuitBreakerError<E>>
     where
-        F: std::ops::FnOnce() -> futures::future::BoxFuture<'static, Result<T, E>>,
+        F: FnOnce() -> futures::future::BoxFuture<'static, Result<T, E>>,
         T: Send + 'static,
         E: Send + 'static,
     {

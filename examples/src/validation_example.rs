@@ -9,7 +9,7 @@
 //! - `ValidationErrors` → `MethodArgumentNotValidException`
 //! - Manual validation → `Validator`, `ValidationUtils`
 
-use nexus_validation::{Validate, ValidationErrors, ValidationError};
+use nexus_validation::{Validate, ValidationErrors};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

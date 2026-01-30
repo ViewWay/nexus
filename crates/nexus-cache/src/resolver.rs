@@ -7,9 +7,8 @@
 //! - `SimpleCacheResolver` - Basic cache resolver
 //! - `NamedCacheResolver` - Resolve by cache name
 
-use crate::{Cache, CacheManager, MemoryCache};
+use crate::CacheManager;
 use std::collections::HashSet;
-use std::hash::Hash;
 use std::sync::Arc;
 
 /// Cache resolver trait
@@ -68,7 +67,7 @@ impl CacheResolver for SimpleCacheResolver {
 /// Resolves caches by name from the cache manager.
 /// 从缓存管理器按名称解析缓存。
 #[derive(Clone)]
-pub struct NamedCacheResolver {
+pub(crate) struct NamedCacheResolver {
     /// Cache manager
     /// 缓存管理器
     cache_manager: Arc<dyn CacheManager>,
@@ -81,7 +80,7 @@ pub struct NamedCacheResolver {
 impl NamedCacheResolver {
     /// Create a new named cache resolver
     /// 创建新的命名缓存解析器
-    pub fn new(cache_manager: Arc<dyn CacheManager>) -> Self {
+    pub(crate) fn new(cache_manager: Arc<dyn CacheManager>) -> Self {
         Self {
             cache_manager,
             default_cache: crate::DEFAULT_CACHE.to_string(),
@@ -90,7 +89,7 @@ impl NamedCacheResolver {
 
     /// Set default cache name
     /// 设置默认缓存名称
-    pub fn default_cache(mut self, name: impl Into<String>) -> Self {
+    pub(crate) fn default_cache(mut self, name: impl Into<String>) -> Self {
         self.default_cache = name.into();
         self
     }
@@ -121,7 +120,7 @@ impl CacheResolver for NamedCacheResolver {
 /// Tries multiple resolvers in order.
 /// 按顺序尝试多个解析器。
 #[derive(Clone)]
-pub struct CompositeCacheResolver {
+pub(crate) struct CompositeCacheResolver {
     /// Resolvers to try
     /// 要尝试的解析器
     resolvers: Vec<Arc<dyn CacheResolver>>,
@@ -130,7 +129,7 @@ pub struct CompositeCacheResolver {
 impl CompositeCacheResolver {
     /// Create a new composite cache resolver
     /// 创建新的复合缓存解析器
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             resolvers: Vec::new(),
         }
@@ -138,7 +137,7 @@ impl CompositeCacheResolver {
 
     /// Add a resolver
     /// 添加解析器
-    pub fn add_resolver(mut self, resolver: Arc<dyn CacheResolver>) -> Self {
+    pub(crate) fn add_resolver(mut self, resolver: Arc<dyn CacheResolver>) -> Self {
         self.resolvers.push(resolver);
         self
     }
@@ -169,7 +168,7 @@ impl CacheResolver for CompositeCacheResolver {
 /// Contains information about cache resolution.
 /// 包含缓存解析的信息。
 #[derive(Debug, Clone)]
-pub struct CacheResolutionContext {
+pub(crate) struct CacheResolutionContext {
     /// Cache names to resolve
     /// 要解析的缓存名称
     pub cache_names: Vec<String>,
@@ -194,7 +193,7 @@ pub struct CacheResolutionContext {
 impl CacheResolutionContext {
     /// Create a new context
     /// 创建新的上下文
-    pub fn new(cache_names: Vec<String>) -> Self {
+    pub(crate) fn new(cache_names: Vec<String>) -> Self {
         Self {
             cache_names,
             target: String::new(),
@@ -206,21 +205,21 @@ impl CacheResolutionContext {
 
     /// Set target
     /// 设置目标
-    pub fn target(mut self, target: impl Into<String>) -> Self {
+    pub(crate) fn target(mut self, target: impl Into<String>) -> Self {
         self.target = target.into();
         self
     }
 
     /// Set method
     /// 设置方法
-    pub fn method(mut self, method: impl Into<String>) -> Self {
+    pub(crate) fn method(mut self, method: impl Into<String>) -> Self {
         self.method = method.into();
         self
     }
 
     /// Add parameter
     /// 添加参数
-    pub fn add_param(
+    pub(crate) fn add_param(
         mut self,
         param_type: impl Into<String>,
         param_value: impl Into<String>,

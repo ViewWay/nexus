@@ -59,6 +59,8 @@ pub struct ValidationContext {
 }
 
 impl ValidationContext {
+    /// Create a new validation context
+    /// 创建新的验证上下文
     pub fn new(field: impl Into<String>, value: impl Into<String>) -> Self {
         Self {
             field: field.into(),
@@ -68,11 +70,15 @@ impl ValidationContext {
         }
     }
 
+    /// Set custom message
+    /// 设置自定义消息
     pub fn with_message(mut self, message: impl Into<String>) -> Self {
         self.message = Some(message.into());
         self
     }
 
+    /// Set error code
+    /// 设置错误代码
     pub fn with_code(mut self, code: impl Into<String>) -> Self {
         self.code = code.into();
         self
@@ -86,11 +92,22 @@ pub enum ValidationRule {
     NotEmpty,
     /// 长度范围 / Length range
     Length {
+        /// Minimum length
+        /// 最小长度
         min: Option<usize>,
+        /// Maximum length
+        /// 最大长度
         max: Option<usize>,
     },
     /// 数值范围 / Range
-    Range { min: Option<i64>, max: Option<i64> },
+    Range {
+        /// Minimum value
+        /// 最小值
+        min: Option<i64>,
+        /// Maximum value
+        /// 最大值
+        max: Option<i64>
+    },
     /// 邮箱 / Email
     Email,
     /// URL

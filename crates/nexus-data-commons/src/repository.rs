@@ -9,6 +9,8 @@
 //! 本模块定义数据访问的核心 repository trait。
 //! 这些 trait 镜像 Spring Data 的 repository 抽象。
 
+#![allow(async_fn_in_trait)]
+
 use crate::{Page, PageRequest, Sort};
 use async_trait::async_trait;
 use std::any::Any;
@@ -56,11 +58,11 @@ pub trait Repository<T: Send + 'static, ID: Send + Sync + 'static>: Send + Sync 
     /// If the entity has a non-null ID, it will be updated.
     /// 如果实体的 ID 为 null，则插入（生成新 ID）。
     /// 如果实体的 ID 不为 null，则更新。
-    async fn save(&self, entity: T) -> std::result::Result<T, Self::Error>;
+    async fn save(&self, entity: T) -> Result<T, Self::Error>;
 
     /// Save all entities
     /// 批量保存实体
-    async fn save_all(&self, entities: Vec<T>) -> std::result::Result<Vec<T>, Self::Error> {
+    async fn save_all(&self, entities: Vec<T>) -> Result<Vec<T>, Self::Error> {
         let mut results = Vec::new();
         for entity in entities {
             results.push(self.save(entity).await?);
@@ -70,33 +72,33 @@ pub trait Repository<T: Send + 'static, ID: Send + Sync + 'static>: Send + Sync 
 
     /// Find entity by ID
     /// 根据 ID 查找实体
-    async fn find_by_id(&self, id: ID) -> std::result::Result<Option<T>, Self::Error>;
+    async fn find_by_id(&self, id: ID) -> Result<Option<T>, Self::Error>;
 
     /// Check if entity exists by ID
     /// 检查指定 ID 的实体是否存在
-    async fn exists_by_id(&self, id: ID) -> std::result::Result<bool, Self::Error> {
+    async fn exists_by_id(&self, id: ID) -> Result<bool, Self::Error> {
         Ok(self.find_by_id(id).await?.is_some())
     }
 
     /// Find all entities
     /// 查找所有实体
-    async fn find_all(&self) -> std::result::Result<Vec<T>, Self::Error>;
+    async fn find_all(&self) -> Result<Vec<T>, Self::Error>;
 
     /// Count all entities
     /// 统计所有实体
-    async fn count(&self) -> std::result::Result<u64, Self::Error>;
+    async fn count(&self) -> Result<u64, Self::Error>;
 
     /// Delete entity by ID
     /// 根据 ID 删除实体
-    async fn delete_by_id(&self, id: ID) -> std::result::Result<(), Self::Error>;
+    async fn delete_by_id(&self, id: ID) -> Result<(), Self::Error>;
 
     /// Delete an entity
     /// 删除实体
-    async fn delete(&self, entity: T) -> std::result::Result<(), Self::Error>;
+    async fn delete(&self, entity: T) -> Result<(), Self::Error>;
 
     /// Delete all entities
     /// 删除所有实体
-    async fn delete_all(&self) -> std::result::Result<(), Self::Error>;
+    async fn delete_all(&self) -> Result<(), Self::Error>;
 }
 
 /// CRUD repository trait
@@ -157,18 +159,18 @@ pub trait PagingAndSortingRepository<T: Send + 'static, ID: Send + Sync + 'stati
     async fn find_all_pageable(
         &self,
         pageable: PageRequest,
-    ) -> std::result::Result<Page<T>, Self::Error>;
+    ) -> Result<Page<T>, Self::Error>;
 
     /// Find all entities with sorting
     /// 排序查找所有实体
-    async fn find_all_sorted(&self, sort: Sort) -> std::result::Result<Vec<T>, Self::Error>;
+    async fn find_all_sorted(&self, sort: Sort) -> Result<Vec<T>, Self::Error>;
 
     /// Find all entities with pagination and sorting
     /// 分页和排序查找所有实体
     async fn find_all_pageable_and_sorted(
         &self,
         pageable: PageRequest,
-    ) -> std::result::Result<Page<T>, Self::Error>
+    ) -> Result<Page<T>, Self::Error>
     where
         Self::Error: From<crate::Error>,
     {
@@ -204,4 +206,4 @@ impl Identifier for uuid::Uuid {}
 ///
 /// This is a marker trait. Actual implementations should be done per-backend.
 /// 这是一个标记 trait。实际实现应按后端完成。
-pub trait Marker {}
+pub(crate) trait Marker {}

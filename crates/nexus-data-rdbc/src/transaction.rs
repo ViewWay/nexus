@@ -111,7 +111,7 @@ impl Clone for Transaction {
 
 /// Trait for transaction operations
 /// 事务操作的 trait
-pub trait TransactionInner: Send + Sync {
+pub(crate) trait TransactionInner: Send + Sync {
     /// Execute a statement
     /// 执行语句
     fn execute(&self, sql: &str) -> Result<u64, Box<dyn std::error::Error + Send + Sync>>;
@@ -294,7 +294,7 @@ impl TransactionManager {
     pub async fn execute_in_transaction<F, T>(
         &self,
         _isolation: IsolationLevel,
-        f: impl FnOnce(Transaction) -> futures_util::future::BoxFuture<'static, R2dbcResult<T>>,
+        _f: impl FnOnce(Transaction) -> futures_util::future::BoxFuture<'static, R2dbcResult<T>>,
     ) -> R2dbcResult<T> {
         // This is a placeholder - actual implementation would:
         // 1. Begin transaction with isolation level
@@ -327,7 +327,7 @@ impl TransactionManager {
         &self,
         _isolation: IsolationLevel,
         _f: F,
-        max_retries: u32,
+        _max_retries: u32,
     ) -> R2dbcResult<T>
     where
         F: Fn(Transaction) -> futures_util::future::BoxFuture<'static, R2dbcResult<T>>,

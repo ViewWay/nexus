@@ -36,7 +36,6 @@
 
 use std::fmt;
 use std::future::Future;
-use std::pin::Pin;
 use std::time::Duration;
 
 /// Backoff strategy type

@@ -557,7 +557,7 @@ impl ConfigBuilder {
 
     /// Add a configuration file to load
     /// 添加要加载的配置文件
-    pub fn add_file<P: AsRef<Path>>(mut self, path: P) -> Self {
+    pub fn add_file<P: AsRef<Path>>(self, path: P) -> Self {
         let path = path.as_ref();
         if let Err(e) = self.config.load_file(path) {
             tracing::warn!("Failed to load config file {:?}: {}", path, e);
@@ -582,28 +582,28 @@ impl ConfigBuilder {
 
     /// Set active profile
     /// 设置活动配置文件
-    pub fn add_profile(mut self, profile: impl Into<crate::Profile>) -> Self {
+    pub fn add_profile(self, profile: impl Into<crate::Profile>) -> Self {
         self.config.environment.add_active_profile(profile.into());
         self
     }
 
     /// Set active profiles
     /// 设置活动配置文件
-    pub fn set_profiles(mut self, profiles: Vec<crate::Profile>) -> Self {
+    pub fn set_profiles(self, profiles: Vec<crate::Profile>) -> Self {
         self.config.environment.set_active_profiles(profiles);
         self
     }
 
     /// Add a property source
     /// 添加属性源
-    pub fn add_property_source(mut self, source: PropertySource) -> Self {
+    pub fn add_property_source(self, source: PropertySource) -> Self {
         self.config.add_property_source(source);
         self
     }
 
     /// Add a property directly
     /// 直接添加属性
-    pub fn add_property(mut self, key: impl Into<String>, value: impl Into<Value>) -> Self {
+    pub fn add_property(self, key: impl Into<String>, value: impl Into<Value>) -> Self {
         let mut source = PropertySource::new("manual");
         source.put(key, value);
         self.config.add_property_source(source);
@@ -619,7 +619,7 @@ impl ConfigBuilder {
 
     /// Load system environment variables
     /// 加载系统环境变量
-    pub fn load_env(mut self) -> Self {
+    pub fn load_env(self) -> Self {
         let mut source = PropertySource::new("systemEnvironment");
         source.set_file_path(PathBuf::from("<env>"));
 
@@ -635,7 +635,7 @@ impl ConfigBuilder {
 
     /// Load command line arguments
     /// 加载命令行参数
-    pub fn load_args(mut self) -> Self {
+    pub fn load_args(self) -> Self {
         let args: Vec<String> = std::env::args().collect();
         let mut source = PropertySource::new("commandLineArgs");
         source.set_file_path(PathBuf::from("<args>"));

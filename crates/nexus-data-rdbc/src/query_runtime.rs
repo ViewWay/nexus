@@ -19,7 +19,7 @@ use crate::{
     Executor,
     error::{R2dbcError, R2dbcResult},
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::collections::HashMap;
 
 /// Query metadata extracted from annotation macros
@@ -384,8 +384,8 @@ where
 
         // Execute the query
         // 执行查询
-        use std::future::Future;
-        use std::pin::Pin;
+        
+        
 
         let row = self.executor.fetch_one(&sql, executor_values).await?;
 

@@ -231,8 +231,8 @@ impl ConfigClient for ConfigServerClient {
 
     async fn watch_config(
         &self,
-        application: &str,
-        profile: &str,
+        _application: &str,
+        _profile: &str,
     ) -> Result<Box<dyn ConfigWatcher>, ConfigError> {
         // For now, return a simple watcher
         // In a real implementation, this would use long-polling or WebSocket

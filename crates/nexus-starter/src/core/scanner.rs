@@ -7,11 +7,10 @@
 //! Based on Spring Boot's @ComponentScan.
 
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use anyhow::Result;
 
-use super::container::{ApplicationContext, BeanDefinition, ComponentRegistry};
+use super::container::ApplicationContext;
 
 // ============================================================================
 // 组件类型 / Component Types
@@ -217,7 +216,7 @@ impl ComponentScanner {
     /// 这个方法会扫描指定包下的所有组件，并注册到应用上下文中。
     /// This method scans all components under the specified packages and registers them to the application context.
     pub fn scan(&self, _ctx: &mut ApplicationContext) -> Result<Vec<ComponentDefinition>> {
-        let mut components = Vec::new();
+        let components = Vec::new();
 
         // TODO: 实现实际的扫描逻辑
         // 目前返回空列表，实际实现需要：
@@ -251,7 +250,7 @@ impl ComponentScanner {
     /// Register a single component
     fn register_component(
         &self,
-        ctx: &mut ApplicationContext,
+        _ctx: &mut ApplicationContext,
         component: ComponentDefinition,
     ) -> Result<()> {
         tracing::debug!(

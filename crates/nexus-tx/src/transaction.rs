@@ -1,7 +1,7 @@
 //! Transaction implementation
 //! 事务实现
 
-use crate::{Propagation, TransactionError, TransactionResult, TransactionStatus};
+use crate::{Propagation, TransactionStatus};
 use std::sync::Arc;
 
 /// Transaction
@@ -128,7 +128,7 @@ impl Transaction {
 ///
 /// Equivalent to Spring's TransactionSynchronizationManager.
 /// 等价于Spring的TransactionSynchronizationManager。
-pub struct TransactionHolder {
+pub(crate) struct TransactionHolder {
     /// Current transaction
     /// 当前事务
     current: Arc<tokio::sync::RwLock<Option<Transaction>>>,
@@ -141,7 +141,7 @@ pub struct TransactionHolder {
 impl TransactionHolder {
     /// Create a new transaction holder
     /// 创建新的事务持有者
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             current: Arc::new(tokio::sync::RwLock::new(None)),
             stack: Arc::new(tokio::sync::RwLock::new(Vec::new())),
@@ -150,41 +150,41 @@ impl TransactionHolder {
 
     /// Get current transaction
     /// 获取当前事务
-    pub async fn current(&self) -> Option<Transaction> {
+    pub(crate) async fn current(&self) -> Option<Transaction> {
         self.current.read().await.clone()
     }
 
     /// Set current transaction
     /// 设置当前事务
-    pub async fn set_current(&self, tx: Transaction) {
+    pub(crate) async fn set_current(&self, tx: Transaction) {
         let mut current = self.current.write().await;
         *current = Some(tx);
     }
 
     /// Clear current transaction
     /// 清除当前事务
-    pub async fn clear(&self) {
+    pub(crate) async fn clear(&self) {
         let mut current = self.current.write().await;
         *current = None;
     }
 
     /// Push transaction onto stack
     /// 将事务压入栈
-    pub async fn push(&self, tx: Transaction) {
+    pub(crate) async fn push(&self, tx: Transaction) {
         let mut stack = self.stack.write().await;
         stack.push(tx);
     }
 
     /// Pop transaction from stack
     /// 从栈弹出事务
-    pub async fn pop(&self) -> Option<Transaction> {
+    pub(crate) async fn pop(&self) -> Option<Transaction> {
         let mut stack = self.stack.write().await;
         stack.pop()
     }
 
     /// Get stack depth
     /// 获取栈深度
-    pub async fn depth(&self) -> usize {
+    pub(crate) async fn depth(&self) -> usize {
         self.stack.read().await.len()
     }
 }
@@ -202,7 +202,7 @@ static GLOBAL_HOLDER: once_cell::sync::Lazy<TransactionHolder> =
 
 /// Get global transaction holder
 /// 获取全局事务持有者
-pub fn global_holder() -> &'static TransactionHolder {
+pub(crate) fn global_holder() -> &'static TransactionHolder {
     &GLOBAL_HOLDER
 }
 

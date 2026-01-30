@@ -12,6 +12,7 @@
 use super::{Method, route::Handler};
 use nexus_http::{Body, Request, Response, Result, StatusCode};
 use std::collections::HashMap;
+use std::future::Future;
 
 /// Trie-based router with efficient path parameter extraction
 /// 基于 Trie 的高效路径参数提取路由器
@@ -182,7 +183,7 @@ impl Default for TrieRouter {
 /// This allows the Router to be used directly with the Server.
 /// 这使得 Router 可以直接与 Server 一起使用。
 impl nexus_http::HttpService for TrieRouter {
-    fn call(&self, req: Request) -> impl std::future::Future<Output = Result<Response>> + Send {
+    fn call(&self, req: Request) -> impl Future<Output = Result<Response>> + Send {
         // Match the route first, then create the appropriate future
         let method = req.method().clone();
         let path = req.path().to_string();

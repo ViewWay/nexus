@@ -215,10 +215,10 @@ impl EnvironmentCollector {
             }
 
             // OS info
-            properties.insert("os.name".to_string(), PropertyValue::new(std::env::consts::OS));
-            properties.insert("os.arch".to_string(), PropertyValue::new(std::env::consts::ARCH));
+            properties.insert("os.name".to_string(), PropertyValue::new(env::consts::OS));
+            properties.insert("os.arch".to_string(), PropertyValue::new(env::consts::ARCH));
             properties
-                .insert("os.family".to_string(), PropertyValue::new(std::env::consts::FAMILY));
+                .insert("os.family".to_string(), PropertyValue::new(env::consts::FAMILY));
 
             for (key, value) in properties {
                 sources.push(PropertySource {
@@ -279,19 +279,20 @@ impl Default for EnvironmentCollector {
 pub struct EnvironmentResponse {
     /// Active profiles
     /// 活动配置
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub activeProfiles: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", rename = "activeProfiles")]
+    pub active_profiles: Vec<String>,
 
     /// Property sources
     /// 属性源
-    pub propertySources: Vec<PropertySource>,
+    #[serde(rename = "propertySources")]
+    pub property_sources: Vec<PropertySource>,
 }
 
 impl From<Environment> for EnvironmentResponse {
     fn from(env: Environment) -> Self {
         Self {
-            activeProfiles: env.profiles,
-            propertySources: env.property_sources,
+            active_profiles: env.profiles,
+            property_sources: env.property_sources,
         }
     }
 }

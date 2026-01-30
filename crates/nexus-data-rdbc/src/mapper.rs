@@ -59,13 +59,13 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 插入记录
     ///
     /// Equivalent to MyBatis-Plus: `int insert(T entity);`
-    async fn insert(&self, entity: &T) -> std::result::Result<i64, R2dbcError>;
+    async fn insert(&self, entity: &T) -> Result<i64, R2dbcError>;
 
     /// Delete by ID
     /// 根据 ID 删除
     ///
     /// Equivalent to MyBatis-Plus: `int deleteById(Serializable id);`
-    async fn delete_by_id<I>(&self, id: I) -> std::result::Result<i64, R2dbcError>
+    async fn delete_by_id<I>(&self, id: I) -> Result<i64, R2dbcError>
     where
         I: Identifier + ToValue,
         Self: Sized,
@@ -78,7 +78,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 根据条件删除
     ///
     /// Equivalent to MyBatis-Plus: `int delete(Wrapper<T> wrapper);`
-    async fn delete(&self, wrapper: QueryWrapper) -> std::result::Result<i64, R2dbcError>
+    async fn delete(&self, wrapper: QueryWrapper) -> Result<i64, R2dbcError>
     where
         Self: Sized,
     {
@@ -89,7 +89,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 根据批量 ID 删除
     ///
     /// Equivalent to MyBatis-Plus: `int deleteBatchIds(Collection<? extends Serializable> idList);`
-    async fn delete_batch_ids<I>(&self, ids: Vec<I>) -> std::result::Result<i64, R2dbcError>
+    async fn delete_batch_ids<I>(&self, ids: Vec<I>) -> Result<i64, R2dbcError>
     where
         I: Identifier + ToValue,
         Self: Sized,
@@ -105,7 +105,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     async fn update(
         &self,
         wrapper: nexus_data_commons::UpdateWrapper,
-    ) -> std::result::Result<i64, R2dbcError>
+    ) -> Result<i64, R2dbcError>
     where
         Self: Sized,
     {
@@ -116,13 +116,13 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 根据 ID 更新
     ///
     /// Equivalent to MyBatis-Plus: `int updateById(T entity);`
-    async fn update_by_id(&self, entity: &T) -> std::result::Result<i64, R2dbcError>;
+    async fn update_by_id(&self, entity: &T) -> Result<i64, R2dbcError>;
 
     /// Select by ID
     /// 根据 ID 查询
     ///
     /// Equivalent to MyBatis-Plus: `T selectById(Serializable id);`
-    async fn select_by_id<I>(&self, id: I) -> std::result::Result<Option<T>, R2dbcError>
+    async fn select_by_id<I>(&self, id: I) -> Result<Option<T>, R2dbcError>
     where
         I: Identifier + ToValue,
     {
@@ -135,7 +135,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 根据 ID 批量查询
     ///
     /// Equivalent to MyBatis-Plus: `List<T> selectBatchIds(Collection<? extends Serializable> idList);`
-    async fn select_batch_ids<I>(&self, ids: Vec<I>) -> std::result::Result<Vec<T>, R2dbcError>
+    async fn select_batch_ids<I>(&self, ids: Vec<I>) -> Result<Vec<T>, R2dbcError>
     where
         I: Identifier + ToValue,
     {
@@ -147,11 +147,11 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 查询所有记录
     ///
     /// Equivalent to MyBatis-Plus: `List<T> selectList(Wrapper<T> queryWrapper);`
-    async fn select_list(&self, wrapper: QueryWrapper) -> std::result::Result<Vec<T>, R2dbcError>;
+    async fn select_list(&self, wrapper: QueryWrapper) -> Result<Vec<T>, R2dbcError>;
 
     /// Select records by wrapper (alias for select_list)
     /// 根据条件查询记录 (select_list 的别名)
-    async fn select(&self, wrapper: QueryWrapper) -> std::result::Result<Vec<T>, R2dbcError> {
+    async fn select(&self, wrapper: QueryWrapper) -> Result<Vec<T>, R2dbcError> {
         self.select_list(wrapper).await
     }
 
@@ -162,7 +162,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     async fn select_one(
         &self,
         wrapper: QueryWrapper,
-    ) -> std::result::Result<Option<T>, R2dbcError> {
+    ) -> Result<Option<T>, R2dbcError> {
         let limited = wrapper.clone().limit(1);
         let results = self.select_list(limited).await?;
         Ok(results.into_iter().next())
@@ -172,7 +172,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
     /// 查询总数
     ///
     /// Equivalent to MyBatis-Plus: `Long selectCount(Wrapper<T> queryWrapper);`
-    async fn select_count(&self, wrapper: QueryWrapper) -> std::result::Result<i64, R2dbcError>
+    async fn select_count(&self, wrapper: QueryWrapper) -> Result<i64, R2dbcError>
     where
         Self: Sized,
     {
@@ -187,7 +187,7 @@ pub trait BaseMapper<T: for<'de> serde::Deserialize<'de>>: Send + Sync {
         &self,
         page_request: PageRequest,
         wrapper: QueryWrapper,
-    ) -> std::result::Result<Page<T>, R2dbcError>
+    ) -> Result<Page<T>, R2dbcError>
     where
         Self: Sized,
     {
@@ -265,7 +265,7 @@ pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>:
 {
     /// Save an entity (insert or update)
     /// 保存实体（插入或更新）
-    async fn save(&self, entity: T) -> std::result::Result<T, nexus_data_commons::Error> {
+    async fn save(&self, entity: T) -> Result<T, nexus_data_commons::Error> {
         // Check if entity is new (ID is default/zero/null)
         let is_new = self.is_new(&entity);
 
@@ -278,36 +278,36 @@ pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>:
 
     /// Insert a new entity
     /// 插入新实体
-    async fn insert(&self, entity: T) -> std::result::Result<T, nexus_data_commons::Error>;
+    async fn insert(&self, entity: T) -> Result<T, nexus_data_commons::Error>;
 
     /// Update an existing entity
     /// 更新现有实体
-    async fn update_entity(&self, entity: T) -> std::result::Result<T, nexus_data_commons::Error>;
+    async fn update_entity(&self, entity: T) -> Result<T, nexus_data_commons::Error>;
 
     /// Find by ID
     /// 根据 ID 查找
     async fn find_by_id(&self, id: ID)
-    -> std::result::Result<Option<T>, nexus_data_commons::Error>;
+    -> Result<Option<T>, nexus_data_commons::Error>;
 
     /// Find all entities
     /// 查找所有实体
-    async fn find_all(&self) -> std::result::Result<Vec<T>, nexus_data_commons::Error>;
+    async fn find_all(&self) -> Result<Vec<T>, nexus_data_commons::Error>;
 
     /// Count all entities
     /// 统计所有实体
-    async fn count(&self) -> std::result::Result<u64, nexus_data_commons::Error>;
+    async fn count(&self) -> Result<u64, nexus_data_commons::Error>;
 
     /// Delete by ID
     /// 根据 ID 删除
-    async fn delete_by_id(&self, id: ID) -> std::result::Result<(), nexus_data_commons::Error>;
+    async fn delete_by_id(&self, id: ID) -> Result<(), nexus_data_commons::Error>;
 
     /// Delete an entity
     /// 删除实体
-    async fn delete(&self, entity: T) -> std::result::Result<(), nexus_data_commons::Error>;
+    async fn delete(&self, entity: T) -> Result<(), nexus_data_commons::Error>;
 
     /// Delete all entities
     /// 删除所有实体
-    async fn delete_all(&self) -> std::result::Result<(), nexus_data_commons::Error>;
+    async fn delete_all(&self) -> Result<(), nexus_data_commons::Error>;
 
     /// Check if an entity is new
     /// 检查实体是否为新
@@ -318,21 +318,21 @@ pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>:
     async fn find_all_pageable(
         &self,
         pageable: PageRequest,
-    ) -> std::result::Result<Page<T>, nexus_data_commons::Error>;
+    ) -> Result<Page<T>, nexus_data_commons::Error>;
 
     /// Find by wrapper
     /// 根据条件查找
     async fn find_by_wrapper(
         &self,
         wrapper: QueryWrapper,
-    ) -> std::result::Result<Vec<T>, nexus_data_commons::Error>;
+    ) -> Result<Vec<T>, nexus_data_commons::Error>;
 
     /// Find one by wrapper
     /// 根据条件查找单个
     async fn find_one_by_wrapper(
         &self,
         wrapper: QueryWrapper,
-    ) -> std::result::Result<Option<T>, nexus_data_commons::Error> {
+    ) -> Result<Option<T>, nexus_data_commons::Error> {
         let results = self.find_by_wrapper(wrapper).await?;
         Ok(results.into_iter().next())
     }
@@ -342,14 +342,14 @@ pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>:
     async fn count_by_wrapper(
         &self,
         wrapper: QueryWrapper,
-    ) -> std::result::Result<u64, nexus_data_commons::Error>;
+    ) -> Result<u64, nexus_data_commons::Error>;
 
     /// Exists by wrapper
     /// 根据条件检查是否存在
     async fn exists_by_wrapper(
         &self,
         wrapper: QueryWrapper,
-    ) -> std::result::Result<bool, nexus_data_commons::Error> {
+    ) -> Result<bool, nexus_data_commons::Error> {
         Ok(self.count_by_wrapper(wrapper).await? > 0)
     }
 
@@ -358,7 +358,7 @@ pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>:
     async fn delete_by_wrapper(
         &self,
         wrapper: QueryWrapper,
-    ) -> std::result::Result<u64, nexus_data_commons::Error>;
+    ) -> Result<u64, nexus_data_commons::Error>;
 }
 
 /// Simple R2DBC Repository placeholder
@@ -409,14 +409,14 @@ pub trait R2dbcCrudRepository<T: Send + 'static, ID: Send + Sync + 'static>:
 ///     // Implement required methods...
 /// }
 /// ```
-pub struct SimpleR2dbcRepository<T, ID> {
+pub(crate) struct SimpleR2dbcRepository<T, ID> {
     _phantom: std::marker::PhantomData<(T, ID)>,
 }
 
 impl<T, ID> SimpleR2dbcRepository<T, ID> {
     /// Create a new placeholder repository
     /// 创建新的占位符 repository
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             _phantom: std::marker::PhantomData,
         }

@@ -29,9 +29,23 @@ pub enum ValidationRule {
     /// 非空字符串 / Non-empty string
     NotEmpty,
     /// 长度范围 / Length range
-    Length { min: usize, max: usize },
+    Length {
+        /// Minimum length (inclusive)
+        /// 最小长度（包含）
+        min: usize,
+        /// Maximum length (inclusive)
+        /// 最大长度（包含）
+        max: usize,
+    },
     /// 数值范围 / Numeric range
-    Range { min: i64, max: i64 },
+    Range {
+        /// Minimum value (inclusive)
+        /// 最小值（包含）
+        min: i64,
+        /// Maximum value (inclusive)
+        /// 最大值（包含）
+        max: i64,
+    },
     /// 正则匹配 / Regex match
     Regex(&'static str),
     /// 邮箱格式 / Email format

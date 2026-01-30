@@ -42,7 +42,7 @@ impl Multipart {
         let boundary = Self::extract_boundary(content_type)?;
 
         // Create a stream from the body bytes
-        let stream = futures::stream::once(async move { Ok::<bytes::Bytes, std::io::Error>(body) });
+        let stream = futures::stream::once(async move { Ok::<Bytes, std::io::Error>(body) });
 
         let multipart = multer::Multipart::with_constraints(
             stream,

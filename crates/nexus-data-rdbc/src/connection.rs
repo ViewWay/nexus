@@ -138,7 +138,7 @@ impl Clone for Connection {
 
 /// Trait for database connection operations
 /// 数据库连接操作的 trait
-pub trait ConnectionInner: Send + Sync {
+pub(crate) trait ConnectionInner: Send + Sync {
     /// Execute a query and return the first row
     /// 执行查询并返回第一行
     fn fetch_one(&self, sql: &str)
@@ -244,7 +244,7 @@ pub struct ConnectionPool {
 
 /// Trait for connection pool operations
 /// 连接池操作的 trait
-pub trait PoolInner: Send + Sync {
+pub(crate) trait PoolInner: Send + Sync {
     /// Acquire a connection from the pool
     /// 从连接池获取连接
     fn acquire(&self) -> Result<Connection, Box<dyn std::error::Error + Send + Sync>>;

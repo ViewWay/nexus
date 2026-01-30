@@ -37,12 +37,9 @@
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
 
-use futures::stream::{Stream, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::sync::Arc;
 
-use crate::chain::Block;
 use crate::tx::TxHash;
 use crate::wallet::Address;
 

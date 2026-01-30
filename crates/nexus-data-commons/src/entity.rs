@@ -14,7 +14,7 @@ use std::fmt::Debug;
 ///
 /// Marks a type as being usable as an entity identifier.
 /// 标记类型可用作实体标识符。
-pub trait Identifier: Any + Send + Sync + Debug + Clone + PartialEq + Eq {}
+pub(crate) trait Identifier: Any + Send + Sync + Debug + Clone + PartialEq + Eq {}
 
 impl Identifier for String {}
 impl Identifier for i32 {}
@@ -182,7 +182,7 @@ pub trait Auditable {
 ///     }
 /// }
 /// ```
-pub trait Versioned {
+pub(crate) trait Versioned {
     /// Get current version
     /// 获取当前版本
     fn version(&self) -> i32;
@@ -231,7 +231,7 @@ pub trait Versioned {
 ///     }
 /// }
 /// ```
-pub trait SoftDeletable {
+pub(crate) trait SoftDeletable {
     /// Check if entity is deleted
     /// 检查实体是否已删除
     fn is_deleted(&self) -> bool;
@@ -322,7 +322,7 @@ pub enum LifecycleEvent {
 ///     }
 /// }
 /// ```
-pub trait EntityWithLifecycle {
+pub(crate) trait EntityWithLifecycle {
     /// Callback before save
     /// 保存前回调
     fn before_save(&mut self) {}
@@ -399,7 +399,7 @@ pub trait EntityWithLifecycle {
 ///     }
 /// }
 /// ```
-pub trait TableName {
+pub(crate) trait TableName {
     /// Get the table name for this entity
     /// 获取此实体的表名
     fn table_name() -> &'static str;
@@ -440,7 +440,7 @@ pub trait TableName {
 ///     }
 /// }
 /// ```
-pub trait ColumnName {
+pub(crate) trait ColumnName {
     /// Convert field name to column name
     /// 将字段名转换为列名
     fn column_name(field: &str) -> String {
@@ -498,7 +498,7 @@ pub trait ColumnName {
 ///     }
 /// }
 /// ```
-pub trait Entity: AggregateRoot + TableName + Any + Send + Sync {
+pub(crate) trait Entity: AggregateRoot + TableName + Any + Send + Sync {
     /// Get a value by field name
     /// 通过字段名获取值
     fn get_field(&self, _field: &str) -> Option<String> {

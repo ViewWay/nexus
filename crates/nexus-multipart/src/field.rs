@@ -111,7 +111,7 @@ impl MultipartFile {
 
     /// Save the file to a path
     /// 保存文件到路径
-    pub async fn save_to<P: AsRef<std::path::Path>>(&self, path: P) -> MultipartResult<()> {
+    pub async fn save_to<P: AsRef<Path>>(&self, path: P) -> MultipartResult<()> {
         tokio::fs::write(path, &self.data).await?;
         Ok(())
     }

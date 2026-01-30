@@ -6,7 +6,7 @@
 //! This module provides JSON response types with automatic serialization.
 //! 本模块提供具有自动序列化的JSON响应类型。
 
-use crate::response::{Body, IntoResponse, Response};
+use crate::response::{IntoResponse, Response};
 use serde::Serialize;
 
 /// JSON response wrapper

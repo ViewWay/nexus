@@ -21,11 +21,9 @@
 //! ```
 
 use crate::{Multipart, MultipartFile, MultipartResult, error::MultipartError};
-use async_trait::async_trait;
-use bytes::Bytes;
 // Use nexus_http for Body type instead of http_body crate
 // 使用 nexus_http 的 Body 类型而不是 http_body crate
-use nexus_http::{Body, Request};
+use nexus_http::Request;
 use std::collections::HashSet;
 
 /// File type validator
@@ -143,25 +141,67 @@ impl Default for FileValidator {
 /// 常用 MIME 类型常量
 pub mod mime_types {
     /// Image MIME types / 图片类型
+
+    /// JPEG image format
+    /// JPEG 图片格式
     pub const IMAGE_JPEG: &str = "image/jpeg";
+
+    /// PNG image format
+    /// PNG 图片格式
     pub const IMAGE_PNG: &str = "image/png";
+
+    /// GIF image format
+    /// GIF 图片格式
     pub const IMAGE_GIF: &str = "image/gif";
+
+    /// WebP image format
+    /// WebP 图片格式
     pub const IMAGE_WEBP: &str = "image/webp";
+
+    /// SVG vector image format
+    /// SVG 矢量图片格式
     pub const IMAGE_SVG: &str = "image/svg+xml";
 
     /// Document MIME types / 文档类型
+
+    /// PDF document format
+    /// PDF 文档格式
     pub const APPLICATION_PDF: &str = "application/pdf";
+
+    /// JSON data format
+    /// JSON 数据格式
     pub const APPLICATION_JSON: &str = "application/json";
+
+    /// XML data format
+    /// XML 数据格式
     pub const APPLICATION_XML: &str = "application/xml";
+
+    /// Plain text format
+    /// 纯文本格式
     pub const TEXT_PLAIN: &str = "text/plain";
+
+    /// CSV spreadsheet format
+    /// CSV 电子表格格式
     pub const TEXT_CSV: &str = "text/csv";
 
     /// Video MIME types / 视频类型
+
+    /// MP4 video format
+    /// MP4 视频格式
     pub const VIDEO_MP4: &str = "video/mp4";
+
+    /// WebM video format
+    /// WebM 视频格式
     pub const VIDEO_WEBM: &str = "video/webm";
 
     /// Audio MIME types / 音频类型
+
+    /// MP3 audio format
+    /// MP3 音频格式
     pub const AUDIO_MP3: &str = "audio/mpeg";
+
+    /// WAV audio format
+    /// WAV 音频格式
     pub const AUDIO_WAV: &str = "audio/wav";
 
     /// Common image types set / 常用图片类型集合

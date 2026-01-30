@@ -83,15 +83,15 @@ where
     V: Clone + Send + Sync + 'static,
 {
     async fn get_stats(&self) -> crate::cache::CacheStats {
-        crate::cache::Cache::stats(self).await
+        Cache::stats(self).await
     }
 
     async fn clear(&self) {
-        crate::cache::Cache::clear(self).await;
+        Cache::clear(self).await;
     }
 
     async fn size(&self) -> usize {
-        crate::cache::Cache::size(self).await
+        Cache::size(self).await
     }
 
     fn name(&self) -> &str {
@@ -162,7 +162,7 @@ impl SimpleCacheManager {
         // Try to get existing cache
         {
             let caches = self.caches.read().await;
-            if let Some(cache) = caches.get(name) {
+            if let Some(_cache) = caches.get(name) {
                 // Note: This would need proper downcasting in real implementation
                 // For now, we'll create a new cache if type doesn't match
             }
@@ -258,7 +258,7 @@ static GLOBAL_MANAGER: tokio::sync::OnceCell<SimpleCacheManager> =
 
 /// Initialize the global cache manager
 /// 初始化全局缓存管理器
-pub fn init_global_manager(manager: SimpleCacheManager) -> Result<(), String> {
+pub(crate) fn init_global_manager(manager: SimpleCacheManager) -> Result<(), String> {
     GLOBAL_MANAGER
         .set(manager)
         .map_err(|_| "Global manager already initialized".to_string())
@@ -266,7 +266,7 @@ pub fn init_global_manager(manager: SimpleCacheManager) -> Result<(), String> {
 
 /// Get the global cache manager
 /// 获取全局缓存管理器
-pub fn global_manager() -> Option<&'static SimpleCacheManager> {
+pub(crate) fn global_manager() -> Option<&'static SimpleCacheManager> {
     GLOBAL_MANAGER.get()
 }
 

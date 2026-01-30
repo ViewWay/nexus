@@ -212,14 +212,14 @@ impl Default for TransactionManagerBuilder {
 /// For demonstration purposes. In production, use a database-specific implementation.
 /// 用于演示目的。在生产中，使用特定数据库的实现。
 #[derive(Debug)]
-pub struct SimpleTransactionManager {
+pub(crate) struct SimpleTransactionManager {
     name: String,
 }
 
 impl SimpleTransactionManager {
     /// Create a new simple transaction manager
     /// 创建新的简单事务管理器
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             name: "simple".to_string(),
         }
@@ -227,13 +227,13 @@ impl SimpleTransactionManager {
 
     /// Create with name
     /// 使用名称创建
-    pub fn with_name(name: impl Into<String>) -> Self {
+    pub(crate) fn with_name(name: impl Into<String>) -> Self {
         Self { name: name.into() }
     }
 
     /// Build a transaction definition
     /// 构建事务定义
-    pub fn build_definition(&self, name: impl Into<String>) -> TransactionDefinition {
+    pub(crate) fn build_definition(&self, name: impl Into<String>) -> TransactionDefinition {
         TransactionDefinition::new(name)
             .propagation(Propagation::Required)
             .isolation(IsolationLevel::ReadCommitted)

@@ -9,7 +9,7 @@
 
 use crate::{Config, ConfigError, ConfigResult, FileFormat, ReloadStrategy};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -200,7 +200,7 @@ impl ConfigLoader {
     /// Load environment variables
     /// 加载环境变量
     fn load_environment_vars(&mut self) -> ConfigResult<()> {
-        use crate::{PropertySource, PropertySourceBuilder, PropertySourceType, Value};
+        use crate::{PropertySourceBuilder, PropertySourceType, Value};
 
         let mut builder = PropertySourceBuilder::new("environmentVariables")
             .source_type(PropertySourceType::SystemEnvironment)
@@ -220,7 +220,7 @@ impl ConfigLoader {
     /// Load command line arguments
     /// 加载命令行参数
     fn load_command_line_args(&mut self) -> ConfigResult<()> {
-        use crate::{PropertySource, PropertySourceBuilder, PropertySourceType, Value};
+        use crate::{PropertySourceBuilder, PropertySourceType, Value};
 
         let mut builder = PropertySourceBuilder::new("commandLineArgs")
             .source_type(PropertySourceType::CommandLine)
@@ -479,7 +479,7 @@ impl Watcher {
 ///
 /// Allows customizing the configuration after loading but before use.
 /// 允许在加载后但在使用前自定义配置。
-pub trait ConfigPostProcessor: Send + Sync {
+pub(crate) trait ConfigPostProcessor: Send + Sync {
     /// Post-process the configuration
     /// 后处理配置
     fn post_process(&self, config: &mut Config) -> ConfigResult<()>;
@@ -487,18 +487,18 @@ pub trait ConfigPostProcessor: Send + Sync {
 
 /// Standard configuration post-processors
 /// 标准配置后处理器
-pub struct StandardPostProcessors;
+pub(crate) struct StandardPostProcessors;
 
 impl StandardPostProcessors {
     /// Create a post-processor that expands placeholders
     /// 创建展开占位符的后处理器
-    pub fn placeholder_expander() -> impl ConfigPostProcessor {
+    pub(crate) fn placeholder_expander() -> impl ConfigPostProcessor {
         PlaceholderExpander
     }
 
     /// Create a post-processor that validates required properties
     /// 创建验证必需属性的后处理器
-    pub fn required_validator(required: Vec<String>) -> impl ConfigPostProcessor {
+    pub(crate) fn required_validator(required: Vec<String>) -> impl ConfigPostProcessor {
         RequiredValidator { required }
     }
 }
@@ -508,7 +508,7 @@ impl StandardPostProcessors {
 struct PlaceholderExpander;
 
 impl ConfigPostProcessor for PlaceholderExpander {
-    fn post_process(&self, config: &mut Config) -> ConfigResult<()> {
+    fn post_process(&self, _config: &mut Config) -> ConfigResult<()> {
         // This would expand ${...} placeholders in property values
         // Implementation would iterate through all properties and expand placeholders
         Ok(())

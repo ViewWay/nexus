@@ -3,7 +3,6 @@
 
 use crate::{
     IsolationLevel, Propagation, TransactionError, TransactionManager, TransactionResult,
-    TransactionStatus,
 };
 use std::sync::Arc;
 
@@ -187,7 +186,7 @@ impl TransactionTemplate {
 ///
 /// Equivalent to Spring's TransactionCallback.
 /// 等价于Spring的TransactionCallback。
-pub trait TransactionCallback<T>: Send {
+pub(crate) trait TransactionCallback<T>: Send {
     /// Execute within transaction
     /// 在事务内执行
     fn execute(&self) -> futures::future::BoxFuture<'_, TransactionResult<T>>;
@@ -198,7 +197,7 @@ pub trait TransactionCallback<T>: Send {
 ///
 /// Equivalent to Spring's TransactionCallbackWithoutResult.
 /// 等价于Spring的TransactionCallbackWithoutResult。
-pub trait TransactionCallbackWithoutResult: Send {
+pub(crate) trait TransactionCallbackWithoutResult: Send {
     /// Execute within transaction
     /// 在事务内执行
     fn execute(&self) -> futures::future::BoxFuture<'_, TransactionResult<()>>;

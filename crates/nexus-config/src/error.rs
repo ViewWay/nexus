@@ -35,8 +35,14 @@ pub enum ConfigError {
     /// 类型转换错误
     #[error("Type conversion error for '{key}': expected {expected}, got {value}")]
     TypeConversion {
+        /// Property key
+        /// 属性键
         key: String,
+        /// Expected type
+        /// 期望类型
         expected: String,
+        /// Actual value
+        /// 实际值
         value: String,
     },
 

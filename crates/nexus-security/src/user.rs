@@ -2,7 +2,6 @@
 //! 用户和UserDetails模块
 
 use crate::{Authority, PasswordEncoder, Role, SecurityError, SecurityResult};
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 

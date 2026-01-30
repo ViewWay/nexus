@@ -25,7 +25,7 @@
 //! }
 //! ```
 
-use crate::{Authority, Role, SecurityError, SecurityResult};
+use crate::SecurityResult;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};

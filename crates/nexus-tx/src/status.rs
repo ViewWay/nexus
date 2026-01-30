@@ -64,7 +64,7 @@ impl TransactionStatus {
     /// Create with existing transaction
     /// 使用现有事务创建
     pub fn existing(name: impl Into<String>) -> Self {
-        let mut status = Self::new(name);
+        let status = Self::new(name);
         status.new_transaction.store(false, Ordering::SeqCst);
         status
     }
@@ -128,7 +128,7 @@ impl TransactionStatus {
 /// Transaction state enum
 /// 事务状态枚举
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TransactionState {
+pub(crate) enum TransactionState {
     /// Active transaction
     /// 活动事务
     Active,
@@ -149,13 +149,13 @@ pub enum TransactionState {
 impl TransactionState {
     /// Check if transaction is active
     /// 检查事务是否活动
-    pub fn is_active(&self) -> bool {
+    pub(crate) fn is_active(&self) -> bool {
         matches!(self, TransactionState::Active)
     }
 
     /// Check if transaction is completed
     /// 检查事务是否已完成
-    pub fn is_completed(&self) -> bool {
+    pub(crate) fn is_completed(&self) -> bool {
         matches!(self, TransactionState::Committed | TransactionState::RolledBack)
     }
 }
@@ -166,7 +166,7 @@ impl TransactionState {
 /// Equivalent to Spring's Savepoint.
 /// 等价于Spring的Savepoint。
 #[derive(Debug, Clone)]
-pub struct Savepoint {
+pub(crate) struct Savepoint {
     /// Savepoint name
     /// 保存点名称
     pub name: String,
@@ -179,7 +179,7 @@ pub struct Savepoint {
 impl Savepoint {
     /// Create a new savepoint
     /// 创建新的保存点
-    pub fn new(name: impl Into<String>) -> Self {
+    pub(crate) fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
             id: None,
@@ -188,7 +188,7 @@ impl Savepoint {
 
     /// Create with ID
     /// 使用ID创建
-    pub fn with_id(name: impl Into<String>, id: u64) -> Self {
+    pub(crate) fn with_id(name: impl Into<String>, id: u64) -> Self {
         Self {
             name: name.into(),
             id: Some(id),

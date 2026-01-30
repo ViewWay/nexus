@@ -33,13 +33,10 @@
 
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
-use quote::{ToTokens, quote};
+use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
 use syn::{
-    Attribute, DeriveInput, Expr, FnArg, ItemFn, ItemStatic, ItemStruct, ItemTrait, Meta, PatType,
-    PathSegment, ReturnType, Signature, Type, TypePath, Visibility, parse_macro_input,
+    DeriveInput, Expr, ItemFn, ItemStatic, ItemStruct, ItemTrait, parse_macro_input,
 };
 
 mod transactional;

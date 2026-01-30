@@ -71,12 +71,20 @@ pub trait ValidateField {
 /// 字段级验证错误 / Field-level validation error
 #[derive(Debug, Clone)]
 pub struct ValidationError {
+    /// Field name that failed validation
+    /// 验证失败的字段名
     pub field: String,
+    /// Error message describing the validation failure
+    /// 描述验证失败原因的错误消息
     pub message: String,
+    /// Error code for programmatic handling
+    /// 用于程序化处理的错误代码
     pub code: String,
 }
 
 impl ValidationError {
+    /// Create a new validation error
+    /// 创建新的验证错误
     pub fn new(field: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             field: field.into(),
@@ -85,6 +93,8 @@ impl ValidationError {
         }
     }
 
+    /// Set a custom error code
+    /// 设置自定义错误代码
     pub fn with_code(mut self, code: impl Into<String>) -> Self {
         self.code = code.into();
         self
@@ -101,6 +111,8 @@ impl std::error::Error for ValidationError {}
 
 /// 可选值验证 / Optional value validation
 pub trait ValidateOptional {
+    /// The wrapped item type
+    /// 包装的项类型
     type Item;
 
     /// 验证可选值 / Validate optional value
@@ -128,6 +140,8 @@ impl<T> ValidateOptional for Option<T> {
 
 /// 集合验证 / Collection validation
 pub trait ValidateCollection {
+    /// The item type in the collection
+    /// 集合中的项类型
     type Item;
 
     /// 验证集合中的每个元素 / Validate each item in collection
@@ -149,7 +163,7 @@ where
         let mut errors = ValidationErrors::new();
         let mut results = Vec::new();
 
-        for (index, item) in self.into_iter().enumerate() {
+        for (_index, item) in self.into_iter().enumerate() {
             if let Err(e) = validator(&item) {
                 errors.merge(e);
             } else {

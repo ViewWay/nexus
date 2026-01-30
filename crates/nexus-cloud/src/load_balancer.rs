@@ -7,6 +7,8 @@
 //! - Ribbon / Spring Cloud LoadBalancer
 //! - Client-side load balancing
 
+#![allow(async_fn_in_trait)]
+
 use crate::ServiceInstance;
 use rand::prelude::{IndexedRandom, Rng};
 use std::sync::Arc;
@@ -252,12 +254,14 @@ pub struct ReactiveLoadBalancer {
     /// 轮询策略
     round_robin: Arc<RoundRobinLoadBalancer>,
 
-    /// Random strategy
-    /// 随机策略
+    /// Random strategy (reserved for future use)
+    /// 随机策略（预留，未来使用）
+    #[allow(dead_code)]
     random: Arc<RandomLoadBalancer>,
 
-    /// Least connection strategy
-    /// 最少连接策略
+    /// Least connection strategy (reserved for future use)
+    /// 最少连接策略（预留，未来使用）
+    #[allow(dead_code)]
     least_connection: Arc<LeastConnectionLoadBalancer>,
 }
 
@@ -312,7 +316,7 @@ mod tests {
 
     #[test]
     fn test_random_load_balancer() {
-        let lb = RandomLoadBalancer;
+        let _lb = RandomLoadBalancer;
         let instances = vec![
             ServiceInstance::new("test", "1", "localhost", 8080),
             ServiceInstance::new("test", "2", "localhost", 8081),

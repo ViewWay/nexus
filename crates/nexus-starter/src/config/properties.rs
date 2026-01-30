@@ -3,7 +3,6 @@
 //! 定义配置属性的 trait 和实现。
 //! Defines traits and implementations for configuration properties.
 
-use std::collections::HashMap;
 use std::sync::Arc;
 use anyhow::Result;
 

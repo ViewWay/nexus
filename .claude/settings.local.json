@@ -97,7 +97,8 @@
       "Bash(NEXUS_PROFILE=dev cargo run:*)",
       "Bash(NEXUS_PROFILE=prod cargo run:*)",
       "Bash(wait:*)",
-      "Bash(CARGO_REGISTRIES_CRATES_IO_INDEX=sparse+https://index.crates.io/ cargo update:*)"
+      "Bash(CARGO_REGISTRIES_CRATES_IO_INDEX=sparse+https://index.crates.io/ cargo update:*)",
+      "Bash(git tag:*)"
     ]
   }
 }

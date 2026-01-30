@@ -33,6 +33,7 @@
 
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
+#![allow(async_fn_in_trait)]
 
 pub mod body;
 pub mod builder;

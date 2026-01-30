@@ -13,7 +13,7 @@
 ///     userRepository.deleteById(id);
 /// }
 /// ```
-use crate::{Cache, CacheManager};
+use crate::Cache;
 use std::future::Future;
 use std::pin::Pin;
 

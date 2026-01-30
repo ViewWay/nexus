@@ -10,7 +10,7 @@
 
 use super::{
     body::Body,
-    error::{Error, Result},
+    error::Result,
     status::StatusCode,
 };
 use std::collections::HashMap;

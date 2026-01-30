@@ -30,6 +30,8 @@
 //! }
 //! ```
 
+#![allow(async_fn_in_trait)]
+
 use crate::{IsolationLevel, Propagation, TransactionError, TransactionResult};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -263,7 +265,7 @@ impl<T> Transactional for T where T: Send + Sync {}
 ///
 /// Equivalent to Spring's TransactionTemplate with try-with-resources.
 /// 等价于Spring与try-with-resources的TransactionTemplate。
-pub struct TransactionGuard<'a> {
+pub(crate) struct TransactionGuard<'a> {
     /// Transaction status
     /// 事务状态
     status: crate::TransactionStatus,
@@ -274,13 +276,13 @@ pub struct TransactionGuard<'a> {
 
     /// Committed flag
     /// 已提交标志
-    committed: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    committed: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl<'a> TransactionGuard<'a> {
     /// Create a new transaction guard
     /// 创建新的事务守卫
-    pub fn new(
+    pub(crate) fn new(
         status: crate::TransactionStatus,
         manager: &'a dyn crate::TransactionManager,
     ) -> Self {
@@ -293,7 +295,7 @@ impl<'a> TransactionGuard<'a> {
 
     /// Commit the transaction
     /// 提交事务
-    pub async fn commit(mut self) -> crate::TransactionResult<()> {
+    pub(crate) async fn commit(self) -> TransactionResult<()> {
         self.committed
             .store(true, std::sync::atomic::Ordering::SeqCst);
         self.manager.commit(self.status.clone()).await
@@ -301,18 +303,18 @@ impl<'a> TransactionGuard<'a> {
 
     /// Rollback the transaction
     /// 回滚事务
-    pub async fn rollback(mut self) -> crate::TransactionResult<()> {
+    pub(crate) async fn rollback(self) -> TransactionResult<()> {
         self.manager.rollback(self.status.clone()).await
     }
 
     /// Mark for rollback only
     /// 标记为仅回滚
-    pub fn set_rollback_only(&self) {
+    pub(crate) fn set_rollback_only(&self) {
         self.status.set_rollback_only();
     }
 }
 
-impl<'a> Drop for TransactionGuard<'a> {
+impl Drop for TransactionGuard<'_> {
     fn drop(&mut self) {
         if !self.committed.load(std::sync::atomic::Ordering::SeqCst) {
             // In a real async Drop scenario, we'd need to handle this differently

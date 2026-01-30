@@ -188,7 +188,7 @@ impl From<sqlx::Error> for R2dbcError {
 
 /// Result type for R2DBC operations
 /// R2DBC 操作的 Result 类型
-pub type R2dbcResult<T> = std::result::Result<T, R2dbcError>;
+pub type R2dbcResult<T> = Result<T, R2dbcError>;
 
 #[cfg(test)]
 mod tests {

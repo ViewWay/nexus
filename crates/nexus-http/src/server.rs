@@ -174,7 +174,7 @@ async fn handle_connection<S>(
     S: HttpService + 'static,
 {
     let mut parser = proto::RequestParser::new();
-    let mut encoder = proto::ResponseEncoder::new();
+    let encoder = proto::ResponseEncoder::new();
 
     tracing::debug!("New connection from {}", peer_addr);
 

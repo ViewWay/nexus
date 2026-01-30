@@ -491,7 +491,7 @@ pub trait RowMapper<T>: Send + Sync {
 ///
 /// A row mapper that uses a closure to map rows.
 /// 使用闭包映射行的行映射器。
-pub struct FnRowMapper<T, F>
+pub(crate) struct FnRowMapper<T, F>
 where
     F: Fn(&Row) -> Result<T, Box<dyn std::error::Error>> + Send + Sync,
 {
@@ -505,7 +505,7 @@ where
 {
     /// Create a new function-based row mapper
     /// 创建新的基于函数的行映射器
-    pub fn new(f: F) -> Self {
+    pub(crate) fn new(f: F) -> Self {
         Self {
             f,
             _phantom: std::marker::PhantomData,
@@ -544,7 +544,7 @@ where
 ///     name: String,
 /// }
 /// ```
-pub trait DeriveRowMapper: Sized {
+pub(crate) trait DeriveRowMapper: Sized {
     /// Map a row to this type
     /// 将行映射到此类型
     fn from_row(row: &Row) -> Result<Self, Box<dyn std::error::Error>>;

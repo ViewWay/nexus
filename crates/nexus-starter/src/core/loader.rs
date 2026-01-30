@@ -364,7 +364,7 @@ impl AutoConfigurationRegistry {
     ///
     /// 返回提取的优先级，如果没有找到则返回 `None`。
     /// Returns extracted priority, or `None` if not found.
-    fn extract_priority(class_name: &str) -> Option<i32> {
+    fn extract_priority(_class_name: &str) -> Option<i32> {
         // 简单实现：从注释中提取优先级
         // Simple implementation: extract priority from comments
         // TODO: 实现更复杂的优先级提取逻辑

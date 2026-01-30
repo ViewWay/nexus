@@ -223,7 +223,7 @@ where
     T: Serialize,
 {
     fn into_response(self) -> Response {
-        let status = StatusCode::from_u16(self.code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+        let _status = StatusCode::from_u16(self.code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
 
         Json(self).into_response()
     }

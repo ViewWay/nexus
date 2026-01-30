@@ -77,7 +77,7 @@ pub type TransactionResult<T> = Result<T, TransactionError>;
 /// 等价于Spring的TransactionSystemException。
 #[derive(Error, Debug)]
 #[error("Transaction system exception: {message}")]
-pub struct TransactionSystemException {
+pub(crate) struct TransactionSystemException {
     /// Error message
     /// 错误消息
     pub message: String,
@@ -91,7 +91,7 @@ pub struct TransactionSystemException {
 impl TransactionSystemException {
     /// Create a new transaction system exception
     /// 创建新的事务系统异常
-    pub fn new(message: impl Into<String>) -> Self {
+    pub(crate) fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
             source: None,
@@ -100,7 +100,7 @@ impl TransactionSystemException {
 
     /// Create with underlying error
     /// 使用底层错误创建
-    pub fn with_source(
+    pub(crate) fn with_source(
         message: impl Into<String>,
         source: impl Into<Box<dyn std::error::Error + Send + Sync>>,
     ) -> Self {
@@ -118,7 +118,7 @@ impl TransactionSystemException {
 /// 等价于Spring的UnexpectedRollbackException。
 #[derive(Error, Debug)]
 #[error("Unexpected rollback: {message}")]
-pub struct UnexpectedRollbackException {
+pub(crate) struct UnexpectedRollbackException {
     /// Error message
     /// 错误消息
     pub message: String,
@@ -127,7 +127,7 @@ pub struct UnexpectedRollbackException {
 impl UnexpectedRollbackException {
     /// Create a new unexpected rollback exception
     /// 创建新的意外回滚异常
-    pub fn new(message: impl Into<String>) -> Self {
+    pub(crate) fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
         }

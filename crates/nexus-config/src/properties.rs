@@ -37,7 +37,7 @@
 use crate::{Config, ConfigError, ConfigResult};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 /// Properties configuration trait
 /// 属性配置trait
@@ -226,24 +226,24 @@ impl Default for PropertiesConfigRegistry {
 ///
 /// Helper for working with nested property structures.
 /// 用于处理嵌套属性结构的助手。
-pub struct NestedProperties;
+pub(crate) struct NestedProperties;
 
 impl NestedProperties {
     /// Flatten nested keys (e.g., "server.port" to "server_port" or vice versa)
     /// 展平嵌套键
-    pub fn flatten_key(key: &str) -> String {
+    pub(crate) fn flatten_key(key: &str) -> String {
         key.replace('.', "_")
     }
 
     /// Nest flat keys
     /// 嵌套扁平键
-    pub fn nest_key(key: &str) -> String {
+    pub(crate) fn nest_key(key: &str) -> String {
         key.replace('_', ".")
     }
 
     /// Extract prefix from key
     /// 从键中提取前缀
-    pub fn extract_prefix(key: &str) -> Option<String> {
+    pub(crate) fn extract_prefix(key: &str) -> Option<String> {
         if let Some(pos) = key.rfind('.') {
             Some(key[..pos].to_string())
         } else {
@@ -253,7 +253,7 @@ impl NestedProperties {
 
     /// Extract suffix from key
     /// 从键中提取后缀
-    pub fn extract_suffix(key: &str) -> Option<String> {
+    pub(crate) fn extract_suffix(key: &str) -> Option<String> {
         if let Some(pos) = key.rfind('.') {
             Some(key[pos + 1..].to_string())
         } else {
@@ -264,7 +264,7 @@ impl NestedProperties {
 
 /// Builder pattern helper for PropertiesConfig
 /// PropertiesConfig的构建器模式助手
-pub struct PropertiesConfigBuilder<T> {
+pub(crate) struct PropertiesConfigBuilder<T> {
     _phantom: std::marker::PhantomData<T>,
 }
 
@@ -274,7 +274,7 @@ where
 {
     /// Create a new builder
     /// 创建新的构建器
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             _phantom: std::marker::PhantomData,
         }
@@ -282,13 +282,13 @@ where
 
     /// Load from config
     /// 从配置加载
-    pub fn load(&self, config: &Config) -> ConfigResult<T> {
+    pub(crate) fn load(&self, config: &Config) -> ConfigResult<T> {
         T::load_from_config(config)
     }
 
     /// Load or default
     /// 加载或默认
-    pub fn load_or_default(&self, config: &Config) -> T
+    pub(crate) fn load_or_default(&self, config: &Config) -> T
     where
         T: Default,
     {
@@ -297,7 +297,7 @@ where
 
     /// Load and validate
     /// 加载并验证
-    pub fn load_and_validate(&self, config: &Config) -> ConfigResult<T> {
+    pub(crate) fn load_and_validate(&self, config: &Config) -> ConfigResult<T> {
         let value = T::load_from_config(config)?;
         value.validate()?;
         Ok(value)

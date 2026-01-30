@@ -137,7 +137,7 @@ impl Default for CacheConfig {
 ///       spec: maximumSize=1000,expireAfterWrite=10m
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CacheProperties {
+pub(crate) struct CacheProperties {
     /// Cache type (simple, caffeine, redis, etc.)
     /// 缓存类型（simple, caffeine, redis等）
     #[serde(default = "default_cache_type")]
@@ -175,7 +175,7 @@ fn default_cache_stats() -> bool {
 /// Cache specification
 /// 缓存规范
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CacheSpec {
+pub(crate) struct CacheSpec {
     /// Maximum cache size
     /// 最大缓存大小
     #[serde(default = "default_max_size")]
@@ -230,7 +230,7 @@ impl Default for CacheProperties {
 /// Equivalent to Spring Boot's `@EnableCaching` configuration.
 /// 等价于Spring Boot的`@EnableCaching`配置。
 #[derive(Debug, Clone)]
-pub struct EnableCaching {
+pub(crate) struct EnableCaching {
     /// Cache manager to use
     /// 要使用的缓存管理器
     pub cache_manager: Option<String>,
@@ -251,7 +251,7 @@ pub struct EnableCaching {
 /// Cache error handling mode
 /// 缓存错误处理模式
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CacheErrorHandler {
+pub(crate) enum CacheErrorHandler {
     /// Throw exception on error
     /// 错误时抛出异常
     Throw,

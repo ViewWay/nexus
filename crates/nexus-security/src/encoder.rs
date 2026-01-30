@@ -1,8 +1,6 @@
 //! Password encoder module
 //! 密码编码器模块
 
-use crate::SecurityResult;
-
 /// Password encoder trait
 /// 密码编码器trait
 ///
@@ -28,7 +26,7 @@ pub trait PasswordEncoder: Send + Sync {
 
     /// Check if encoding needs to be updated (for password migration)
     /// 检查编码是否需要更新（用于密码迁移）
-    fn upgrade_encoding(&self, encoded: &str) -> bool {
+    fn upgrade_encoding(&self, _encoded: &str) -> bool {
         // Default implementation says encoding doesn't need upgrade
         false
     }
@@ -229,7 +227,7 @@ impl PasswordEncoder for Pbkdf2PasswordEncoder {
 
         // Generate salt
         let salt: Vec<u8> = (0..self.salt_length)
-            .map(|_| rand::thread_rng().r#gen())
+            .map(|_| rand::rng().random())
             .collect();
 
         // Derive key

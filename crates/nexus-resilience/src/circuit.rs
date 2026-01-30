@@ -44,6 +44,7 @@
 #![warn(unreachable_pub)]
 
 use std::fmt;
+use std::future::Future;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
@@ -439,7 +440,7 @@ impl CircuitBreaker {
     pub async fn call<F, T, E>(&self, f: F) -> Result<T>
     where
         F: FnOnce() -> std::pin::Pin<
-            Box<dyn std::future::Future<Output = std::result::Result<T, E>> + Send>,
+            Box<dyn Future<Output = std::result::Result<T, E>> + Send>,
         >,
         E: std::error::Error,
     {

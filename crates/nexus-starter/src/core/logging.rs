@@ -118,7 +118,7 @@ impl StartupInfo {
 
     /// 打印 Web 服务器配置（Spring Boot 风格）
     /// Print Web server configuration (Spring Boot style)
-    pub fn print_web_config(&self, config_class: &str, details: &[&str], class_name: &str) {
+    pub fn print_web_config(&self, config_class: &str, details: &[&str], _class_name: &str) {
         let timestamp = format_timestamp();
         for detail in details {
             println!(
@@ -193,13 +193,13 @@ fn pid() -> u32 {
 
 /// 打印配置完成信息
 /// Print configuration completed info
-pub fn print_config_done(name: &str) {
+pub fn print_config_done(_name: &str) {
     // Silent in Spring Boot style - no explicit completion message
 }
 
 /// 打印自动配置开始
 /// Print auto-configuration start
-pub fn print_autoconfig_start(name: &str) {
+pub fn print_autoconfig_start(_name: &str) {
     // Silent in Spring Boot style
 }
 
@@ -223,7 +223,7 @@ pub fn print_separator() {
 
 /// 打印启动信息
 /// Print startup info
-pub fn print_startup_info(debug: bool, worker_threads: usize, profile: Option<String>) {
+pub fn print_startup_info(_debug: bool, _worker_threads: usize, _profile: Option<String>) {
     // Use StartupInfo instead
 }
 
@@ -251,7 +251,7 @@ pub fn print_startup_info(debug: bool, worker_threads: usize, profile: Option<St
 /// // 指定 profile
 /// init_runtime_logging(Some("dev"))?;
 /// ```
-pub fn init_runtime_logging(profile: Option<&str>) -> anyhow::Result<()> {
+pub fn init_runtime_logging(_profile: Option<&str>) -> anyhow::Result<()> {
     #[cfg(feature = "nexus-observability")]
     {
         // 使用 nexus-observability 统一日志系统
