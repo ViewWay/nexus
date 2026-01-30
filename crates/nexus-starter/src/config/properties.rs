@@ -204,10 +204,10 @@ mod tests {
 
     #[test]
     fn test_property_resolver_resolve() {
-        let loader = Arc::new(ConfigurationLoader::new());
+        let mut loader = ConfigurationLoader::new();
         loader.set("server.port".to_string(), "9090".to_string());
 
-        let resolver = PropertyResolver::new(loader);
+        let resolver = PropertyResolver::new(Arc::new(loader));
 
         // 简单替换
         assert_eq!(resolver.resolve("${server.port}"), "9090");
@@ -221,10 +221,10 @@ mod tests {
 
     #[test]
     fn test_property_resolver_get() {
-        let loader = Arc::new(ConfigurationLoader::new());
+        let mut loader = ConfigurationLoader::new();
         loader.set("test.key".to_string(), "test.value".to_string());
 
-        let resolver = PropertyResolver::new(loader);
+        let resolver = PropertyResolver::new(Arc::new(loader));
         assert_eq!(resolver.get_property("test.key"), Some("test.value".to_string()));
         assert_eq!(resolver.get_property_or("test.key", "default"), "test.value");
         assert_eq!(resolver.get_property_or("missing", "default"), "default");

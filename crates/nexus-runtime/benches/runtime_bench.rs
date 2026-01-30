@@ -9,7 +9,16 @@
 //! 此基准测试套件测量 Nexus 运行时与基线（tokio/async-std）相比的性能。
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use nexus_runtime::{Runtime, bounded, channel, select_two, spawn};
+use nexus_runtime::{
+    Runtime, RuntimeConfig,
+    bounded, channel, select_two, spawn,
+    sleep, Duration,
+    SchedulerConfig, WorkStealingConfig, WorkStealingScheduler,
+};
+
+// ============================================================================
+// Spawn Benchmarks / 任务生成基准测试
+// ============================================================================
 
 fn bench_spawn_single(c: &mut Criterion) {
     let mut group = c.benchmark_group("spawn_single");
@@ -50,6 +59,10 @@ fn bench_spawn_many(c: &mut Criterion) {
 
     group.finish();
 }
+
+// ============================================================================
+// Channel Benchmarks / 通道基准测试
+// ============================================================================
 
 fn bench_channel_unbounded(c: &mut Criterion) {
     let mut group = c.benchmark_group("channel_unbounded");
@@ -116,6 +129,97 @@ fn bench_channel_bounded(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_channel_throughput(c: &mut Criterion) {
+    let mut group = c.benchmark_group("channel_throughput");
+
+    for buffer in [1usize, 10, 100, 1000].iter() {
+        group.throughput(Throughput::Elements(*buffer as u64));
+        group.bench_with_input(
+            BenchmarkId::new("bounded_throughput", buffer),
+            buffer,
+            |b, buffer| {
+                let mut runtime = Runtime::new().unwrap();
+                let buffer_size = *buffer;
+                b.iter(|| {
+                    let _ = runtime.block_on(async {
+                        let (tx, mut rx) = bounded::<i32>(buffer_size);
+                        let sender = spawn(async move {
+                            for i in 0..buffer_size {
+                                let _ = tx.send(i as i32);
+                            }
+                        });
+                        let mut received = 0;
+                        for _ in 0..buffer_size {
+                            if let Some(_v) = rx.recv().await {
+                                received += 1;
+                            }
+                        }
+                        sender.wait().await.unwrap();
+                        std::hint::black_box(received);
+                    });
+                });
+            },
+        );
+    }
+
+    group.finish();
+}
+
+fn bench_channel_contention(c: &mut Criterion) {
+    let mut group = c.benchmark_group("channel_contention");
+
+    for producers in [1usize, 2, 4, 8].iter() {
+        group.throughput(Throughput::Elements(*producers as u64));
+        group.bench_with_input(
+            BenchmarkId::new("multi_producer", producers),
+            producers,
+            |b, producers| {
+                let mut runtime = Runtime::new().unwrap();
+                let num_producers = *producers;
+                let items_per_producer = 100;
+                b.iter(|| {
+                    let _ = runtime.block_on(async {
+                        use std::sync::Arc;
+
+                        let (tx, mut rx) = bounded::<i32>(num_producers * items_per_producer);
+                        let tx = Arc::new(tx);
+
+                        let mut handles = Vec::with_capacity(num_producers);
+                        for p in 0..num_producers {
+                            let tx = Arc::clone(&tx);
+                            handles.push(spawn(async move {
+                                for i in 0..items_per_producer {
+                                    let _ = tx.send((p * items_per_producer + i) as i32);
+                                }
+                            }));
+                        }
+
+                        let receiver = spawn(async move {
+                            let mut count = 0;
+                            while let Some(_) = rx.recv().await {
+                                count += 1;
+                            }
+                            count
+                        });
+
+                        for handle in handles {
+                            handle.wait().await.unwrap();
+                        }
+                        let received = receiver.wait().await.unwrap();
+                        std::hint::black_box(received);
+                    });
+                });
+            },
+        );
+    }
+
+    group.finish();
+}
+
+// ============================================================================
+// Select Benchmarks / Select 基准测试
+// ============================================================================
+
 fn bench_select_two(c: &mut Criterion) {
     let mut group = c.benchmark_group("select_two");
 
@@ -140,6 +244,91 @@ fn bench_select_two(c: &mut Criterion) {
 
     group.finish();
 }
+
+// ============================================================================
+// Timer Benchmarks / 时间轮基准测试
+// ============================================================================
+
+fn bench_sleep_zero(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sleep");
+
+    group.bench_function("zero_duration", |b| {
+        let mut runtime = Runtime::new().unwrap();
+        b.iter(|| {
+            let _ = runtime.block_on(async {
+                sleep(Duration::ZERO).await;
+            });
+        });
+    });
+
+    group.finish();
+}
+
+fn bench_sleep_short(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sleep");
+
+    for ms in [1u64, 5, 10, 50].iter() {
+        group.bench_with_input(BenchmarkId::new("short_ms", ms), ms, |b, ms| {
+            let mut runtime = Runtime::new().unwrap();
+            b.iter(|| {
+                let _ = runtime.block_on(async {
+                    sleep(Duration::from_millis(*ms)).await;
+                });
+            });
+        });
+    }
+
+    group.finish();
+}
+
+fn bench_sleep_medium(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sleep");
+
+    for ms in [100u64, 250, 500].iter() {
+        group.bench_with_input(BenchmarkId::new("medium_ms", ms), ms, |b, ms| {
+            let mut runtime = Runtime::new().unwrap();
+            b.iter(|| {
+                let _ = runtime.block_on(async {
+                    sleep(Duration::from_millis(*ms)).await;
+                });
+            });
+        });
+    }
+
+    group.finish();
+}
+
+fn bench_sleep_concurrent(c: &mut Criterion) {
+    let mut group = c.benchmark_group("sleep");
+
+    for count in [10usize, 50, 100].iter() {
+        group.bench_with_input(BenchmarkId::new("concurrent", count), count, |b, count| {
+            let mut runtime = Runtime::new().unwrap();
+            b.iter(|| {
+                let _ = runtime.block_on(async {
+                    let mut handles = Vec::with_capacity(*count);
+                    for _ in 0..*count {
+                        handles.push(spawn(async {
+                            sleep(Duration::from_millis(10)).await;
+                            42i32
+                        }));
+                    }
+                    let mut sum = 0i32;
+                    for handle in handles {
+                        sum += handle.wait().await.unwrap();
+                    }
+                    std::hint::black_box(sum);
+                });
+            });
+        });
+    }
+
+    group.finish();
+}
+
+// ============================================================================
+// Scheduler Benchmarks / 调度器基准测试
+// ============================================================================
 
 fn bench_scheduler_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("scheduler");
@@ -173,14 +362,79 @@ fn bench_scheduler_throughput(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_runtime_creation(c: &mut Criterion) {
+    let mut group = c.benchmark_group("runtime");
+
+    group.bench_function("new", |b| {
+        b.iter(|| {
+            let _ = Runtime::new().unwrap();
+        });
+    });
+
+    group.bench_function("with_config", |b| {
+        b.iter(|| {
+            let config = RuntimeConfig {
+                scheduler: SchedulerConfig::default(),
+                ..Default::default()
+            };
+            let _ = Runtime::with_config(config).unwrap();
+        });
+    });
+
+    group.finish();
+}
+
+// ============================================================================
+// Work-Stealing Scheduler Benchmarks / 工作窃取调度器基准测试
+// ============================================================================
+
+fn bench_work_stealing_scheduler(c: &mut Criterion) {
+    let mut group = c.benchmark_group("work_stealing");
+
+    for tasks in [100usize, 1000].iter() {
+        group.throughput(Throughput::Elements(*tasks as u64));
+        group.bench_with_input(BenchmarkId::new("throughput", tasks), tasks, |b, tasks| {
+            b.iter(|| {
+                // Work-stealing scheduler is standalone, not integrated with Runtime
+                // This benchmark measures scheduler creation overhead
+                let config = WorkStealingConfig::new()
+                    .worker_threads(num_cpus::get())
+                    .queue_size(256);
+                let _scheduler = WorkStealingScheduler::with_config(config).unwrap();
+                std::hint::black_box(*tasks);
+            });
+        });
+    }
+
+    group.finish();
+}
+
+// ============================================================================
+// Criterion Main / Criterion 主函数
+// ============================================================================
+
 criterion_group!(
     benches,
+    // Spawn benchmarks
     bench_spawn_single,
     bench_spawn_many,
+    // Channel benchmarks
     bench_channel_unbounded,
     bench_channel_bounded,
+    bench_channel_throughput,
+    bench_channel_contention,
+    // Select benchmarks
     bench_select_two,
-    bench_scheduler_throughput
+    // Scheduler benchmarks
+    bench_scheduler_throughput,
+    bench_work_stealing_scheduler,
+    // Timer benchmarks
+    bench_sleep_zero,
+    bench_sleep_short,
+    bench_sleep_medium,
+    bench_sleep_concurrent,
+    // Runtime benchmarks
+    bench_runtime_creation,
 );
 
 criterion_main!(benches);
