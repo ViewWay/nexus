@@ -5,6 +5,18 @@
 
 use crate::core::{AutoConfiguration, ApplicationContext};
 
+// Re-export actuator types
+// 重新导出 actuator 类型
+pub use nexus_actuator::{
+    Actuator, InfoBuilder, HealthCheck, HealthIndicator, HealthStatus,
+    MetricsRegistry, Metric, MetricType,
+    Environment, EnvironmentCollector,
+};
+
+// Re-export the handler function
+// 重新导出处理函数
+pub use nexus_actuator::routes::handle_request;
+
 // ============================================================================
 // ActuatorAutoConfiguration / Actuator 自动配置
 // ============================================================================
@@ -79,17 +91,38 @@ impl AutoConfiguration for ActuatorAutoConfiguration {
     fn configure(&self, ctx: &mut ApplicationContext) -> anyhow::Result<()> {
         tracing::info!("Configuring Actuator (base path: {})", self.base_path);
 
+        // Create Actuator with configured settings
+        // 使用配置的设置创建 Actuator
+        let mut actuator = Actuator::new()
+            .enable_health(self.health_enabled)
+            .enable_metrics(self.metrics_enabled);
+
+        // Set application info from configuration
+        // 从配置设置应用信息
+        let app_name = ctx.get_property_or("app.name", "nexus-app");
+        let app_version = ctx.get_property_or("app.version", "0.1.0");
+        actuator = actuator.info(app_name, app_version);
+
+        // Register the actuator as a bean
+        // 将 actuator 注册为 bean
+        ctx.register_bean(actuator);
+
+        // Log enabled endpoints
+        // 记录启用的端点
         if self.health_enabled {
             tracing::info!("  Health endpoint: {}/health", self.base_path);
-            // TODO: 注册健康检查端点
         }
 
         if self.metrics_enabled {
             tracing::info!("  Metrics endpoint: {}/metrics", self.base_path);
-            // TODO: 注册指标端点
         }
 
-        // TODO: 注册其他端点（info, env, beans 等）
+        // Info and env are always enabled by default in Actuator
+        // Info 和 env 在 Actuator 中默认总是启用
+        tracing::info!("  Info endpoint: {}/info", self.base_path);
+        tracing::info!("  Env endpoint: {}/env", self.base_path);
+
+        tracing::info!("Registered Actuator bean");
 
         Ok(())
     }
@@ -110,5 +143,39 @@ mod tests {
         assert!(config.health_enabled);
         assert!(config.metrics_enabled);
         assert_eq!(config.base_path, "/actuator");
+    }
+
+    #[test]
+    fn test_actuator_auto_config_registers_actuator() {
+        let config = ActuatorAutoConfiguration {
+            enabled: true,
+            health_enabled: true,
+            metrics_enabled: true,
+            base_path: "/actuator".to_string(),
+        };
+
+        let mut ctx = ApplicationContext::new();
+        config.configure(&mut ctx).unwrap();
+
+        // Verify Actuator was registered
+        // 验证 Actuator 已注册
+        assert!(ctx.contains_bean::<Actuator>());
+    }
+
+    #[test]
+    fn test_actuator_auto_config_with_custom_base_path() {
+        let config = ActuatorAutoConfiguration {
+            enabled: true,
+            health_enabled: true,
+            metrics_enabled: false,
+            base_path: "/management".to_string(),
+        };
+
+        let mut ctx = ApplicationContext::new();
+        config.configure(&mut ctx).unwrap();
+
+        // Verify Actuator was registered even with custom base path
+        // 验证即使使用自定义基础路径，Actuator 也已注册
+        assert!(ctx.contains_bean::<Actuator>());
     }
 }
