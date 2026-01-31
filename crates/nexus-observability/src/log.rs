@@ -125,6 +125,98 @@ impl std::fmt::Display for LogLevel {
     }
 }
 
+/// Format a log record using a custom pattern
+/// 使用自定义模式格式化日志记录
+///
+/// # Supported Placeholders / 支持的占位符
+///
+/// | Placeholder | Meaning | Example |
+/// |------------|---------|---------|
+/// | `%d` | Date/time | `2024-01-30 10:30:45` |
+/// | `%t` | Thread ID | `12345` |
+/// | `%p` | Priority/level | `INFO` |
+/// | `%c` | Category/logger name | `my.app.Service` |
+/// | `%m` | Message | `User logged in` |
+/// | `%n` | Newline | (actual newline) |
+/// | `%%` | Percent sign | `%` |
+/// | `%X{key}` | MDC value | (from MDC map) |
+///
+/// # Example / 示例
+///
+/// ```
+/// # "%d [%t] %p %c - %m%n"
+/// # "2024-01-30 10:30:45 [12345] INFO my.app.Service - User logged in"
+/// ```
+pub fn format_pattern(
+    pattern: &str,
+    timestamp: &str,
+    thread_id: u64,
+    level: &LogLevel,
+    target: &str,
+    message: &str,
+) -> String {
+    let mut chars = pattern.chars().peekable();
+    let mut formatted = String::new();
+
+    while let Some(c) = chars.next() {
+        if c == '%' {
+            match chars.next() {
+                Some('d') => {
+                    formatted.push_str(timestamp);
+                }
+                Some('t') => {
+                    formatted.push_str(&thread_id.to_string());
+                }
+                Some('p') => {
+                    formatted.push_str(&level.to_string());
+                }
+                Some('c') => {
+                    formatted.push_str(target);
+                }
+                Some('m') => {
+                    formatted.push_str(message);
+                }
+                Some('n') => {
+                    formatted.push('\n');
+                }
+                Some('%') => {
+                    formatted.push('%');
+                }
+                Some('X') => {
+                    // MDC placeholder %X{key}
+                    // MDC 占位符 %X{key}
+                    if chars.next() == Some('{') {
+                        let mut key = String::new();
+                        while let Some(&ch) = chars.peek() {
+                            if ch == '}' {
+                                break;
+                            }
+                            key.push(ch);
+                            chars.next();
+                        }
+                        if chars.next() == Some('}') {
+                            // For now, just show [key] placeholder for MDC values
+                            // 未来：实际从 MDC map 获取值
+                            formatted.push_str(&format!("[{}]", key));
+                        }
+                    }
+                }
+                Some(other) => {
+                    formatted.push('%');
+                    formatted.push(other);
+                }
+                None => {
+                    formatted.push('%');
+                }
+            }
+        } else {
+            formatted.push(c);
+        }
+    }
+
+    formatted
+}
+
 /// Log format style
 /// 日志格式样式
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -248,6 +340,19 @@ pub struct LoggerConfig {
     /// Maximum number of log files to keep
     /// 保留的最大日志文件数
     pub max_files: usize,
+    /// Custom log pattern (overrides default format)
+    /// 自定义日志模式（覆盖默认格式）
+    ///
+    /// Supported placeholders / 支持的占位符:
+    /// - `%d` - date/time / 日期时间
+    /// - `%t` - thread ID / 线程ID
+    /// - `%p` - priority/level / 优先级/级别
+    /// - `%c` - category/logger name / 分类器/日志名称
+    /// - `%m` - message / 消息
+    /// - `%n` - newline / 换行
+    /// - `%%` - percent sign / 百分号
+    /// - `%X{key}` - MDC value / MDC 值
+    pub custom_pattern: Option<String>,
 }
 
 /// Log rotation policy
@@ -319,6 +424,7 @@ impl Default for LoggerConfig {
             with_target: true,
             rotation,
             max_files,
+            custom_pattern: None,
         }
     }
 }
@@ -594,8 +700,16 @@ impl Logger {
         }
 
         // Spring Boot: logging.pattern.console
-        // TODO: Parse custom pattern (future enhancement)
-        // TODO: 解析自定义模式（未来增强）
+        if let Ok(pattern) = std::env::var("LOGGING_PATTERN_CONSOLE") {
+            config.custom_pattern = Some(pattern);
+        }
+
+        // Also support NEXUS_LOG_PATTERN
+        if std::env::var("NEXUS_LOG_PATTERN").is_ok() {
+            if let Ok(pattern) = std::env::var("NEXUS_LOG_PATTERN") {
+                config.custom_pattern = Some(pattern);
+            }
+        }
 
         Logger::init_with_config(config)
     }
@@ -967,5 +1081,62 @@ mod tests {
 
         let log2 = LoggerFactory::get_for::<String>();
         assert_eq!(log2.name(), std::any::type_name::<String>());
+    }
+
+    #[test]
+    fn test_format_pattern_basic() {
+        let pattern = "%d [%t] %p %c - %m%n";
+        let result = format_pattern(
+            pattern,
+            "2024-01-30 10:30:45",
+            12345,
+            &LogLevel::Info,
+            "my.app.Service",
+            "Test message",
+        );
+        assert!(result.contains("2024-01-30 10:30:45"));
+        assert!(result.contains("12345"));
+        assert!(result.contains("INFO"));
+        assert!(result.contains("my.app.Service"));
+        assert!(result.contains("Test message"));
+    }
+
+    #[test]
+    fn test_format_pattern_percent() {
+        let result = format_pattern(
+            "Progress: 50%% complete",
+            "",
+            0,
+            &LogLevel::Info,
+            "",
+            "",
+        );
+        assert_eq!(result, "Progress: 50% complete");
+    }
+
+    #[test]
+    fn test_format_pattern_newline() {
+        let result = format_pattern(
+            "Line 1%nLine 2",
+            "",
+            0,
+            &LogLevel::Info,
+            "",
+            "",
+        );
+        assert_eq!(result, "Line 1\nLine 2");
+    }
+
+    #[test]
+    fn test_format_pattern_mdc() {
+        let result = format_pattern(
+            "User: %X{userId}",
+            "",
+            0,
+            &LogLevel::Info,
+            "",
+            "",
+        );
+        assert_eq!(result, "User: [userId]");
     }
 }

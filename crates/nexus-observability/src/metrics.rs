@@ -92,6 +92,15 @@ impl MetricId {
         self.labels = labels;
         self
     }
+
+    /// Create a new MetricId with a suffix added to the name
+    /// 创建名称带后缀的新 MetricId
+    fn with_suffix(&self, suffix: &str) -> MetricId {
+        MetricId {
+            name: format!("{}_{}", self.name, suffix),
+            labels: self.labels.clone(),
+        }
+    }
 }
 
 /// Metric type
@@ -144,9 +153,9 @@ pub struct Counter {
     /// 计数器值
     value: Arc<AtomicU64>,
 
-    /// Help text
-    /// 帮助文本
-    help: Option<String>,
+    /// Help text (interior mutable for shared updates)
+    /// 帮助文本（内部可变以支持共享更新）
+    help: Arc<RwLock<Option<String>>>,
 }
 
 impl Counter {
@@ -156,7 +165,7 @@ impl Counter {
         Self {
             id: MetricId::new(name),
             value: Arc::new(AtomicU64::new(0)),
-            help: None,
+            help: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -166,15 +175,17 @@ impl Counter {
         Self {
             id: MetricId::new(name).with_labels(labels),
             value: Arc::new(AtomicU64::new(0)),
-            help: None,
+            help: Arc::new(RwLock::new(None)),
         }
     }
 
     /// Set help text
     /// 设置帮助文本
-    pub fn with_help(mut self, help: impl Into<String>) -> Self {
-        self.help = Some(help.into());
-        self
+    pub fn with_help(&self, help: impl Into<String>) -> Self {
+        if let Ok(mut h) = self.help.write() {
+            *h = Some(help.into());
+        }
+        self.clone()
     }
 
     /// Get the metric ID
@@ -209,8 +220,8 @@ impl Counter {
 
     /// Get help text
     /// 获取帮助文本
-    pub fn help(&self) -> Option<&str> {
-        self.help.as_deref()
+    pub fn help(&self) -> Option<String> {
+        self.help.read().ok().and_then(|h| h.clone())
     }
 }
 
@@ -229,9 +240,9 @@ pub struct Gauge {
     /// 仪表值（可以为负）
     value: Arc<AtomicI64>,
 
-    /// Help text
-    /// 帮助文本
-    help: Option<String>,
+    /// Help text (interior mutable for shared updates)
+    /// 帮助文本（内部可变以支持共享更新）
+    help: Arc<RwLock<Option<String>>>,
 }
 
 impl Gauge {
@@ -241,7 +252,7 @@ impl Gauge {
         Self {
             id: MetricId::new(name),
             value: Arc::new(AtomicI64::new(0)),
-            help: None,
+            help: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -251,15 +262,17 @@ impl Gauge {
         Self {
             id: MetricId::new(name).with_labels(labels),
             value: Arc::new(AtomicI64::new(0)),
-            help: None,
+            help: Arc::new(RwLock::new(None)),
         }
     }
 
     /// Set help text
     /// 设置帮助文本
-    pub fn with_help(mut self, help: impl Into<String>) -> Self {
-        self.help = Some(help.into());
-        self
+    pub fn with_help(&self, help: impl Into<String>) -> Self {
+        if let Ok(mut h) = self.help.write() {
+            *h = Some(help.into());
+        }
+        self.clone()
     }
 
     /// Get the metric ID
@@ -306,8 +319,8 @@ impl Gauge {
 
     /// Get help text
     /// 获取帮助文本
-    pub fn help(&self) -> Option<&str> {
-        self.help.as_deref()
+    pub fn help(&self) -> Option<String> {
+        self.help.read().ok().and_then(|h| h.clone())
     }
 }
 
@@ -365,9 +378,9 @@ pub struct Histogram {
     /// 直方图数据
     data: Arc<RwLock<HistogramData>>,
 
-    /// Help text
-    /// 帮助文本
-    help: Option<String>,
+    /// Help text (interior mutable for shared updates)
+    /// 帮助文本（内部可变以支持共享更新）
+    help: Arc<RwLock<Option<String>>>,
 }
 
 /// Histogram data (interior mutable)
@@ -486,7 +499,7 @@ impl Histogram {
         Self {
             id: MetricId::new(name),
             data: Arc::new(RwLock::new(HistogramData::new())),
-            help: None,
+            help: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -497,7 +510,7 @@ impl Histogram {
         Self {
             id: MetricId::new(name),
             data: Arc::new(RwLock::new(HistogramData::with_buckets(bucket_options))),
-            help: None,
+            help: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -507,15 +520,17 @@ impl Histogram {
         Self {
             id: MetricId::new(name).with_labels(labels),
             data: Arc::new(RwLock::new(HistogramData::new())),
-            help: None,
+            help: Arc::new(RwLock::new(None)),
         }
     }
 
     /// Set help text
     /// 设置帮助文本
-    pub fn with_help(mut self, help: impl Into<String>) -> Self {
-        self.help = Some(help.into());
-        self
+    pub fn with_help(&self, help: impl Into<String>) -> Self {
+        if let Ok(mut h) = self.help.write() {
+            *h = Some(help.into());
+        }
+        self.clone()
     }
 
     /// Get the metric ID
@@ -563,8 +578,8 @@ impl Histogram {
 
     /// Get help text
     /// 获取帮助文本
-    pub fn help(&self) -> Option<&str> {
-        self.help.as_deref()
+    pub fn help(&self) -> Option<String> {
+        self.help.read().ok().and_then(|h| h.clone())
     }
 }
 
@@ -608,7 +623,7 @@ impl Metric {
 
     /// Get help text
     /// 获取帮助文本
-    pub fn help(&self) -> Option<&str> {
+    pub fn help(&self) -> Option<String> {
         match self {
             Self::Counter(c) => c.help(),
             Self::Gauge(g) => g.help(),
@@ -785,7 +800,7 @@ impl MetricsRegistry {
                 output.push_str("# HELP ");
                 output.push_str(&name);
                 output.push_str(" ");
-                output.push_str(help);
+                output.push_str(&help);
                 output.push_str("\n");
             }
 
@@ -808,19 +823,18 @@ impl MetricsRegistry {
                         output.push_str(&export_metric_line(&gauge.id(), gauge.get() as u64));
                     },
                     Metric::Histogram(histogram) => {
-                        // Export bucket counts
+                        // Export bucket counts with _bucket suffix
+                        let bucket_name = histogram.id().with_suffix("bucket");
                         for bucket in histogram.buckets() {
-                            let mut bucket_id = histogram.id().clone();
+                            let mut bucket_id = bucket_name.clone();
                             bucket_id.labels.push(("le".to_string(), bucket.label()));
                             output.push_str(&export_metric_line(&bucket_id, bucket.count));
                         }
-                        // Export sum and count
-                        let mut sum_id = histogram.id().clone();
-                        sum_id.labels.push(("_sum".to_string(), "".to_string()));
+                        // Export sum and count with proper suffixes
+                        let sum_id = histogram.id().with_suffix("sum");
                         output.push_str(&export_metric_line(&sum_id, histogram.sum() as u64));
 
-                        let mut count_id = histogram.id().clone();
-                        count_id.labels.push(("_count".to_string(), "".to_string()));
+                        let count_id = histogram.id().with_suffix("count");
                         output.push_str(&export_metric_line(&count_id, histogram.count()));
                     },
                 }
@@ -973,7 +987,7 @@ mod tests {
     #[test]
     fn test_counter_with_help() {
         let counter = Counter::new("test").with_help("Test counter");
-        assert_eq!(counter.help(), Some("Test counter"));
+        assert_eq!(counter.help(), Some("Test counter".to_string()));
     }
 
     #[test]
