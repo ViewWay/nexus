@@ -21,12 +21,18 @@
 //! ```
 
 use crate::core::{AutoConfiguration, ApplicationContext};
+use anyhow::Result as AnyhowResult;
+use std::net::SocketAddr;
 
 /// Get the number of available CPU cores
 /// 获取可用的 CPU 核心数
 fn available_parallelism() -> usize {
     num_cpus::get()
 }
+
+// Re-export HTTP server types
+// 重新导出 HTTP 服务器类型
+pub use nexus_http::{Server, Response, StatusCode, Request, Body, HttpService, IntoResponse, Json};
 
 // ============================================================================
 // WebServerAutoConfiguration / Web 服务器自动配置
@@ -265,12 +271,82 @@ impl AutoConfiguration for WebServerAutoConfiguration {
     ///
     /// 配置 HTTP 服务器并注册相关 Bean。
     /// Configure HTTP server and register related beans.
-    fn configure(&self, _ctx: &mut ApplicationContext) -> anyhow::Result<()> {
-        // Spring Boot 风格：不在启动时打印详细配置
-        // Spring Boot style: Don't print detailed config during startup
-        // TODO: 实际创建并启动服务器
-        // TODO: Actually create and start the server
+    fn configure(&self, ctx: &mut ApplicationContext) -> anyhow::Result<()> {
+        // Register the configuration as a bean so it can be retrieved later
+        // 将配置注册为 Bean，以便后续获取
+        ctx.register_named_bean("webServerConfig".to_string(), self.clone());
         Ok(())
+    }
+}
+
+impl WebServerAutoConfiguration {
+    /// Create and start the HTTP server with the given service
+    /// 使用给定的服务创建并启动 HTTP 服务器
+    ///
+    /// # 参数 / Parameters
+    ///
+    /// - `service`: HTTP service that handles requests / 处理请求的 HTTP 服务
+    ///
+    /// # 返回 / Returns
+    ///
+    /// 返回一个 Future，当 await 时会运行服务器直到出错。
+    /// Returns a Future that runs the server until an error occurs.
+    ///
+    /// # 示例 / Example
+    ///
+    /// ```rust,ignore
+    /// use nexus_starter::web::WebServerAutoConfiguration;
+    /// use nexus_http::{Response, Result};
+    ///
+    /// async fn handler(req: Request) -> Result<Response> {
+    ///     Ok(Response::builder().body("Hello".into()).unwrap())
+    /// }
+    ///
+    /// let config = WebServerAutoConfiguration::new();
+    /// config.run(handler).await?;
+    /// ```
+    pub async fn run<S>(&self, service: S) -> AnyhowResult<()>
+    where
+        S: HttpService + Clone + 'static,
+    {
+        // Validate the bind address
+        // 验证绑定地址
+        let bind_addr = self.bind_address();
+        bind_addr.parse::<SocketAddr>().map_err(|e| {
+            anyhow::anyhow!("Invalid bind address '{}': {}", bind_addr, e)
+        })?;
+
+        // Create the server with the configuration
+        // 使用配置创建服务器
+        let server = Server::bind(&bind_addr)
+            .max_connections(self.max_connections)
+            .request_timeout(self.request_timeout_secs);
+
+        // Run the server
+        // 运行服务器
+        server.run(service).await.map_err(|e| {
+            anyhow::anyhow!("Server error: {}", e)
+        })
+    }
+
+    /// Create a Server instance without running it
+    /// 创建服务器实例但不运行它
+    ///
+    /// # 返回 / Returns
+    ///
+    /// 返回配置好的 `nexus_http::Server` 实例。
+    /// Returns a configured `nexus_http::Server` instance.
+    pub fn create_server(&self) -> Server {
+        let bind_addr = self.bind_address();
+        // Validate the address format, fall back to default if invalid
+        // 验证地址格式，如果无效则使用默认值
+        let _ = bind_addr.parse::<SocketAddr>().unwrap_or_else(|_| {
+            SocketAddr::from(([127, 0, 0, 1], 8080))
+        });
+
+        Server::bind(bind_addr)
+            .max_connections(self.max_connections)
+            .request_timeout(self.request_timeout_secs)
     }
 }
 
@@ -527,6 +603,37 @@ mod tests {
             .with_port(9090)
             .with_host("0.0.0.0");
         assert_eq!(config.bind_address(), "0.0.0.0:9090");
+    }
+
+    #[test]
+    fn test_web_server_create_server() {
+        let config = WebServerAutoConfiguration::new()
+            .with_port(9090)
+            .with_host("0.0.0.0")
+            .with_max_connections(5000);
+
+        let server = config.create_server();
+        assert_eq!(server.addr().to_string(), "0.0.0.0:9090");
+    }
+
+    #[test]
+    fn test_web_server_configure_registers_bean() {
+        use crate::core::ApplicationContext;
+
+        let config = WebServerAutoConfiguration::new()
+            .with_port(9090)
+            .with_host("0.0.0.0");
+
+        let mut ctx = ApplicationContext::new();
+        config.configure(&mut ctx).unwrap();
+
+        // Verify the configuration was registered as a bean
+        // 验证配置已注册为 Bean
+        let registered = ctx.get_bean_by_name::<WebServerAutoConfiguration>("webServerConfig");
+        assert!(registered.is_some());
+        let registered_config = registered.unwrap();
+        assert_eq!(registered_config.port, 9090);
+        assert_eq!(registered_config.host, "0.0.0.0");
     }
 
     // ------------------------------------------------------------------------
