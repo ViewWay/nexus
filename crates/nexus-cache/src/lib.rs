@@ -65,7 +65,7 @@ mod resolver;
 pub use cache::{Cache, CacheBuilder, CacheConfig, CacheStats, MemoryCache};
 pub use cache_config::CacheConfig as CacheSettings;
 pub use cache_evict::{CacheEvict, CacheEvictExec, CacheEvictOptions, EvictPolicy};
-pub use cache_manager::{CacheManager, CacheManagerBuilder};
+pub use cache_manager::{CacheManager, CacheManagerBuilder, SimpleCacheManager};
 pub use cache_put::{CachePut, CachePutExec, CachePutOptions};
 pub use cacheable::{Cacheable, CacheableOptions, Cached};
 pub use condition_evaluator::evaluate_cache_condition;

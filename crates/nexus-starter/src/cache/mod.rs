@@ -5,6 +5,15 @@
 
 use crate::core::{AutoConfiguration, ApplicationContext};
 
+// Re-export cache types
+// 重新导出缓存类型
+pub use nexus_cache::{
+    Cache, CacheBuilder, CacheConfig, CacheStats, MemoryCache,
+    CacheManager, CacheManagerBuilder, SimpleCacheManager,
+    Cacheable, CachePut, CacheEvict, Cached,
+    DEFAULT_CACHE, DEFAULT_TTL_SECS, DEFAULT_MAX_CAPACITY,
+};
+
 // ============================================================================
 // CacheAutoConfiguration / 缓存自动配置
 // ============================================================================
@@ -77,9 +86,15 @@ impl AutoConfiguration for CacheAutoConfiguration {
     fn configure(&self, ctx: &mut ApplicationContext) -> anyhow::Result<()> {
         tracing::info!("Configuring Cache (TTL: {}s, Max size: {})", self.ttl, self.max_size);
 
-        // TODO: 创建并注册 CacheManager
-        // let cache = MemoryCache::new(self.ttl, self.max_size);
-        // ctx.register_bean(cache);
+        // Create CacheManager with configured settings
+        // 使用配置的设置创建 CacheManager
+        let cache_config = CacheConfig::new(DEFAULT_CACHE)
+            .ttl_secs(self.ttl)
+            .max_capacity(self.max_size);
+
+        let manager = SimpleCacheManager::with_config(cache_config);
+        ctx.register_bean(manager);
+        tracing::info!("Registered CacheManager bean");
 
         Ok(())
     }
@@ -99,5 +114,21 @@ mod tests {
         assert!(!config.enabled);
         assert_eq!(config.ttl, 600);
         assert_eq!(config.max_size, 10000);
+    }
+
+    #[test]
+    fn test_cache_auto_config_registers_manager() {
+        let config = CacheAutoConfiguration {
+            enabled: true,
+            ttl: 300,
+            max_size: 5000,
+        };
+
+        let mut ctx = ApplicationContext::new();
+        config.configure(&mut ctx).unwrap();
+
+        // Verify CacheManager was registered
+        // 验证 CacheManager 已注册
+        assert!(ctx.contains_bean::<SimpleCacheManager>());
     }
 }
