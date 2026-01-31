@@ -137,7 +137,13 @@ pub const DEFAULT_SERVER_PORT: u16 = 8080;
 pub const DEFAULT_SERVER_HOST: &str = "127.0.0.1";
 
 /// 默认工作线程数
-pub const DEFAULT_WORKER_THREADS: usize = 4; // TODO: Use num_cpus when available
+/// Default number of worker threads
+///
+/// Note: This is a conservative default. Actual runtime uses available_parallelism()
+/// which returns the number of CPU cores.
+/// 注意：这是一个保守的默认值。实际运行时使用 available_parallelism()
+/// 返回 CPU 核心数。
+pub const DEFAULT_WORKER_THREADS: usize = 4;
 
 /// 应用配置文件名
 pub const APP_CONFIG_FILE: &str = "application";
