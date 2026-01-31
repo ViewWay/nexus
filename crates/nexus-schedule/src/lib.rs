@@ -14,7 +14,10 @@
 
 pub mod scheduled;
 
-pub use scheduled::{ScheduleType, ScheduledTask, TaskScheduler};
+pub use scheduled::{
+    ScheduleType, ScheduledTask, TaskScheduler,
+    schedule_fixed_rate, schedule_fixed_delay,
+};
 
 /// Re-exports of commonly used types
 /// 常用类型的重新导出

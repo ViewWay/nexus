@@ -5,6 +5,14 @@
 
 use crate::core::{AutoConfiguration, ApplicationContext};
 
+// Re-export schedule types
+// 重新导出调度类型
+pub use nexus_schedule::{
+    ScheduleType, ScheduledTask, TaskScheduler,
+    schedule_fixed_rate, schedule_fixed_delay,
+    DEFAULT_SCHEDULED_POOL_SIZE, DEFAULT_FIXED_RATE_MS, DEFAULT_INITIAL_DELAY_MS,
+};
+
 // ============================================================================
 // ScheduleAutoConfiguration / 定时任务自动配置
 // ============================================================================
@@ -69,13 +77,18 @@ impl AutoConfiguration for ScheduleAutoConfiguration {
     fn configure(&self, ctx: &mut ApplicationContext) -> anyhow::Result<()> {
         tracing::info!("Configuring Scheduled Tasks (Pool size: {})", self.pool_size);
 
-        // TODO: 创建并注册 TaskScheduler
-        // let scheduler = TaskScheduler::new(self.pool_size);
-        // ctx.register_bean(scheduler);
+        // Create and register TaskScheduler
+        // 创建并注册 TaskScheduler
+        let scheduler = TaskScheduler::new();
+        ctx.register_bean(scheduler);
+        tracing::info!("Registered TaskScheduler bean");
 
-        // 扫描 @Scheduled 注解的方法
-        // 扫描 @cron、@fixed_rate、@fixed_delay 注解
-        // 注册定时任务
+        // TODO: 扫描 @Scheduled 注解的方法
+        // TODO: 扫描 @cron、@fixed_rate、@fixed_delay 注解
+        // TODO: 注册定时任务
+        // Scan for @Scheduled annotated methods
+        // Scan for @cron, @fixed_rate, @fixed_delay annotations
+        // Register scheduled tasks
 
         Ok(())
     }
@@ -94,5 +107,20 @@ mod tests {
         let config = ScheduleAutoConfiguration::new();
         assert!(!config.enabled);
         assert_eq!(config.pool_size, 4);
+    }
+
+    #[test]
+    fn test_schedule_auto_config_registers_scheduler() {
+        let config = ScheduleAutoConfiguration {
+            enabled: true,
+            pool_size: 4,
+        };
+
+        let mut ctx = ApplicationContext::new();
+        config.configure(&mut ctx).unwrap();
+
+        // Verify TaskScheduler was registered
+        // 验证 TaskScheduler 已注册
+        assert!(ctx.contains_bean::<TaskScheduler>());
     }
 }
