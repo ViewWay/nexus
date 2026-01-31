@@ -85,34 +85,132 @@ impl PropertyResolver {
     /// ```text
     /// ${server.port}         -> 从配置获取 server.port
     /// ${server.port:8080}    -> 从配置获取 server.port，默认 8080
+    /// \${escaped}            -> 保留为 ${escaped}
     /// ```
     pub fn resolve(&self, value: &str) -> String {
         let mut result = value.to_string();
 
-        // 简单的占位符替换（TODO: 完整实现）
-        while let Some(start) = result.find(&self.placeholder_prefix) {
-            let end = match result[start..].find(&self.placeholder_suffix) {
-                Some(pos) => pos + start + self.placeholder_suffix.len(),
-                None => break,
-            };
+        // Handle escaped placeholders: \${ -> temp marker
+        result = result.replace(r"\${", "\x00ESCaped\x00");
 
-            let placeholder = &result[start..end];
-            let inner = &placeholder[self.placeholder_prefix.len()..placeholder.len() - self.placeholder_suffix.len()];
+        // 多轮解析以支持嵌套占位符和值中的占位符，最多10层防止循环引用
+        // Multiple passes to support nested placeholders and placeholders in values
+        for _ in 0..10 {
+            let prev_result = result.clone();
+            let mut pos = 0;
 
-            let resolved = if let Some(colon_pos) = inner.find(&self.value_separator) {
-                // 有默认值: ${key:default}
-                let key = &inner[..colon_pos];
-                let default = &inner[colon_pos + 1..];
-                self.loader.get_or(key, default)
+            while pos < result.len() {
+                if let Some(start) = result[pos..].find(&self.placeholder_prefix) {
+                    let start = start + pos;
+
+                    // Find matching closing brace, accounting for nested placeholders
+                    let end = self.find_matching_end(&result, start);
+                    let end = match end {
+                        Some(e) => e + self.placeholder_suffix.len(),
+                        None => {
+                            pos = start + self.placeholder_prefix.len();
+                            continue;
+                        }
+                    };
+
+                    let placeholder = &result[start..end];
+                    let inner = &placeholder[self.placeholder_prefix.len()..placeholder.len() - self.placeholder_suffix.len()];
+
+                    // 递归解析 inner 中的占位符（处理嵌套情况）
+                    // Recursively resolve placeholders in inner (handle nesting)
+                    let resolved_key = self.resolve_single(inner);
+                    let resolved = if let Some(colon_pos) = resolved_key.find(&self.value_separator) {
+                        // 有默认值: ${key:default}
+                        let key = &resolved_key[..colon_pos];
+                        let default = &resolved_key[colon_pos + 1..];
+                        self.loader.get_or(key, default)
+                    } else {
+                        // 无默认值: ${key}
+                        self.loader.get(&resolved_key).unwrap_or_else(|| placeholder.to_string())
+                    };
+
+                    result = format!("{}{}{}", &result[..start], &resolved, &result[end..]);
+                    pos = start + resolved.len();
+                } else {
+                    break;
+                }
+            }
+
+            // 如果没有变化，退出循环
+            if result == prev_result {
+                break;
+            }
+        }
+
+        // Restore escaped placeholders: \x00ESCaped\x00 -> \${
+        result = result.replace("\x00ESCaped\x00", r"\${");
+
+        result
+    }
+
+    /// Resolve a single level of placeholders (non-recursive)
+    /// 解析单层占位符（非递归）
+    fn resolve_single(&self, value: &str) -> String {
+        let mut result = value.to_string();
+        let mut pos = 0;
+
+        while pos < result.len() {
+            if let Some(start) = result[pos..].find(&self.placeholder_prefix) {
+                let start = start + pos;
+                let end = self.find_matching_end(&result, start);
+                let end = match end {
+                    Some(e) => e + self.placeholder_suffix.len(),
+                    None => {
+                        pos = start + self.placeholder_prefix.len();
+                        continue;
+                    }
+                };
+
+                let placeholder = &result[start..end];
+                let inner = &placeholder[self.placeholder_prefix.len()..placeholder.len() - self.placeholder_suffix.len()];
+
+                let resolved = if let Some(colon_pos) = inner.find(&self.value_separator) {
+                    let key = &inner[..colon_pos];
+                    let default = &inner[colon_pos + 1..];
+                    self.loader.get_or(key, default)
+                } else {
+                    self.loader.get(inner).unwrap_or_else(|| placeholder.to_string())
+                };
+
+                result = format!("{}{}{}", &result[..start], &resolved, &result[end..]);
+                pos = start + resolved.len();
             } else {
-                // 无默认值: ${key}
-                self.loader.get(inner).unwrap_or_else(|| placeholder.to_string())
-            };
-
-            result = format!("{}{}{}", &result[..start], resolved, &result[end..]);
+                break;
+            }
         }
 
         result
+    }
+
+    /// Find the matching closing brace for a placeholder starting at start
+    /// 查找从 start 开始的占位符的匹配结束括号
+    fn find_matching_end(&self, s: &str, start: usize) -> Option<usize> {
+        let chars: Vec<char> = s[start..].chars().collect();
+        let mut depth = 0;
+        let mut i = 2; // Skip the initial ${
+
+        while i < chars.len() {
+            if i + 1 < chars.len() && chars[i] == '$' && chars[i + 1] == '{' {
+                // Found nested ${, increase depth
+                depth += 1;
+                i += 2;
+            } else if chars[i] == '}' {
+                if depth == 0 {
+                    return Some(start + i);
+                }
+                depth -= 1;
+                i += 1;
+            } else {
+                i += 1;
+            }
+        }
+
+        None
     }
 
     /// 获取属性
@@ -216,6 +314,58 @@ mod tests {
 
         // 未找到且无默认值
         assert_eq!(resolver.resolve("${missing.key}"), "${missing.key}");
+    }
+
+    #[test]
+    fn test_property_resolver_escaped() {
+        let resolver = PropertyResolver::new(Arc::new(ConfigurationLoader::new()));
+
+        // 转义的占位符应该保留
+        // 输入: \${not.a.placeholder} -> 输出: \${not.a.placeholder} (不被解析)
+        assert_eq!(resolver.resolve(r"\${not.a.placeholder}"), r"\${not.a.placeholder}");
+
+        // 混合转义和正常占位符
+        let mut loader = ConfigurationLoader::new();
+        loader.set("server.port".to_string(), "8080".to_string());
+        let resolver = PropertyResolver::new(Arc::new(loader));
+        assert_eq!(resolver.resolve(r"Port: \${literal}, Real: ${server.port}"), r"Port: \${literal}, Real: 8080");
+    }
+
+    #[test]
+    fn test_property_resolver_nested() {
+        let mut loader = ConfigurationLoader::new();
+        loader.set("app.prefix".to_string(), "server".to_string());
+        loader.set("server.port".to_string(), "9090".to_string());
+
+        let resolver = PropertyResolver::new(Arc::new(loader));
+
+        // 嵌套占位符: ${${app.prefix}.port}
+        assert_eq!(resolver.resolve("${${app.prefix}.port}"), "9090");
+    }
+
+    #[test]
+    fn test_property_resolver_recursive() {
+        let mut loader = ConfigurationLoader::new();
+        // 值本身包含占位符
+        loader.set("host".to_string(), "localhost".to_string());
+        loader.set("url".to_string(), "http://${host}:8080".to_string());
+
+        let resolver = PropertyResolver::new(Arc::new(loader));
+
+        // 递归解析
+        assert_eq!(resolver.resolve("${url}"), "http://localhost:8080");
+    }
+
+    #[test]
+    fn test_property_resolver_multiple() {
+        let mut loader = ConfigurationLoader::new();
+        loader.set("host".to_string(), "localhost".to_string());
+        loader.set("port".to_string(), "8080".to_string());
+
+        let resolver = PropertyResolver::new(Arc::new(loader));
+
+        // 多个占位符
+        assert_eq!(resolver.resolve("${host}:${port}"), "localhost:8080");
     }
 
     #[test]
