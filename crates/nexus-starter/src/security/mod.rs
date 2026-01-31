@@ -5,6 +5,25 @@
 
 use crate::core::{AutoConfiguration, ApplicationContext};
 
+// Re-export security types
+// 重新导出安全类型
+pub use nexus_security::{
+    // Authentication & Authorization
+    Authentication, AuthenticationManager, SecurityContext,
+    // Authorities & Roles
+    Authority, Role, Permission,
+    // JWT
+    JwtTokenProvider, JwtUtil, JwtClaims, JwtAuthentication,
+    // Password encoding
+    PasswordEncoder, BcryptPasswordEncoder,
+    // Users
+    User, UserDetails, UserService,
+    // Security annotations
+    PreAuthorize, Secured,
+    // Errors
+    SecurityError, SecurityResult,
+};
+
 // ============================================================================
 // SecurityAutoConfiguration / 安全自动配置
 // ============================================================================
@@ -74,14 +93,23 @@ impl AutoConfiguration for SecurityAutoConfiguration {
     fn configure(&self, ctx: &mut ApplicationContext) -> anyhow::Result<()> {
         tracing::info!("Configuring Security");
 
-        if let Some(ref secret) = self.jwt_secret {
-            tracing::info!("JWT authentication enabled (expiration: {}s)", self.jwt_expiration);
-
-            // TODO: 创建并注册 JwtTokenProvider
-            // ctx.register_bean(JwtTokenProvider::new(secret));
-        } else {
+        // Create JwtTokenProvider with configured settings
+        // 使用配置的设置创建 JwtTokenProvider
+        let secret = self.jwt_secret.as_ref().cloned().unwrap_or_else(|| {
             tracing::warn!("JWT secret not configured, using default (insecure!)");
-        }
+            "nexus-jwt-secret-key-change-in-production-2024".to_string()
+        });
+
+        // Convert expiration from seconds to hours
+        // 将过期时间从秒转换为小时
+        let expiration_hours = (self.jwt_expiration / 3600) as i64;
+
+        let provider = JwtTokenProvider::with_settings(secret, expiration_hours);
+        ctx.register_bean(provider);
+        tracing::info!(
+            "Registered JwtTokenProvider bean (expiration: {}s)",
+            self.jwt_expiration
+        );
 
         Ok(())
     }
@@ -108,10 +136,12 @@ impl AutoConfiguration for JwtAutoConfiguration {
         60  // 在 SecurityAutoConfiguration 之后
     }
 
-    fn configure(&self, ctx: &mut ApplicationContext) -> anyhow::Result<()> {
-        tracing::info!("Configuring JWT");
-
-        // TODO: 配置 JWT 验证、编码等
+    fn configure(&self, _ctx: &mut ApplicationContext) -> anyhow::Result<()> {
+        // JWT is configured in SecurityAutoConfiguration
+        // This is a placeholder for additional JWT-specific configuration
+        // JWT 在 SecurityAutoConfiguration 中配置
+        // 这是额外的 JWT 特定配置的占位符
+        tracing::info!("JWT additional configuration completed");
         Ok(())
     }
 }
@@ -129,5 +159,49 @@ mod tests {
         let config = SecurityAutoConfiguration::new();
         assert!(config.enabled);
         assert_eq!(config.jwt_expiration, 3600);
+        assert!(config.jwt_secret.is_none());
+    }
+
+    #[test]
+    fn test_security_auto_config_with_secret() {
+        let config = SecurityAutoConfiguration {
+            enabled: true,
+            jwt_secret: Some("my-secret-key".to_string()),
+            jwt_expiration: 7200,
+        };
+        assert_eq!(config.jwt_secret, Some("my-secret-key".to_string()));
+        assert_eq!(config.jwt_expiration, 7200);
+    }
+
+    #[test]
+    fn test_security_auto_config_registers_provider() {
+        let config = SecurityAutoConfiguration {
+            enabled: true,
+            jwt_secret: Some("test-secret".to_string()),
+            jwt_expiration: 3600,
+        };
+
+        let mut ctx = ApplicationContext::new();
+        config.configure(&mut ctx).unwrap();
+
+        // Verify JwtTokenProvider was registered
+        // 验证 JwtTokenProvider 已注册
+        assert!(ctx.contains_bean::<JwtTokenProvider>());
+    }
+
+    #[test]
+    fn test_security_auto_config_with_default_secret() {
+        let config = SecurityAutoConfiguration {
+            enabled: true,
+            jwt_secret: None,
+            jwt_expiration: 3600,
+        };
+
+        let mut ctx = ApplicationContext::new();
+        config.configure(&mut ctx).unwrap();
+
+        // Should still register with default secret
+        // 应该仍然使用默认密钥注册
+        assert!(ctx.contains_bean::<JwtTokenProvider>());
     }
 }
