@@ -55,6 +55,11 @@
 
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
+// Allow dead_code: This is a framework library with many public APIs that are
+// provided for users but not used internally. This is expected and intentional.
+// 允许 dead_code：这是一个框架库，包含许多公共 API 供用户使用但内部未使用。
+// 这是预期且有意的设计。
+#![allow(dead_code)]
 
 mod entity;
 mod error;
@@ -63,14 +68,14 @@ mod query;
 mod repository;
 mod sort;
 
-pub use entity::{AggregateRoot, Auditable, LifecycleEvent};
+pub use entity::{AggregateRoot, Auditable, Identifier, LifecycleEvent};
 pub use error::{Error, Result};
 pub use page::{List, Page, PageRequest, Slice};
 pub use query::{
     Condition, LambdaQueryWrapper, Predicate, QueryOrder, QueryWrapper, Specification, ToValue,
     ToValueMap, UpdateWrapper, Value,
 };
-pub use repository::{CrudRepository, Identifier, PagingAndSortingRepository, Repository};
+pub use repository::{CrudRepository, PagingAndSortingRepository, Repository};
 pub use sort::{Direction, Order, Sort};
 
 /// Core re-exports

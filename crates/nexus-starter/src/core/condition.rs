@@ -391,6 +391,19 @@ macro_rules! all_conditions {
     }};
 }
 
+/// Macro to create an AnyConditions collection from multiple conditions
+/// 从多个条件创建 AnyConditions 集合的宏
+///
+/// # Example / 示例
+///
+/// ```rust,ignore
+/// use nexus_starter::core::condition::any_conditions;
+///
+/// let condition = any_conditions!(
+///     ConditionalOnProperty::new("feature.enabled", true),
+///     ConditionalOnProperty::new("fallback.enabled", true),
+/// );
+/// ```
 #[macro_export]
 macro_rules! any_conditions {
     ($($condition:expr),* $(,)?) => {{
@@ -421,7 +434,7 @@ mod tests {
 
     #[test]
     fn test_conditional_on_expression() {
-        let mut ctx = ApplicationContext::new();
+        let ctx = ApplicationContext::new();
         ctx.register_bean("test_value".to_string());
 
         // 测试简单表达式

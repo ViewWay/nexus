@@ -22,24 +22,22 @@
 </p>
 </div>
 
-# Nexus Framework / Nexus 框架
+# Nexus Framework
 
 Nexus is a production-grade, high-availability web framework written in Rust with a custom async runtime. Unlike other frameworks that use Tokio, Nexus features a custom async runtime built from scratch using io-uring for maximum performance.
 
-Nexus 是一个用 Rust 编写的生产级、高可用 Web 框架，具有自定义异步运行时。与使用 Tokio 的其他框架不同，Nexus 具有使用 io-uring 从头构建的自定义异步运行时，以实现最大性能。
+## 🎯 Features
 
-## 🎯 Features / 功能特性
+- **Custom Runtime** - Thread-per-core architecture with io-uring support
+- **High Availability** - Circuit breakers, rate limiters, retry logic
+- **Web3 Native** - Built-in blockchain and smart contract support
+- **Observability** - OpenTelemetry-compatible tracing/metrics
+- **Type Safety** - Leverages Rust's type system
+- **Spring-like** - Familiar patterns for Spring Boot developers
 
-- **Custom Runtime / 自定义运行时** - Thread-per-core architecture with io-uring support / 支持 io-uring 的 thread-per-core 架构
-- **High Availability / 高可用** - Circuit breakers, rate limiters, retry logic / 熔断器、限流器、重试逻辑
-- **Web3 Native / 原生 Web3** - Built-in blockchain and smart contract support / 内置区块链和智能合约支持
-- **Observability / 可观测性** - OpenTelemetry-compatible tracing/metrics / 兼容 OpenTelemetry 的追踪/指标
-- **Type Safety / 类型安全** - Leverages Rust's type system / 利用 Rust 的类型系统
-- **Spring-like / 类 Spring** - Familiar patterns for Spring Boot developers / Spring Boot 开发者熟悉的模式
+## ⚡️ Quick Start
 
-## ⚡️ Quick Start / 快速开始
-
-### Installation / 安装
+### Installation
 
 Add to your `Cargo.toml`:
 
@@ -51,23 +49,23 @@ nexus-router = "0.1"
 nexus-observability = "0.1"
 ```
 
-### Basic HTTP Server / 基础 HTTP 服务器
+### Basic HTTP Server
 
 ```rust
 use nexus_http::{Body, Response, Server, StatusCode};
 use nexus_runtime::Runtime;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging / 初始化日志
+    // Initialize logging
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    // Create runtime and run server / 创建运行时并运行服务器
+    // Create runtime and run server
     let mut runtime = Runtime::new()?;
 
     runtime.block_on(async {
-        // Bind server to address / 绑定服务器到地址
+        // Bind server to address
         let _server = Server::bind("127.0.0.1:8080")
             .run(handle_request)
             .await?;
@@ -85,19 +83,18 @@ async fn handle_request(req: nexus_http::Request) -> Result<Response, nexus_http
 }
 ```
 
-### Complete Annotated Example / 完整注解示例
+### Complete REST API Example
 
 ```rust
-//! Nexus REST API Example / Nexus REST API 示例
+//! Nexus REST API Example
 //!
 //! This example demonstrates a complete REST API with:
-//! 此示例演示了完整的 REST API，包括：
-//! - Routing with path parameters / 带路径参数的路由
-//! - JSON request/response / JSON 请求/响应
-//! - Error handling / 错误处理
-//! - Middleware (CORS, logging) / 中间件（CORS、日志）
-//! - Circuit breaker / 熔断器
-//! - Observability (tracing, metrics) / 可观测性（追踪、指标）
+//! - Routing with path parameters
+//! - JSON request/response
+//! - Error handling
+//! - Middleware (CORS, logging)
+//! - Circuit breaker
+//! - Observability (tracing, metrics)
 
 use nexus_http::{
     Body, Response, Server, StatusCode,
@@ -108,10 +105,10 @@ use nexus_runtime::Runtime;
 use nexus_observability::{tracing, metrics};
 
 // ============================================================================
-// Data Models / 数据模型
+// Data Models
 // ============================================================================
 
-/// User representation / 用户表示
+/// User representation
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 struct User {
     id: u64,
@@ -119,7 +116,7 @@ struct User {
     email: String,
 }
 
-/// Create user request / 创建用户请求
+/// Create user request
 #[derive(Debug, serde::Deserialize)]
 struct CreateUserRequest {
     username: String,
@@ -127,22 +124,22 @@ struct CreateUserRequest {
 }
 
 // ============================================================================
-// Error Handling / 错误处理
+// Error Handling
 // ============================================================================
 
-/// API Error type / API 错误类型
+/// API Error type
 #[derive(Debug)]
 enum ApiError {
-    /// User not found (404) / 用户未找到
+    /// User not found (404)
     UserNotFound(u64),
-    /// Invalid input (400) / 无效输入
+    /// Invalid input (400)
     InvalidInput(String),
-    /// Internal server error (500) / 内部服务器错误
+    /// Internal server error (500)
     Internal(String),
 }
 
 impl ApiError {
-    /// Convert to HTTP status code / 转换为 HTTP 状态码
+    /// Convert to HTTP status code
     fn status_code(&self) -> StatusCode {
         match self {
             ApiError::UserNotFound(_) => StatusCode::NOT_FOUND,
@@ -151,7 +148,7 @@ impl ApiError {
         }
     }
 
-    /// Get error message / 获取错误消息
+    /// Get error message
     fn message(&self) -> String {
         match self {
             ApiError::UserNotFound(id) => format!("User {} not found", id),
@@ -162,17 +159,17 @@ impl ApiError {
 }
 
 // ============================================================================
-// In-Memory Store / 内存存储
+// In-Memory Store
 // ============================================================================
 
-/// Simple in-memory user store / 简单的内存用户存储
+/// Simple in-memory user store
 struct UserStore {
     users: std::sync::Arc<parking_lot::Mutex<std::collections::HashMap<u64, User>>>,
     next_id: std::sync::Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl UserStore {
-    /// Create new store / 创建新存储
+    /// Create new store
     fn new() -> Self {
         Self {
             users: std::sync::Arc::new(parking_lot::Mutex::new(std::collections::HashMap::new())),
@@ -180,12 +177,12 @@ impl UserStore {
         }
     }
 
-    /// Get user by ID / 按 ID 获取用户
+    /// Get user by ID
     fn get(&self, id: u64) -> Option<User> {
         self.users.lock().get(&id).cloned()
     }
 
-    /// Create new user / 创建新用户
+    /// Create new user
     fn create(&self, req: CreateUserRequest) -> User {
         let id = self.next_id.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         let user = User {
@@ -197,17 +194,17 @@ impl UserStore {
         user
     }
 
-    /// List all users / 列出所有用户
+    /// List all users
     fn list(&self) -> Vec<User> {
         self.users.lock().values().cloned().collect()
     }
 }
 
 // ============================================================================
-// Route Handlers / 路由处理器
+// Route Handlers
 // ============================================================================
 
-/// GET /users - List all users / 列出所有用户
+/// GET /users - List all users
 async fn list_users(
     _req: Request,
     store: nexus_router::State<UserStore>,
@@ -223,12 +220,12 @@ async fn list_users(
         .unwrap())
 }
 
-/// GET /users/:id - Get user by ID / 按 ID 获取用户
+/// GET /users/:id - Get user by ID
 async fn get_user(
     req: Request,
     store: nexus_router::State<UserStore>,
 ) -> HttpResult<Response> {
-    // Extract path parameter / 提取路径参数
+    // Extract path parameter
     let id = req
         .param("id")
         .and_then(|s| s.parse::<u64>().ok())
@@ -236,7 +233,7 @@ async fn get_user(
 
     tracing::info!("Getting user: {}", id);
 
-    // Look up user / 查找用户
+    // Look up user
     let user = store
         .get(id)
         .ok_or_else(|| ApiError::UserNotFound(id))?;
@@ -248,12 +245,12 @@ async fn get_user(
         .unwrap())
 }
 
-/// POST /users - Create new user / 创建新用户
+/// POST /users - Create new user
 async fn create_user(
     mut req: Request,
     store: nexus_router::State<UserStore>,
 ) -> HttpResult<Response> {
-    // Parse request body / 解析请求体
+    // Parse request body
     let body = std::pin::pin(&mut req)
         .body_bytes()
         .await
@@ -264,12 +261,12 @@ async fn create_user(
 
     tracing::info!("Creating user: {}", create_req.username);
 
-    // Validate input / 验证输入
+    // Validate input
     if create_req.username.is_empty() || create_req.username.len() > 50 {
         return Err(ApiError::InvalidInput("Username must be 1-50 characters".into()).into());
     }
 
-    // Create user / 创建用户
+    // Create user
     let user = store.create(create_req);
 
     Ok(Response::builder()
@@ -281,7 +278,7 @@ async fn create_user(
 }
 
 // ============================================================================
-// Error Conversion / 错误转换
+// Error Conversion
 // ============================================================================
 
 impl From<ApiError> for nexus_http::Error {
@@ -291,39 +288,39 @@ impl From<ApiError> for nexus_http::Error {
 }
 
 // ============================================================================
-// Main Application / 主应用程序
+// Main Application
 // ============================================================================
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging / 初始化日志
+    // Initialize logging
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    // Create shared state / 创建共享状态
+    // Create shared state
     let store = UserStore::new();
 
-    // Build router / 构建路由器
+    // Build router
     let app = Router::new()
-        // GET /users - List users / 列出用户
+        // GET /users - List users
         .route("/users", nexus_router::Method::GET, list_users)
 
-        // GET /users/:id - Get user / 获取用户
+        // GET /users/:id - Get user
         .route("/users/:id", nexus_router::Method::GET, get_user)
 
-        // POST /users - Create user / 创建用户
+        // POST /users - Create user
         .route("/users", nexus_router::Method::POST, create_user)
 
-        // Add state / 添加状态
+        // Add state
         .with_state(store);
 
-    // Create and run runtime / 创建并运行运行时
+    // Create and run runtime
     let mut runtime = Runtime::new()?;
 
     tracing::info!("Starting server on http://127.0.0.1:8080");
 
     runtime.block_on(async {
-        // Start server / 启动服务器
+        // Start server
         let _server = Server::bind("127.0.0.1:8080")
             .run(app)
             .await?;
@@ -333,38 +330,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-### Testing the API / 测试 API
+### Testing the API
 
 ```bash
-# List users (empty) / 列出用户（空）
+# List users (empty)
 curl http://localhost:8080/users
 
-# Create a user / 创建用户
+# Create a user
 curl -X POST http://localhost:8080/users \
   -H "Content-Type: application/json" \
   -d '{"username":"alice","email":"alice@example.com"}'
 
-# Get user by ID / 按 ID 获取用户
+# Get user by ID
 curl http://localhost:8080/users/1
 
-# List users (with data) / 列出用户（有数据）
+# List users (with data)
 curl http://localhost:8080/users
 ```
 
-### Nexus Logging / Nexus 日志
+### Nexus Logging
 
 Nexus provides a unified logging system with two modes: **Verbose** (development) and **Simple** (production).
-
-Nexus 提供统一的日志系统，具有两种模式：**Verbose**（开发）和 **Simple**（生产）。
 
 ```rust
 use nexus_observability::log::{Logger, LoggerConfig, LogLevel, LogMode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Automatic mode selection based on profile / 基于配置文件自动选择模式
+    // Automatic mode selection based on profile
     let config = LoggerConfig {
         level: LogLevel::Info,
-        mode: LogMode::from_profile(Some("dev")),  // dev→Verbose, prod→Simple
+        mode: LogMode::from_profile(Some("dev")),  // dev->Verbose, prod->Simple
         ..Default::default()
     };
 
@@ -375,58 +370,58 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-**Configuration via Environment Variables / 通过环境变量配置:**
+**Configuration via Environment Variables:**
 
 ```bash
-# Set log level / 设置日志级别
+# Set log level
 export NEXUS_LOG_LEVEL=DEBUG
 
-# Set log mode explicitly / 显式设置日志模式
+# Set log mode explicitly
 export NEXUS_LOG_MODE=simple  # or "verbose"
 
-# Set profile (affects default mode) / 设置配置文件（影响默认模式）
-export NEXUS_PROFILE=prod  # dev→verbose, prod→simple
+# Set profile (affects default mode)
+export NEXUS_PROFILE=prod  # dev->verbose, prod->simple
 ```
 
-**Output Comparison / 输出对比:**
+**Output Comparison:**
 
 | Mode | Format |
 |------|--------|
-| Verbose (dev) / 详细（开发） | `2026-01-30 10:30:45.123 \|INFO\| 55377 [main] n.http.server : Request received` |
-| Simple (prod) / 精简（生产） | `INFO n.http.server: Request received` |
+| Verbose (dev) | `2026-01-30 10:30:45.123 \|INFO\| 55377 [main] n.http.server : Request received` |
+| Simple (prod) | `INFO n.http.server: Request received` |
 
-### Resilience Patterns / 弹性模式
+### Resilience Patterns
 
 ```rust
 use nexus_resilience::{CircuitBreaker, RateLimiter, RetryPolicy};
 use nexus_http::Request;
 
-// Circuit breaker / 熔断器
+// Circuit breaker
 let breaker = CircuitBreaker::new(
     "external-api",
-    5,      // failure threshold / 失败阈值
-    10000,  // timeout ms / 超时毫秒
+    5,      // failure threshold
+    10000,  // timeout ms
 );
 
-// Rate limiter / 限流器
+// Rate limiter
 let limiter = RateLimiter::token_bucket(100, 10); // 100 requests, refill 10/sec
 
-// Retry with exponential backoff / 指数退避重试
+// Retry with exponential backoff
 let retry = RetryPolicy::exponential_backoff(3, 100); // 3 retries, 100ms base
 
-// Use in handler / 在处理器中使用
+// Use in handler
 async fn call_external_api(req: Request) -> Result<Response, Error> {
     breaker.call(|| async {
         limiter.throttle().await?;
         retry.retry(|| async {
-            // Actual API call / 实际 API 调用
+            // Actual API call
             make_request(req).await
         }).await
     }).await
 }
 ```
 
-### Web3 Support / Web3 支持
+### Web3 Support
 
 ```rust
 use nexus_web3::{
@@ -435,14 +430,14 @@ use nexus_web3::{
 };
 
 async fn web3_example() -> Result<(), Box<dyn std::error::Error>> {
-    // Connect to Ethereum / 连接到以太坊
+    // Connect to Ethereum
     let chain = Chain::ethereum();
     let rpc = RpcClient::new(&chain.rpc_url())?;
 
-    // Create wallet / 创建钱包
+    // Create wallet
     let wallet = LocalWallet::new(&mut rand::thread_rng());
 
-    // Build transaction / 构建交易
+    // Build transaction
     let tx = TransactionBuilder::new()
         .to(wallet.address())
         .value(1000000) // 0.001 ETH
@@ -450,7 +445,7 @@ async fn web3_example() -> Result<(), Box<dyn std::error::Error>> {
         .chain_id(chain.chain_id())
         .build(TxType::Legacy)?;
 
-    // Send transaction / 发送交易
+    // Send transaction
     let signed = wallet.sign_transaction(&tx)?;
     let tx_hash = rpc.send_raw_transaction(&signed).await?;
 
@@ -460,48 +455,44 @@ async fn web3_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## 🚀 Performance / 性能
+## 🚀 Performance
 
 Nexus is designed for high performance from the ground up:
 
-Nexus 从根本上设计为高性能：
+- **70% fewer syscalls** vs epoll with io-uring
+- **40% lower latency** with thread-per-core architecture
+- **Zero-copy I/O** for minimal allocations
+- **Linear scalability** with no lock contention
 
-- **70% fewer syscalls** vs epoll with io-uring / 与 epoll 相比减少 70% 系统调用
-- **40% lower latency** with thread-per-core architecture / thread-per-core 架构降低 40% 延迟
-- **Zero-copy I/O** for minimal allocations / 零拷贝 I/O 最小化分配
-- **Linear scalability** with no lock contention / 线性可扩展性，无锁竞争
-
-| Benchmark / 基准测试 | Result / 结果 |
-|---------------------|---------------|
+| Benchmark | Result |
+|-----------|--------|
 | HTTP Parsing (GET) | ~170 ns |
 | HTTP Encoding | ~120 ns |
 | Throughput | 6.8 GiB/s |
 | Spawn latency | < 1 μs |
 | Channel throughput | 10M+ msg/s |
 
-## 📚 Documentation / 文档
+## 📚 Documentation
 
-| Resource / 资源 | Link / 链接 |
-|------------------|-------------|
-| **Book / 书籍** | [docs.nexusframework.com](https://docs.nexusframework.com) |
-| **API Docs / API 文档** | [docs.rs/nexus](https://docs.rs/nexus) |
-| **Design Spec / 设计规范** | [design-spec.md](docs/design-spec.md) |
-| **Implementation Plan / 实施计划** | [implementation-plan.md](docs/design/implementation-plan.md) |
-| **Examples / 示例** | [examples/](examples/) |
+| Resource | Link |
+|----------|------|
+| **Book** | [docs.nexusframework.com](https://docs.nexusframework.com) |
+| **API Docs** | [docs.rs/nexus](https://docs.rs/nexus) |
+| **Design Spec** | [design-spec.md](docs/design-spec.md) |
+| **Implementation Plan** | [implementation-plan.md](docs/design/implementation-plan.md) |
+| **Examples** | [examples/](examples/) |
 
-## 🏗️ Architecture / 架构
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Application Layer                         │
-│                    应用程序层                                 │
 ├─────────────────────────────────────────────────────────────┤
 │  Handlers  │  Middleware  │  Extractors  │  Response        │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │                     Nexus Runtime                            │
-│                     Nexus 运行时                              │
 ├─────────────────────────────────────────────────────────────┤
 │  Task Scheduler  │  I/O Driver  │  Timer  │  Executor       │
 │  (Thread-per-Core)  │  (io-uring)   │                          │
@@ -509,74 +500,67 @@ Nexus 从根本上设计为高性能：
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │                     System Layer                             │
-│                     系统层                                   │
 ├─────────────────────────────────────────────────────────────┤
 │       io-uring (Linux) / epoll / kqueue                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 🛠️ Development / 开发
+## 🛠️ Development
 
 ```bash
-# Clone repository / 克隆仓库
+# Clone repository
 git clone https://github.com/nexus-rs/nexus.git
 cd nexus
 
-# Build / 构建
+# Build
 cargo build --workspace
 
-# Test / 测试
+# Test
 cargo test --workspace
 
-# Run benchmarks / 运行基准测试
+# Run benchmarks
 cargo bench -p nexus-runtime
 
-# Format / 格式化
+# Format
 cargo fmt --all
 
-# Lint / 代码检查
+# Lint
 cargo clippy --workspace -- -D warnings
 ```
 
-## 📋 Project Status / 项目状态
+## 📋 Project Status
 
 > **⚠️ Alpha Version**
 >
 > Nexus is currently in **Phase 7: Production Ready** (100% complete). All phases 0-7 have been completed, including the custom async runtime, HTTP server, middleware system, resilience patterns, observability, Web3 support, and performance benchmarking.
->
-> Nexus 目前处于 **第 7 阶段：生产就绪**（100% 完成）。第 0-7 阶段全部完成，包括自定义异步运行时、HTTP 服务器、中间件系统、弹性模式、可观测性、Web3 支持和性能基准测试。
 
-| Phase | Status / 状态 | Description / 描述 |
-|-------|---------------|-------------------|
-| Phase 0 | ✅ Complete / 完成 | Foundation / 基础设施 |
-| Phase 1 | ✅ Complete / 完成 | Runtime Core / 运行时核心 |
-| Phase 2 | ✅ Complete / 完成 | HTTP Server / HTTP 服务器 |
-| Phase 3 | ✅ Complete / 完成 | Router & Middleware / 路由和中间件 |
-| Phase 4 | ✅ Complete / 完成 | Resilience / 弹性 |
-| Phase 5 | ✅ Complete / 完成 | Observability / 可观测性 |
-| Phase 6 | ✅ Complete / 完成 | Web3 Integration / Web3 集成 |
-| Phase 7 | ✅ Complete / 完成 | Performance & Hardening / 性能和加固 |
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 0 | ✅ Complete | Foundation |
+| Phase 1 | ✅ Complete | Runtime Core |
+| Phase 2 | ✅ Complete | HTTP Server |
+| Phase 3 | ✅ Complete | Router & Middleware |
+| Phase 4 | ✅ Complete | Resilience |
+| Phase 5 | ✅ Complete | Observability |
+| Phase 6 | ✅ Complete | Web3 Integration |
+| Phase 7 | ✅ Complete | Performance & Hardening |
 
 See [implementation plan](docs/design/implementation-plan.md) for details.
-详情请参阅 [实施计划](docs/design/implementation-plan.md)。
 
-## 🤝 Contributing / 贡献
+## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-我们欢迎贡献！请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解指南。
 
-## 📄 License / 许可证
+## 📄 License
 
 Nexus is licensed under either of
-Nexus 采用以下任一许可证
 
 - Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0))
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT))
 
-## 🙏 Acknowledgments / 致谢
+## 🙏 Acknowledgments
 
 Nexus is inspired by excellent frameworks across multiple languages:
-Nexus 汲取了多种语言优秀框架的灵感：
 
 - **Rust**: Axum, Actix Web, Monoio, Salvo
 - **Go**: Gin, Echo
@@ -586,4 +570,3 @@ Nexus 汲取了多种语言优秀框架的灵感：
 ---
 
 **Nexus Framework** — Built for the future of web development.
-**Nexus 框架** — 为 Web 开发的未来而构建。

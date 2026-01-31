@@ -14,7 +14,7 @@ use std::fmt::Debug;
 ///
 /// Marks a type as being usable as an entity identifier.
 /// 标记类型可用作实体标识符。
-pub(crate) trait Identifier: Any + Send + Sync + Debug + Clone + PartialEq + Eq {}
+pub trait Identifier: Any + Send + Sync + Debug + Clone + PartialEq + Eq {}
 
 impl Identifier for String {}
 impl Identifier for i32 {}

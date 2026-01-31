@@ -421,41 +421,109 @@ impl Default for UpdateWrapper {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Condition {
     /// Equal: field = value
-    Eq { field: String, value: Value },
+    /// 相等：field = value
+    Eq {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Not equal: field != value
-    Ne { field: String, value: Value },
+    /// 不等：field != value
+    Ne {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Greater than: field > value
-    Gt { field: String, value: Value },
+    /// 大于：field > value
+    Gt {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Greater than or equal: field >= value
-    Ge { field: String, value: Value },
+    /// 大于等于：field >= value
+    Ge {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Less than: field < value
-    Lt { field: String, value: Value },
+    /// 小于：field < value
+    Lt {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Less than or equal: field <= value
-    Le { field: String, value: Value },
+    /// 小于等于：field <= value
+    Le {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// LIKE: field LIKE pattern
-    Like { field: String, pattern: String },
+    Like {
+        /// Field name / 字段名
+        field: String,
+        /// LIKE pattern / 匹配模式
+        pattern: String,
+    },
     /// NOT LIKE: field NOT LIKE pattern
-    NotLike { field: String, pattern: String },
+    NotLike {
+        /// Field name / 字段名
+        field: String,
+        /// NOT LIKE pattern / 不匹配模式
+        pattern: String,
+    },
     /// IN: field IN (values...)
-    In { field: String, values: Vec<Value> },
+    In {
+        /// Field name / 字段名
+        field: String,
+        /// Values to compare / 比较值列表
+        values: Vec<Value>,
+    },
     /// NOT IN: field NOT IN (values...)
-    NotIn { field: String, values: Vec<Value> },
+    NotIn {
+        /// Field name / 字段名
+        field: String,
+        /// Values to exclude / 排除值列表
+        values: Vec<Value>,
+    },
     /// BETWEEN: field BETWEEN low AND high
     Between {
+        /// Field name / 字段名
         field: String,
+        /// Low value / 下限值
         low: Value,
+        /// High value / 上限值
         high: Value,
     },
     /// NOT BETWEEN: field NOT BETWEEN low AND high
     NotBetween {
+        /// Field name / 字段名
         field: String,
+        /// Low value / 下限值
         low: Value,
+        /// High value / 上限值
         high: Value,
     },
     /// IS NULL: field IS NULL
-    IsNull { field: String },
+    IsNull {
+        /// Field name / 字段名
+        field: String,
+    },
     /// IS NOT NULL: field IS NOT NULL
-    IsNotNull { field: String },
+    IsNotNull {
+        /// Field name / 字段名
+        field: String,
+    },
     /// AND: (condition1 AND condition2 AND ...)
     And(Box<Vec<Condition>>),
     /// OR: (condition1 OR condition2 OR ...)
@@ -854,23 +922,74 @@ impl Default for Specification {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Predicate {
     /// Equal: field = value
-    Eq { field: String, value: Value },
+    /// 相等：field = value
+    Eq {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Not equal: field != value
-    Ne { field: String, value: Value },
+    /// 不等：field != value
+    Ne {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Greater than: field > value
-    Gt { field: String, value: Value },
+    /// 大于：field > value
+    Gt {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Greater than or equal: field >= value
-    Ge { field: String, value: Value },
+    /// 大于等于：field >= value
+    Ge {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Less than: field < value
-    Lt { field: String, value: Value },
+    /// 小于：field < value
+    Lt {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// Less than or equal: field <= value
-    Le { field: String, value: Value },
+    /// 小于等于：field <= value
+    Le {
+        /// Field name / 字段名
+        field: String,
+        /// Field value / 字段值
+        value: Value,
+    },
     /// LIKE: field LIKE pattern
-    Like { field: String, pattern: String },
+    Like {
+        /// Field name / 字段名
+        field: String,
+        /// LIKE pattern / 匹配模式
+        pattern: String,
+    },
     /// IN: field IN (values...)
-    In { field: String, values: Vec<Value> },
+    In {
+        /// Field name / 字段名
+        field: String,
+        /// Values to compare / 比较值列表
+        values: Vec<Value>,
+    },
     /// NOT IN: field NOT IN (values...)
-    NotIn { field: String, values: Vec<Value> },
+    NotIn {
+        /// Field name / 字段名
+        field: String,
+        /// Values to exclude / 排除值列表
+        values: Vec<Value>,
+    },
     /// AND: (predicate1 AND predicate2)
     And(Box<Predicate>, Box<Predicate>),
     /// OR: (predicate1 OR predicate2)

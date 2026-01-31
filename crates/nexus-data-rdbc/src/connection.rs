@@ -273,6 +273,19 @@ pub(crate) trait PoolInner: Send + Sync {
 
 /// Convert Box to Arc
 /// 将 Box 转换为 Arc
+///
+/// # Safety / 安全性
+///
+/// This is safe because:
+/// 1. `Box::into_raw` consumes the Box and returns a valid pointer
+/// 2. `Arc::from_raw` takes ownership of the pointer and creates a new Arc
+/// 3. The pointer is not used after this conversion
+///
+/// 这是安全的，因为：
+/// 1. `Box::into_raw` 消耗 Box 并返回有效指针
+/// 2. `Arc::from_raw` 接管指针并创建新的 Arc
+/// 3. 转换后不再使用该指针
+#[allow(unsafe_code)]
 fn box_to_arc(inner: Box<dyn PoolInner>) -> Arc<dyn PoolInner> {
     let raw = Box::into_raw(inner);
     unsafe { Arc::from_raw(raw) }

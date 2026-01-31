@@ -187,7 +187,10 @@ pub trait PagingAndSortingRepository<T: Send + 'static, ID: Send + Sync + 'stati
 ///
 /// Marks a type as being usable as an entity ID.
 /// 标记类型可用作实体 ID。
-pub trait Identifier: Any + Send + Sync {}
+///
+/// Note: This is currently unused and kept for potential future use.
+/// 注意：此 trait 当前未使用，保留供将来可能使用。
+pub(crate) trait Identifier: Any + Send + Sync {}
 
 impl Identifier for i32 {}
 impl Identifier for i64 {}

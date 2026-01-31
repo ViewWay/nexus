@@ -108,11 +108,11 @@ impl TcpStream {
             },
         };
 
-        ConnectFuture::Connecting(ConnectingState {
+        ConnectFuture::Connecting(Box::new(ConnectingState {
             addr,
             fd: None,
             started: false,
-        })
+        }))
     }
 
     /// Read some bytes from the stream
@@ -194,7 +194,8 @@ pub enum ConnectFuture {
     /// Error state / 错误状态
     Error(io::Error),
     /// Connecting state / 连接中状态
-    Connecting(ConnectingState),
+    /// Boxed to reduce enum size / 使用Box减小枚举大小
+    Connecting(Box<ConnectingState>),
     /// Done state / 完成状态
     Done,
 }

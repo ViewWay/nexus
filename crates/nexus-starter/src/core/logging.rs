@@ -40,6 +40,8 @@ pub struct StartupInfo {
 }
 
 impl StartupInfo {
+    /// Create a new startup info
+    /// 创建新的启动信息
     pub fn new(debug: bool, worker_threads: usize, profile: Option<String>) -> Self {
         Self {
             start_time: Instant::now(),
@@ -252,7 +254,7 @@ pub fn print_startup_info(_debug: bool, _worker_threads: usize, _profile: Option
 /// init_runtime_logging(Some("dev"))?;
 /// ```
 pub fn init_runtime_logging(_profile: Option<&str>) -> anyhow::Result<()> {
-    #[cfg(feature = "nexus-observability")]
+    #[cfg(feature = "observability")]
     {
         // 使用 nexus-observability 统一日志系统
         // Use nexus-observability unified logging system
@@ -281,7 +283,7 @@ pub fn init_runtime_logging(_profile: Option<&str>) -> anyhow::Result<()> {
         Ok(())
     }
 
-    #[cfg(not(feature = "nexus-observability"))]
+    #[cfg(not(feature = "observability"))]
     {
         // 回退到简单日志
         let level = std::env::var("NEXUS_LOG_LEVEL")
@@ -319,36 +321,66 @@ pub fn level_icon(level: &tracing::Level) -> &'static str {
 
 // ANSI 颜色扩展
 /// ANSI color extensions
+/// ANSI 颜色扩展
 pub trait Colorize {
+    /// Convert to cyan color
+    /// 转换为青色
     fn cyan(self) -> String;
+
+    /// Convert to green color
+    /// 转换为绿色
     fn green(self) -> String;
+
+    /// Convert to yellow color
+    /// 转换为黄色
     fn yellow(self) -> String;
+
+    /// Convert to red color
+    /// 转换为红色
     fn red(self) -> String;
+
+    /// Convert to gray color
+    /// 转换为灰色
     fn gray(self) -> String;
+
+    /// Convert to bold text
+    /// 转换为粗体
     fn bold(self) -> String;
 }
 
 impl Colorize for &str {
+    /// Convert to cyan color
+    /// 转换为青色
     fn cyan(self) -> String {
         format!("\x1b[36m{}\x1b[0m", self)
     }
 
+    /// Convert to green color
+    /// 转换为绿色
     fn green(self) -> String {
         format!("\x1b[32m{}\x1b[0m", self)
     }
 
+    /// Convert to yellow color
+    /// 转换为黄色
     fn yellow(self) -> String {
         format!("\x1b[33m{}\x1b[0m", self)
     }
 
+    /// Convert to red color
+    /// 转换为红色
     fn red(self) -> String {
         format!("\x1b[31m{}\x1b[0m", self)
     }
 
+    /// Convert to gray color
+    /// 转换为灰色
     fn gray(self) -> String {
         format!("\x1b[90m{}\x1b[0m", self)
     }
 
+    /// Convert to bold text
+    /// 转换为粗体
     fn bold(self) -> String {
         format!("\x1b[1m{}\x1b[0m", self)
     }
