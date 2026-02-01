@@ -152,19 +152,23 @@ impl ColumnValue {
     }
 }
 
-/// Database rows (result set)
-/// 数据库行（结果集）
+/// Database rows (result set) - placeholder
+/// 数据库行（结果集）- 占位符
 ///
 /// Represents a collection of rows from a query result.
 /// 表示查询结果的行集合。
+///
+/// Note: This is currently a placeholder. A full implementation would need
+/// to use a concrete row type rather than the Row trait (which is not dyn-compatible).
+/// 注意：这目前是占位符。完整实现需要使用具体的行类型而不是 Row trait（不是 dyn 兼容的）。
 pub trait Rows: Send + Sync {
-    /// Get the next row
-    /// 获取下一行
-    fn next(&mut self) -> Result<Option<Box<dyn Row>>, crate::Error>;
+    /// Get the number of rows (placeholder)
+    /// 获取行数（占位符）
+    fn count(&self) -> Result<u64, crate::Error>;
 
-    /// Collect all rows into a Vec
-    /// 收集所有行到 Vec
-    fn collect(self) -> Result<Vec<Box<dyn Row>>, crate::Error>
+    /// Collect all rows into a count (placeholder)
+    /// 收集所有行到计数（占位符）
+    fn collect(self) -> Result<u64, crate::Error>
     where
         Self: Sized;
 }

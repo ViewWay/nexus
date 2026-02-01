@@ -6,7 +6,7 @@
 //! This module provides transaction management for database operations.
 //! 本模块提供数据库操作的事务管理。
 
-use crate::{DatabaseType, Error, Result};
+use crate::{DatabaseType, Error, R2dbcError, R2dbcResult};
 use std::sync::Arc;
 
 /// Transaction isolation level
@@ -114,20 +114,20 @@ impl Clone for Transaction {
 pub(crate) trait TransactionInner: Send + Sync {
     /// Execute a statement
     /// 执行语句
-    fn execute(&self, sql: &str) -> Result<u64, Box<dyn std::error::Error + Send + Sync>>;
+    fn execute(&self, sql: &str) -> std::result::Result<u64, Box<dyn std::error::Error + Send + Sync>>;
 
-    /// Query and return rows
-    /// 查询并返回行
+    /// Query and return rows (placeholder - returns count for now)
+    /// 查询并返回行（占位符 - 现在返回计数）
     fn query(&self, sql: &str)
-    -> Result<Vec<crate::Row>, Box<dyn std::error::Error + Send + Sync>>;
+    -> std::result::Result<u64, Box<dyn std::error::Error + Send + Sync>>;
 
     /// Commit the transaction
     /// 提交事务
-    fn commit(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+    fn commit(&self) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
     /// Rollback the transaction
     /// 回滚事务
-    fn rollback(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+    fn rollback(&self) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
     /// Check if transaction is committed
     /// 检查事务是否已提交
@@ -199,9 +199,9 @@ impl Transaction {
             .map_err(|e| R2dbcError::Sql(e.to_string()))
     }
 
-    /// Query and return rows within this transaction
-    /// 在此事务中查询并返回行
-    pub async fn query(&self, sql: &str) -> R2dbcResult<Vec<crate::Row>> {
+    /// Query and return rows within this transaction (placeholder - returns count for now)
+    /// 在此事务中查询并返回行（占位符 - 现在返回计数）
+    pub async fn query(&self, sql: &str) -> R2dbcResult<u64> {
         if !self.is_active() {
             return Err(R2dbcError::transaction("Transaction is not active"));
         }
@@ -294,8 +294,8 @@ impl TransactionManager {
     pub async fn execute_in_transaction<F, T>(
         &self,
         _isolation: IsolationLevel,
-        _f: impl FnOnce(Transaction) -> futures_util::future::BoxFuture<'static, R2dbcResult<T>>,
-    ) -> R2dbcResult<T> {
+        _f: impl FnOnce(Transaction) -> futures_util::future::BoxFuture<'static, crate::Result<T>>,
+    ) -> crate::Result<T> {
         // This is a placeholder - actual implementation would:
         // 1. Begin transaction with isolation level
         // 2. Execute the function
@@ -328,9 +328,9 @@ impl TransactionManager {
         _isolation: IsolationLevel,
         _f: F,
         _max_retries: u32,
-    ) -> R2dbcResult<T>
+    ) -> crate::Result<T>
     where
-        F: Fn(Transaction) -> futures_util::future::BoxFuture<'static, R2dbcResult<T>>,
+        F: Fn(Transaction) -> futures_util::future::BoxFuture<'static, crate::Result<T>>,
     {
         let _attempt = 0;
 

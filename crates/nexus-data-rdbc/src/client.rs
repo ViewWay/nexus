@@ -6,7 +6,7 @@
 //! High-level database client for executing queries.
 //! 用于执行查询的高级数据库客户端。
 
-use crate::{Error, Result, Row};
+use crate::{Error, Result};
 use std::sync::Arc;
 
 /// Database client
@@ -15,21 +15,21 @@ use std::sync::Arc;
 /// High-level client for database operations.
 /// 用于数据库操作的高级客户端。
 pub trait DatabaseClient: Send + Sync {
-    /// Execute a query and return rows
-    /// 执行查询并返回行
+    /// Execute a query and return row count (placeholder - returns count for now)
+    /// 执行查询并返回行数（占位符 - 现在返回计数）
     fn query(
         &self,
         sql: &str,
         params: &[&dyn ToSql],
-    ) -> impl std::future::Future<Output = Result<Vec<Box<dyn Row>>>> + Send;
+    ) -> impl std::future::Future<Output = Result<u64>> + Send;
 
-    /// Execute a query and return the first row
-    /// 执行查询并返回第一行
+    /// Execute a query and return the first row count (placeholder - returns count for now)
+    /// 执行查询并返回第一行计数（占位符 - 现在返回计数）
     fn query_one(
         &self,
         sql: &str,
         params: &[&dyn ToSql],
-    ) -> impl std::future::Future<Output = Result<Option<Box<dyn Row>>>> + Send;
+    ) -> impl std::future::Future<Output = Result<u64>> + Send;
 
     /// Execute a command (INSERT, UPDATE, DELETE)
     /// 执行命令 (INSERT, UPDATE, DELETE)

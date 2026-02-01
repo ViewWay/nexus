@@ -78,7 +78,7 @@ pub use error::{R2dbcError, Error, Result, R2dbcResult};
 pub use config::{DatabaseConfig, PostgresConfig, MySqlConfig, SqliteConfig, SslMode};
 pub use row::{Row, RowInternal, ColumnValue, ColumnType};
 pub use connection::{Connection, PoolConfig};
-pub use transaction::{Transaction, TransactionManager, TxManager, IsolationLevel};
+pub use transaction::{Transaction, TransactionManager, IsolationLevel};
 pub use client::{DatabaseClient, SqlxPoolClient, ToSql};
 pub use repository::{R2dbcRepository, SqlxRepository};
 pub use pool::{Pool, PoolOptions};
@@ -107,7 +107,7 @@ pub mod prelude {
         Error, Result,
         DatabaseClient, SqlxPoolClient,
         R2dbcRepository, SqlxRepository,
-        Transaction, TransactionManager, TxManager,
+        Transaction, TransactionManager,
         Row, DatabaseConfig, PostgresConfig, MySqlConfig, SqliteConfig,
     };
 }
