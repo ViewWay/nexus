@@ -35,6 +35,7 @@
 #![warn(unreachable_pub)]
 #![allow(async_fn_in_trait)]
 
+pub mod api_response;
 pub mod body;
 pub mod builder;
 pub mod conn;
@@ -55,6 +56,8 @@ pub mod websocket;
 
 // Re-exports for convenience
 // 重新导出以便使用
+pub use api_response::{IntoApiResponse, PageResponse, ResultCode};
+pub use api_response::ApiResponse;
 pub use body::{Body, EmptyBody, FullBody, HttpBody};
 pub use builder::{Uri, UriBuilder};
 pub use conn::{Connection, ConnectionState};
