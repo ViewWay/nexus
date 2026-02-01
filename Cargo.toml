@@ -21,6 +21,7 @@ members = [
     "crates/nexus-actuator",
     "crates/nexus-web3",  # Enabled: using alloy 1.4 compatible with serde 1.0
     "crates/nexus-macros",
+    "crates/nexus-openapi",
     "crates/nexus-starter",
     "crates/nexus-benches",
     "crates/nexus-data-commons",
@@ -197,6 +198,11 @@ h3 = "^0.0.8"
 h3-quinn = "^0.0.10"
 quinn = "0.11"
 futures-rustls = "0.26"
+
+# API Documentation / API 文档
+# Equivalent to: SpringDoc OpenAPI (Swagger 3)
+utoipa = { version = "5", features = ["chrono", "uuid", "decimal", "repr"] }
+utoipa-swagger-ui = { version = "8", features = ["actix-web", "axum"] }
 
 # Web3 / 区块链
 # Equivalent to: Spring Web3 (community projects)
