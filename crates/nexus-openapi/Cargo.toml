@@ -24,6 +24,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 default = ["swagger", "json"]
 swagger = ["utoipa-swagger-ui"]
 json = ["utoipa"]
+http = ["nexus-http"]
 actix = ["utoipa-swagger-ui/actix-web", "utoipa/actix_extras"]
 axum = ["utoipa-swagger-ui/axum", "utoipa/axum_extras"]
 rocket = []
@@ -40,7 +41,7 @@ utoipa = { workspace = true, optional = true }
 utoipa-swagger-ui = { workspace = true, optional = true }
 
 # Core types / 核心类型
-nexus-http = { path = "../nexus-http" }
+nexus-http = { path = "../nexus-http", optional = true }
 nexus-core = { path = "../nexus-core" }
 
 # YAML support / YAML支持

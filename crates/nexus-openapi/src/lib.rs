@@ -3,43 +3,68 @@
 //!
 //! # Equivalent to Spring / 等价于 Spring
 //!
-//! - `@Operation` - `#[openapi]`
-//! - `@ApiResponse` - `#[response]`
-//! - `@Parameter` - `#[param]`
-//! - `@Tag` - `#[tag]`
-//! - `@Schema` - `#[schema]`
-//! - SpringDoc OpenAPI - OpenApi
+//! | Nexus | Spring |
+//! |-------|--------|
+//! | `OpenApi` | `@OpenAPIDefinition` |
+//! | `SwaggerUi` | `springdoc-openapi-ui` |
+//! | `ToSchema` | `@Schema` |
+//! | `IntoParams` | `@Parameter` |
+//! | `#[openapi]` | `@Operation` |
 //!
-//! # Example / 示例
+//! # Features / 功能
+//!
+//! - OpenAPI 3.0 specification generation / OpenAPI 3.0 规范生成
+//! - Swagger UI integration / Swagger UI 集成
+//! - Type-safe schema definitions / 类型安全的模式定义
+//! - HTTP framework integration / HTTP 框架集成
+//! - Spring Boot compatible API / Spring Boot 兼容 API
+//!
+//! # Quick Start / 快速开始
 //!
 //! ```rust,ignore
-//! use nexus_openapi::{OpenApi, OpenApiConfig};
-//! use nexus_macros::get;
-//! use serde::Serialize;
+//! use nexus_openapi::{OpenApi, OpenApiConfig, SwaggerUi};
+//! use nexus_openapi::{InfoConfig, OpenApiBuilder};
+//! use nexus_openapi::{Schema, PathItem, Operation, Response};
 //!
-//! #[derive(Serialize)]
-//! struct User {
-//!     id: u64,
-//!     name: String,
-//! }
-//!
-//! #[openapi(
-//!     summary = "Get user by ID",
-//!     description = "Returns a single user",
-//!     tags = ["users"],
-//!     responses(
-//!         code = 200, description = "User found",
-//!         code = 404, description = "User not found"
+//! // Create OpenAPI specification
+//! // 创建 OpenAPI 规范
+//! let openapi = OpenApiBuilder::new()
+//!     .title("My API")
+//!     .version("1.0.0")
+//!     .description("My API description")
+//!     .add_path("/users", PathItem::new()
+//!         .get(Operation::new()
+//!             .summary("List users")
+//!             .add_response("200", Response::ok("Success"))
+//!         )
 //!     )
-//! )]
-//! #[get("/users/{id}")]
-//! async fn get_user(id: u64) -> Json<User> {
-//!     Json(User { id, name: "John".to_string() })
-//! }
+//!     .build();
 //!
-//! let openapi = OpenApi::new(OpenApiConfig::default());
-//! let spec = openapi.generate().await?;
+//! // Create Swagger UI handler
+//! // 创建 Swagger UI 处理器
+//! let swagger = SwaggerUi::new(openapi);
+//!
+//! // Handle HTTP request
+//! // 处理 HTTP 请求
+//! let (body, status, headers) = swagger.handle("/swagger");
 //! ```
+//!
+//! # Modules / 模块
+//!
+//! - [`config`] - Configuration types / 配置类型
+//! - [`schema`] - Schema definitions / 模式定义
+//! - [`operation`] - Operation definitions / 操作定义
+//! - [`response`] - Response definitions / 响应定义
+//! - [`path`] - Path definitions / 路径定义
+//! - [`openapi`] - OpenAPI builder / OpenAPI 构建器
+//! - [`swagger`] - Swagger UI integration / Swagger UI 集成
+//! - [`http`] - HTTP framework integration / HTTP 框架集成
+//! - [`macros`] - Re-exported utoipa macros / 重新导出的 utoipa 宏
+//!
+//! # Examples / 示例
+//!
+//! More examples are available in the [OpenAPI documentation](https://nexus.viewway.io/openapi).
+//! 更多示例请参考 [OpenAPI 文档](https://nexus.viewway.io/openapi)。
 
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
@@ -50,6 +75,8 @@ pub mod operation;
 pub mod response;
 pub mod path;
 pub mod openapi;
+pub mod swagger;
+pub mod http;
 pub mod macros;
 
 pub use config::{OpenApiConfig, ServerConfig, ContactConfig, LicenseConfig, InfoConfig, TagConfig, ExternalDocsConfig};
@@ -58,6 +85,8 @@ pub use operation::{Operation, Parameter, ParameterLocation, SecurityScheme, Req
 pub use response::{Response, ResponseContent, ApiResponse};
 pub use path::{PathItem, PathMethod, PathOperation, Components};
 pub use openapi::OpenApi;
+pub use swagger::{SwaggerUi, SwaggerConfig, ModelRendering, SyntaxHighlightTheme};
+pub use http::{OpenApiHandler, OpenApiResponse, OpenApiRoutes, OpenApiRouter};
 
 /// Version of the OpenAPI module
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
