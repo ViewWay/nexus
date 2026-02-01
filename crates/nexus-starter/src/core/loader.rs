@@ -364,12 +364,139 @@ impl AutoConfigurationRegistry {
     ///
     /// 返回提取的优先级，如果没有找到则返回 `None`。
     /// Returns extracted priority, or `None` if not found.
-    fn extract_priority(_class_name: &str) -> Option<i32> {
-        // 简单实现：从注释中提取优先级
-        // Simple implementation: extract priority from comments
-        // TODO: 实现更复杂的优先级提取逻辑
-        // TODO: Implement more complex priority extraction logic
+    ///
+    /// # 支持的格式 / Supported Formats
+    ///
+    /// - `# priority: 100`
+    /// - `# order: 100`
+    /// - `// priority: 100`
+    /// - `@Order(100)` (Spring 风格)
+    /// - `[order=100]` (属性风格)
+    fn extract_priority(class_name: &str) -> Option<i32> {
+        let lower = class_name.to_lowercase();
+
+        // 格式 1: # priority: 100
+        if let Some(idx) = lower.find("#priority:") {
+            if let Some(num) = Self::extract_number_after(&class_name, idx + 10) {
+                return num.parse().ok();
+            }
+        }
+        if let Some(idx) = lower.find("# priority:") {
+            if let Some(num) = Self::extract_number_after(&class_name, idx + 11) {
+                return num.parse().ok();
+            }
+        }
+
+        // 格式 2: # order: 100
+        if let Some(idx) = lower.find("#order:") {
+            if let Some(num) = Self::extract_number_after(&class_name, idx + 7) {
+                return num.parse().ok();
+            }
+        }
+        if let Some(idx) = lower.find("# order:") {
+            if let Some(num) = Self::extract_number_after(&class_name, idx + 8) {
+                return num.parse().ok();
+            }
+        }
+
+        // 格式 3: // priority: 100
+        if let Some(idx) = lower.find("//priority:") {
+            if let Some(num) = Self::extract_number_after(&class_name, idx + 11) {
+                return num.parse().ok();
+            }
+        }
+        if let Some(idx) = lower.find("// priority:") {
+            if let Some(num) = Self::extract_number_after(&class_name, idx + 12) {
+                return num.parse().ok();
+            }
+        }
+
+        // 格式 4: @Order(100)
+        if let Some(idx) = lower.find("@order(") {
+            if let Some(num) = Self::extract_number_in_parens(&class_name, idx + 7) {
+                return num.parse().ok();
+            }
+        }
+
+        // 格式 5: @Order("order", 100)
+        if let Some(idx) = lower.find("@order(\"") {
+            if let Some(comma) = class_name[idx..].find(',') {
+                let abs_comma = idx + comma + 1;
+                if let Some(num) = Self::extract_number_after(&class_name, abs_comma) {
+                    return num.parse().ok();
+                }
+            }
+        }
+
+        // 格式 6: [order=100]
+        if let Some(idx) = lower.find("[order=") {
+            if let Some(num) = Self::extract_number_after(&class_name, idx + 7) {
+                return num.parse().ok();
+            }
+        }
+
+        // 格式 7: [priority=100]
+        if let Some(idx) = lower.find("[priority=") {
+            if let Some(num) = Self::extract_number_after(&class_name, idx + 10) {
+                return num.parse().ok();
+            }
+        }
+
         None
+    }
+
+    /// 提取指定位置后的数字
+    /// Extract number after the specified position
+    fn extract_number_after(text: &str, start: usize) -> Option<String> {
+        let chars = text.chars().skip(start).peekable();
+        let mut result = String::new();
+        let mut found_digit = false;
+
+        for c in chars {
+            if c.is_ascii_digit() || (c == '-' && result.is_empty()) {
+                result.push(c);
+                found_digit = true;
+            } else if found_digit {
+                break;
+            } else if !c.is_whitespace() {
+                // 跳过前导空白，遇到非空白非数字则停止
+                if !c.is_whitespace() {
+                    break;
+                }
+            }
+        }
+
+        if found_digit {
+            Some(result)
+        } else {
+            None
+        }
+    }
+
+    /// 提取括号内的数字
+    /// Extract number inside parentheses
+    fn extract_number_in_parens(text: &str, start: usize) -> Option<String> {
+        let mut result = String::new();
+        let mut started = false;
+
+        for c in text.chars().skip(start) {
+            if c == ')' {
+                break;
+            }
+            if c.is_ascii_digit() || (c == '-' && result.is_empty()) {
+                result.push(c);
+                started = true;
+            } else if !started && !c.is_whitespace() {
+                // 非数字非空白字符
+                continue;
+            }
+        }
+
+        if !result.is_empty() {
+            Some(result)
+        } else {
+            None
+        }
     }
 
     /// 获取排序后的配置列表
@@ -473,5 +600,100 @@ mod tests {
         registry.register("module::Config2".to_string()).unwrap();
         let sorted = registry.get_sorted();
         assert_eq!(sorted.len(), 2);
+    }
+
+    #[test]
+    fn test_extract_priority_hash_format() {
+        // #priority:100
+        assert_eq!(AutoConfigurationRegistry::extract_priority("#priority:100"), Some(100));
+        assert_eq!(AutoConfigurationRegistry::extract_priority("#priority: -50"), Some(-50));
+
+        // # priority: 100
+        assert_eq!(AutoConfigurationRegistry::extract_priority("# priority: 100"), Some(100));
+        assert_eq!(AutoConfigurationRegistry::extract_priority("# priority:200"), Some(200));
+    }
+
+    #[test]
+    fn test_extract_priority_order_format() {
+        // #order:100
+        assert_eq!(AutoConfigurationRegistry::extract_priority("#order:100"), Some(100));
+
+        // # order: 100
+        assert_eq!(AutoConfigurationRegistry::extract_priority("# order: 50"), Some(50));
+    }
+
+    #[test]
+    fn test_extract_priority_comment_format() {
+        // //priority:100
+        assert_eq!(AutoConfigurationRegistry::extract_priority("//priority:100"), Some(100));
+
+        // // priority: 100
+        assert_eq!(AutoConfigurationRegistry::extract_priority("// priority: 75"), Some(75));
+    }
+
+    #[test]
+    fn test_extract_priority_spring_format() {
+        // @Order(100)
+        assert_eq!(AutoConfigurationRegistry::extract_priority("@Order(100)"), Some(100));
+        assert_eq!(AutoConfigurationRegistry::extract_priority("@Order(200)"), Some(200));
+
+        // @Order("order", 100)
+        assert_eq!(AutoConfigurationRegistry::extract_priority("@Order(\"order\", 100)"), Some(100));
+    }
+
+    #[test]
+    fn test_extract_priority_bracket_format() {
+        // [order=100]
+        assert_eq!(AutoConfigurationRegistry::extract_priority("[order=100]"), Some(100));
+
+        // [priority=100]
+        assert_eq!(AutoConfigurationRegistry::extract_priority("[priority=100]"), Some(100));
+    }
+
+    #[test]
+    fn test_extract_priority_combined() {
+        // Class name with priority annotation
+        assert_eq!(AutoConfigurationRegistry::extract_priority("MyConfig #priority:100"), Some(100));
+        assert_eq!(AutoConfigurationRegistry::extract_priority("MyConfig # order: 50 // comment"), Some(50));
+        assert_eq!(AutoConfigurationRegistry::extract_priority("MyConfig @Order(200)"), Some(200));
+    }
+
+    #[test]
+    fn test_extract_priority_none() {
+        // No priority specified
+        assert_eq!(AutoConfigurationRegistry::extract_priority("MyConfig"), None);
+        assert_eq!(AutoConfigurationRegistry::extract_priority("module::MyConfig"), None);
+        assert_eq!(AutoConfigurationRegistry::extract_priority("# invalid"), None);
+        assert_eq!(AutoConfigurationRegistry::extract_priority("@Order()"), None);
+    }
+
+    #[test]
+    fn test_registry_register_with_priority() {
+        let mut registry = AutoConfigurationRegistry::new();
+
+        // Register with different priorities
+        registry.register("HighPriorityConfig #priority:100".to_string()).unwrap();
+        registry.register("LowPriorityConfig #priority:-50".to_string()).unwrap();
+        registry.register("DefaultConfig".to_string()).unwrap();
+
+        assert_eq!(registry.len(), 3);
+
+        // Get sorted - should be ordered by priority
+        let sorted = registry.get_sorted();
+        assert_eq!(sorted.len(), 3);
+    }
+
+    #[test]
+    fn test_extract_number_after() {
+        assert_eq!(AutoConfigurationRegistry::extract_number_after("priority: 100", 9), Some("100".to_string()));
+        assert_eq!(AutoConfigurationRegistry::extract_number_after("value: -50 end", 7), Some("-50".to_string()));
+        assert_eq!(AutoConfigurationRegistry::extract_number_after("no number", 0), None);
+    }
+
+    #[test]
+    fn test_extract_number_in_parens() {
+        assert_eq!(AutoConfigurationRegistry::extract_number_in_parens("Order(100)", 5), Some("100".to_string()));
+        assert_eq!(AutoConfigurationRegistry::extract_number_in_parens("Order( -50 )", 5), Some("-50".to_string()));
+        assert_eq!(AutoConfigurationRegistry::extract_number_in_parens("Order()", 5), None);
     }
 }
