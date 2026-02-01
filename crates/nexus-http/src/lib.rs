@@ -42,6 +42,7 @@ pub mod conn;
 pub mod error;
 pub mod exception;
 pub mod ext;
+pub mod multipart;
 pub mod http2;
 pub mod method;
 pub mod proto;
@@ -80,6 +81,10 @@ pub use server::Server;
 pub use service::HttpService;
 pub use sse::{Event, Sse, SseKeepAlive};
 pub use status::StatusCode;
+pub use multipart::{
+    FileSizeLimits, FromMultipart, MultipartFile, MultipartData, MultipartForm,
+    media_type_for_extension, validate_content_type, validate_extension,
+};
 pub use validation::{
     Validatable, ValidatableExtractor, Validated, ValidationError, ValidationErrors,
     ValidationHelpers, ValidationMiddleware,
