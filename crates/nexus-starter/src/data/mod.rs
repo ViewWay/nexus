@@ -235,10 +235,15 @@ impl AutoConfiguration for TransactionAutoConfiguration {
         50  // 在数据源配置之后
     }
 
-    fn configure(&self, _ctx: &mut ApplicationContext) -> anyhow::Result<()> {
+    fn configure(&self, ctx: &mut ApplicationContext) -> anyhow::Result<()> {
         tracing::info!("Configuring Transaction Manager");
 
-        // TODO: 创建并注册 TransactionManager
+        // Create and register TransactionManager
+        // 创建并注册 TransactionManager
+        let tm = TransactionManager::new();
+        ctx.register_bean(tm);
+        tracing::info!("Registered TransactionManager bean");
+
         Ok(())
     }
 }
@@ -318,5 +323,17 @@ mod tests {
         let pool_config = config.pool_config();
         assert_eq!(pool_config.max_size, 20);
         assert_eq!(pool_config.min_idle, 5);
+    }
+
+    #[test]
+    fn test_transaction_auto_config_registers_manager() {
+        let auto_config = TransactionAutoConfiguration;
+
+        let mut ctx = ApplicationContext::new();
+        auto_config.configure(&mut ctx).unwrap();
+
+        // Verify TransactionManager was registered
+        // 验证 TransactionManager 已注册
+        assert!(ctx.contains_bean::<TransactionManager>());
     }
 }
