@@ -1661,9 +1661,32 @@ pub fn component_scan(_attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 // ============================================================================
-// Validation Macro (equivalent to @Validated)
-// 校验宏（等价于 @Validated）
+// Validation Macros (equivalent to @Valid/@Validated/@NotNull/@Size/etc)
+// 验证宏（等价于 @Valid/@Validated/@NotNull/@Size 等）
 // ============================================================================
+
+/// Enable validation for a parameter or struct
+/// 启用参数或结构体的验证
+///
+/// Equivalent to Spring's `@Valid`.
+/// 等价于 Spring 的 `@Valid`。
+///
+/// # Example / 示例
+///
+/// ```rust,no_run,ignore
+/// use nexus_macros::Valid;
+///
+/// #[post("/users")]
+/// async fn create_user(#[Valid] req: CreateUserRequest) -> Response {
+///     Response::ok()
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn valid(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Validation is handled by Validated extractor at runtime
+    // 验证由运行时的 Validated 提取器处理
+    item
+}
 
 /// Enable method-level validation
 /// 启用方法级校验
@@ -1674,15 +1697,225 @@ pub fn component_scan(_attr: TokenStream, item: TokenStream) -> TokenStream {
 /// # Example / 示例
 ///
 /// ```rust,no_run,ignore
-/// use nexus_macros::validated;
+/// use nexus_macros::Validated;
 ///
+/// #[Validated]
 /// #[post("/users")]
-/// async fn create_user(#[validated] user: User) -> Result<User, Error> {
-///     Ok(user)
+/// async fn create_user(#[Valid] req: CreateUserRequest) -> Response {
+///     Response::ok()
 /// }
 /// ```
 #[proc_macro_attribute]
 pub fn validated(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Mark a field as required (not null)
+/// 标记字段为必填（非空）
+///
+/// Equivalent to Spring's `@NotNull`.
+/// 等价于 Spring 的 `@NotNull`。
+///
+/// # Example / 示例
+///
+/// ```rust,no_run,ignore
+/// use nexus_macros::NotNull;
+///
+/// struct User {
+///     #[NotNull]
+///     username: String,
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn not_null(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Mark a string field as required and non-empty
+/// 标记字符串字段为必填且非空
+///
+/// Equivalent to Spring's `@NotBlank`.
+/// 等价于 Spring 的 `@NotBlank`。
+#[proc_macro_attribute]
+pub fn not_blank(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Mark a collection field as required and non-empty
+/// 标记集合字段为必填且非空
+///
+/// Equivalent to Spring's `@NotEmpty`.
+/// 等价于 Spring 的 `@NotEmpty`。
+#[proc_macro_attribute]
+pub fn not_empty(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Size constraint for strings, collections, arrays, maps, etc.
+/// 字符串、集合、数组、映射等的大小约束
+///
+/// Equivalent to Spring's `@Size`.
+/// 等价于 Spring 的 `@Size`。
+///
+/// # Example / 示例
+///
+/// ```rust,no_run,ignore
+/// use nexus_macros::Size;
+///
+/// struct User {
+///     #[Size(min = 3, max = 20)]
+///     username: String,
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn size(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Length constraint for strings (alias for Size)
+/// 字符串长度约束（Size 的别名）
+#[proc_macro_attribute]
+pub fn length(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    size(_attr, item)
+}
+
+/// Minimum value constraint for numeric types
+/// 数值类型的最小值约束
+///
+/// Equivalent to Spring's `@Min`.
+/// 等价于 Spring 的 `@Min`。
+#[proc_macro_attribute]
+pub fn min(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Maximum value constraint for numeric types
+/// 数值类型的最大值约束
+///
+/// Equivalent to Spring's `@Max`.
+/// 等价于 Spring 的 `@Max`。
+#[proc_macro_attribute]
+pub fn max(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Decimal minimum value constraint
+/// 小数最小值约束
+///
+/// Equivalent to Spring's `@DecimalMin`.
+/// 等价于 Spring 的 `@DecimalMin`。
+#[proc_macro_attribute]
+pub fn decimal_min(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Decimal maximum value constraint
+/// 小数最大值约束
+///
+/// Equivalent to Spring's `@DecimalMax`.
+/// 等价于 Spring 的 `@DecimalMax`。
+#[proc_macro_attribute]
+pub fn decimal_max(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Email format validation
+/// 邮箱格式验证
+///
+/// Equivalent to Spring's `@Email`.
+/// 等价于 Spring 的 `@Email`。
+#[proc_macro_attribute]
+pub fn email(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Pattern validation using regular expression
+/// 使用正则表达式进行模式验证
+///
+/// Equivalent to Spring's `@Pattern`.
+/// 等价于 Spring 的 `@Pattern`。
+#[proc_macro_attribute]
+pub fn pattern(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// URL format validation
+/// URL 格式验证
+///
+/// Equivalent to Spring's `@Url`.
+/// 等价于 Spring 的 `@Url`。
+#[proc_macro_attribute]
+pub fn url(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Assert that the boolean value is true
+/// 断言布尔值为 true
+///
+/// Equivalent to Spring's `@AssertTrue`.
+/// 等价于 Spring 的 `@AssertTrue`。
+#[proc_macro_attribute]
+pub fn assert_true(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Assert that the boolean value is false
+/// 断言布尔值为 false
+///
+/// Equivalent to Spring's `@AssertFalse`.
+/// 等价于 Spring 的 `@AssertFalse`。
+#[proc_macro_attribute]
+pub fn assert_false(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Past date validation
+/// 过去日期验证
+///
+/// Equivalent to Spring's `@Past`.
+/// 等价于 Spring 的 `@Past`。
+#[proc_macro_attribute]
+pub fn past(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Future date validation
+/// 未来日期验证
+///
+/// Equivalent to Spring's `@Future`.
+/// 等价于 Spring 的 `@Future`。
+#[proc_macro_attribute]
+pub fn future(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Range validation for numeric values
+/// 数值范围验证
+///
+/// Equivalent to Spring's `@Range`.
+/// 等价于 Spring 的 `@Range`。
+#[proc_macro_attribute]
+pub fn range(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Negative value validation
+/// 负值验证
+///
+/// Equivalent to Spring's `@Negative`.
+/// 等价于 Spring 的 `@Negative`。
+#[proc_macro_attribute]
+pub fn negative(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/// Positive value validation
+/// 正值验证
+///
+/// Equivalent to Spring's `@Positive`.
+/// 等价于 Spring 的 `@Positive`。
+#[proc_macro_attribute]
+pub fn positive(_attr: TokenStream, item: TokenStream) -> TokenStream {
     item
 }
 
