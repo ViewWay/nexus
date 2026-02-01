@@ -1,0 +1,63 @@
+[package]
+name = "nexus-data-orm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "ORM integration for Nexus framework (Active Record, Query Builder)"
+keywords = ["nexus", "data", "orm", "active-record", "query-builder"]
+categories = ["database", "asynchronous"]
+
+[features]
+default = []
+
+# Sea ORM integration (disabled due to sqlx 0.8.6 compatibility issue)
+# sea-orm = ["dep:sea-orm"]
+
+# Diesel integration (optional)
+diesel = ["dep:diesel"]
+
+# All ORM integrations
+all = ["diesel"]
+
+[dependencies]
+# Data commons
+nexus-data-commons = { path = "../nexus-data-commons" }
+
+# Data RDBC for reactive database access
+nexus-data-rdbc = { path = "../nexus-data-rdbc" }
+
+# Async runtime
+nexus-runtime = { path = "../nexus-runtime" }
+
+# Sea ORM (temporarily disabled due to sqlx 0.8.6 compatibility)
+# sea-orm = { version = "1.1", optional = true, features = ["runtime-tokio-rustls", "sqlx-sqlite", "sqlx-postgres", "sqlx-mysql", "macros"] }
+
+# Diesel (optional)
+diesel = { version = "2.2", optional = true, features = ["postgres", "mysql", "sqlite"] }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Serialization
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+# Async trait support
+async-trait = { workspace = true }
+
+# UUID support
+uuid = { version = "1.12", features = ["v4", "serde"] }
+
+# Chrono for datetime
+chrono = { version = "0.4", features = ["serde"] }
+
+# Logging
+tracing = { workspace = true }
+
+# Futures support
+futures-util = "0.3"
+

@@ -1,0 +1,754 @@
+//! Query Builder
+//! 查询构建器
+//!
+//! # Overview / 概述
+//!
+//! This module provides a fluent query builder for constructing database queries.
+//! 本模块提供用于构建数据库查询的流畅查询构建器。
+//!
+//! # Equivalent to Spring / 等价于 Spring
+//!
+//! | Nexus | Spring/JPA |
+//! |-------|------------|
+//! | `QueryBuilder::where_()` | `Specification` / `CriteriaBuilder.where()` |
+//! | `QueryBuilder::order_by()` | `Sort` / `OrderBy` |
+//! | `QueryBuilder::limit()` | `Pageable` / `setMaxResults()` |
+//! | `QueryBuilder::join()` | `EntityGraph` / `JOIN` |
+//!
+//! # Example / 示例
+//!
+//! ```rust,no_run,ignore
+//! use nexus_data_orm::QueryBuilder;
+//!
+//! let users = User::query()
+//!     .where_("age > ?", &["18"])
+//!     .where_("status = ?", &["active"])
+//!     .order_by("created_at DESC")
+//!     .limit(10)
+//!     .offset(20)
+//!     .all().await?;
+//! ```
+
+use crate::{Error, Model, Result};
+use std::marker::PhantomData;
+
+/// Trait for SQL parameter conversion
+/// SQL 参数转换的 trait
+pub trait ToSql: Send + Sync {
+    /// Convert to SQL value
+    /// 转换为 SQL 值
+    fn to_sql(&self) -> String;
+}
+
+impl ToSql for i32 {
+    fn to_sql(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl ToSql for i64 {
+    fn to_sql(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl ToSql for u32 {
+    fn to_sql(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl ToSql for u64 {
+    fn to_sql(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl ToSql for f64 {
+    fn to_sql(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl ToSql for &str {
+    fn to_sql(&self) -> String {
+        format!("'{}'", self.replace("'", "''"))
+    }
+}
+
+impl ToSql for String {
+    fn to_sql(&self) -> String {
+        format!("'{}'", self.replace("'", "''"))
+    }
+}
+
+impl ToSql for bool {
+    fn to_sql(&self) -> String {
+        if *self {
+            "TRUE".to_string()
+        } else {
+            "FALSE".to_string()
+        }
+    }
+}
+
+/// Where clause
+/// WHERE 子句
+///
+/// Represents a condition in a WHERE clause.
+/// 表示 WHERE 子句中的条件。
+#[derive(Debug, Clone)]
+pub struct WhereClause {
+    /// The condition SQL
+    /// 条件 SQL
+    pub condition: String,
+
+    /// Parameters for the condition
+    /// 条件的参数
+    pub params: Vec<String>,
+}
+
+impl WhereClause {
+    /// Create a new where clause
+    /// 创建新的 WHERE 子句
+    pub fn new(condition: impl Into<String>) -> Self {
+        Self {
+            condition: condition.into(),
+            params: Vec::new(),
+        }
+    }
+
+    /// Add a parameter
+    /// 添加参数
+    pub fn param(mut self, value: impl ToSql) -> Self {
+        self.params.push(value.to_sql());
+        self
+    }
+
+    /// Add multiple parameters
+    /// 添加多个参数
+    pub fn params(mut self, values: &[&dyn ToSql]) -> Self {
+        for &value in values {
+            self.params.push(value.to_sql());
+        }
+        self
+    }
+}
+
+/// Order by clause
+/// ORDER BY 子句
+///
+/// Represents sorting in a query.
+/// 表示查询中的排序。
+#[derive(Debug, Clone)]
+pub struct OrderBy {
+    /// Column name
+    /// 列名
+    pub column: String,
+
+    /// Direction (ASC or DESC)
+    /// 方向（ASC 或 DESC）
+    pub direction: OrderDirection,
+}
+
+impl OrderBy {
+    /// Create a new order by clause
+    /// 创建新的 ORDER BY 子句
+    pub fn new(column: impl Into<String>) -> Self {
+        Self {
+            column: column.into(),
+            direction: OrderDirection::Asc,
+        }
+    }
+
+    /// Set direction to ascending
+    /// 设置方向为升序
+    pub fn asc(mut self) -> Self {
+        self.direction = OrderDirection::Asc;
+        self
+    }
+
+    /// Set direction to descending
+    /// 设置方向为降序
+    pub fn desc(mut self) -> Self {
+        self.direction = OrderDirection::Desc;
+        self
+    }
+}
+
+/// Order direction
+/// 排序方向
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OrderDirection {
+    /// Ascending
+    /// 升序
+    Asc,
+
+    /// Descending
+    /// 降序
+    Desc,
+}
+
+impl OrderDirection {
+    /// Get the SQL keyword
+    /// 获取 SQL 关键字
+    pub fn as_sql(&self) -> &str {
+        match self {
+            OrderDirection::Asc => "ASC",
+            OrderDirection::Desc => "DESC",
+        }
+    }
+}
+
+/// Limit clause
+/// LIMIT 子句
+///
+/// Represents the LIMIT and OFFSET in a query.
+/// 表示查询中的 LIMIT 和 OFFSET。
+#[derive(Debug, Clone)]
+pub struct Limit {
+    /// Maximum number of rows to return
+    /// 要返回的最大行数
+    pub limit: Option<usize>,
+
+    /// Number of rows to skip
+    /// 要跳过的行数
+    pub offset: Option<usize>,
+}
+
+impl Limit {
+    /// Create a new limit clause
+    /// 创建新的 LIMIT 子句
+    pub fn new() -> Self {
+        Self {
+            limit: None,
+            offset: None,
+        }
+    }
+
+    /// Set the limit
+    /// 设置限制
+    pub fn with_limit(mut self, limit: usize) -> Self {
+        self.limit = Some(limit);
+        self
+    }
+
+    /// Set the offset
+    /// 设置偏移
+    pub fn with_offset(mut self, offset: usize) -> Self {
+        self.offset = Some(offset);
+        self
+    }
+}
+
+impl Default for Limit {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Join clause
+/// JOIN 子句
+///
+/// Represents a JOIN in a query.
+/// 表示查询中的 JOIN。
+#[derive(Debug, Clone)]
+pub struct Join {
+    /// Join type (INNER, LEFT, RIGHT)
+    /// JOIN 类型（INNER, LEFT, RIGHT）
+    pub join_type: JoinType,
+
+    /// Table to join
+    /// 要连接的表
+    pub table: String,
+
+    /// Join condition
+    /// 连接条件
+    pub on: String,
+
+    /// Alias for the joined table
+    /// 连接表的别名
+    pub alias: Option<String>,
+}
+
+impl Join {
+    /// Create a new join clause
+    /// 创建新的 JOIN 子句
+    pub fn new(join_type: JoinType, table: impl Into<String>, on: impl Into<String>) -> Self {
+        Self {
+            join_type,
+            table: table.into(),
+            on: on.into(),
+            alias: None,
+        }
+    }
+
+    /// Set an alias for the joined table
+    /// 为连接的表设置别名
+    pub fn alias(mut self, alias: impl Into<String>) -> Self {
+        self.alias = Some(alias.into());
+        self
+    }
+}
+
+/// Join type
+/// JOIN 类型
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JoinType {
+    /// Inner join
+    /// 内连接
+    Inner,
+
+    /// Left join
+    /// 左连接
+    Left,
+
+    /// Right join
+    /// 右连接
+    Right,
+
+    /// Cross join
+    /// 交叉连接
+    Cross,
+}
+
+impl JoinType {
+    /// Get the SQL keyword
+    /// 获取 SQL 关键字
+    pub fn as_sql(&self) -> &str {
+        match self {
+            JoinType::Inner => "INNER JOIN",
+            JoinType::Left => "LEFT JOIN",
+            JoinType::Right => "RIGHT JOIN",
+            JoinType::Cross => "CROSS JOIN",
+        }
+    }
+}
+
+/// Query builder
+/// 查询构建器
+///
+/// Provides a fluent interface for building database queries.
+/// 提供用于构建数据库查询的流畅接口。
+///
+/// # Example / 示例
+///
+/// ```rust,no_run,ignore
+/// use nexus_data_orm::QueryBuilder;
+///
+/// let query = User::query()
+///     .where_("age > ?", &["18"])
+///     .order_by("created_at DESC")
+///     .limit(10);
+///
+/// let sql = query.to_sql();
+/// // SELECT * FROM users WHERE age > 18 ORDER BY created_at DESC LIMIT 10
+/// ```
+pub struct QueryBuilder<M: Model> {
+    /// Model type
+    /// 模型类型
+    _phantom: PhantomData<M>,
+
+    /// Where clauses
+    /// WHERE 子句
+    wheres: Vec<WhereClause>,
+
+    /// Order by clauses
+    /// ORDER BY 子句
+    order_by: Vec<OrderBy>,
+
+    /// Limit and offset
+    /// LIMIT 和 OFFSET
+    limit: Limit,
+
+    /// Joins
+    /// JOIN
+    joins: Vec<Join>,
+
+    /// Selected columns (empty means *)
+    /// 选择的列（空表示 *）
+    select: Vec<String>,
+
+    /// Group by columns
+    /// GROUP BY 列
+    group_by: Vec<String>,
+
+    /// Having clause
+    /// HAVING 子句
+    having: Option<String>,
+
+    /// Distinct flag
+    /// DISTINCT 标志
+    distinct: bool,
+}
+
+impl<M: Model> QueryBuilder<M> {
+    /// Create a new query builder
+    /// 创建新的查询构建器
+    pub fn new() -> Self {
+        Self {
+            _phantom: PhantomData,
+            wheres: Vec::new(),
+            order_by: Vec::new(),
+            limit: Limit::default(),
+            joins: Vec::new(),
+            select: Vec::new(),
+            group_by: Vec::new(),
+            having: None,
+            distinct: false,
+        }
+    }
+
+    /// Add a where clause
+    /// 添加 WHERE 子句
+    ///
+    /// # Example / 示例
+    ///
+    /// ```rust,no_run,ignore
+    /// let users = User::query()
+    ///     .where_("age > ?", &["18"])
+    ///     .where_("status = ?", &["active"])
+    ///     .all().await?;
+    /// ```
+    pub fn where_(mut self, condition: &str, params: &[&dyn ToSql]) -> Self {
+        let mut params_vec = Vec::new();
+        for &param in params {
+            params_vec.push(param.to_sql());
+        }
+        self.wheres.push(WhereClause {
+            condition: condition.to_string(),
+            params: params_vec,
+        });
+        self
+    }
+
+    /// Add an order by clause
+    /// 添加 ORDER BY 子句
+    ///
+    /// # Example / 示例
+    ///
+    /// ```rust,no_run,ignore
+    /// let users = User::query()
+    ///     .order_by("created_at DESC")
+    ///     .all().await?;
+    /// ```
+    pub fn order_by(mut self, column: &str) -> OrderByBuilder<M> {
+        OrderByBuilder {
+            query_builder: self,
+            column: column.to_string(),
+        }
+    }
+
+    /// Set the limit
+    /// 设置 LIMIT
+    ///
+    /// # Example / 示例
+    ///
+    /// ```rust,no_run,ignore
+    /// let users = User::query()
+    ///     .limit(10)
+    ///     .all().await?;
+    /// ```
+    pub fn limit(mut self, limit: usize) -> Self {
+        self.limit.limit = Some(limit);
+        self
+    }
+
+    /// Set the offset
+    /// 设置 OFFSET
+    ///
+    /// # Example / 示例
+    ///
+    /// ```rust,no_run,ignore
+    /// let users = User::query()
+    ///     .limit(10)
+    ///     .offset(20)
+    ///     .all().await?;
+    /// ```
+    pub fn offset(mut self, offset: usize) -> Self {
+        self.limit.offset = Some(offset);
+        self
+    }
+
+    /// Add a join
+    /// 添加 JOIN
+    ///
+    /// # Example / 示例
+    ///
+    /// ```rust,no_run,ignore
+    /// let users = User::query()
+    ///     .join(JoinType::Inner, "posts", "users.id = posts.user_id")
+    ///     .all().await?;
+    /// ```
+    pub fn join(mut self, join_type: JoinType, table: &str, on: &str) -> Self {
+        self.joins.push(Join::new(join_type, table, on));
+        self
+    }
+
+    /// Select specific columns
+    /// 选择特定列
+    ///
+    /// # Example / 示例
+    ///
+    /// ```rust,no_run,ignore
+    /// let users = User::query()
+    ///     .select(&["id", "name"])
+    ///     .all().await?;
+    /// ```
+    pub fn select(mut self, columns: &[&str]) -> Self {
+        self.select = columns.iter().map(|s| s.to_string()).collect();
+        self
+    }
+
+    /// Add a group by clause
+    /// 添加 GROUP BY 子句
+    pub fn group_by(mut self, columns: &[&str]) -> Self {
+        self.group_by = columns.iter().map(|s| s.to_string()).collect();
+        self
+    }
+
+    /// Add a having clause
+    /// 添加 HAVING 子句
+    pub fn having(mut self, condition: &str) -> Self {
+        self.having = Some(condition.to_string());
+        self
+    }
+
+    /// Set distinct flag
+    /// 设置 DISTINCT 标志
+    pub fn distinct(mut self) -> Self {
+        self.distinct = true;
+        self
+    }
+
+    /// Build the SQL query
+    /// 构建 SQL 查询
+    pub fn to_sql(&self) -> String {
+        let mut sql = String::new();
+
+        // SELECT clause
+        sql.push_str("SELECT ");
+        if self.distinct {
+            sql.push_str("DISTINCT ");
+        }
+        if self.select.is_empty() {
+            sql.push_str("*");
+        } else {
+            sql.push_str(&self.select.join(", "));
+        }
+
+        // FROM clause
+        sql.push_str(" FROM ");
+        sql.push_str(&M::table_name());
+
+        // JOINs
+        for join in &self.joins {
+            sql.push(' ');
+            sql.push_str(join.join_type.as_sql());
+            sql.push(' ');
+            sql.push_str(&join.table);
+            if let Some(alias) = &join.alias {
+                sql.push_str(" AS ");
+                sql.push_str(alias);
+            }
+            sql.push_str(" ON ");
+            sql.push_str(&join.on);
+        }
+
+        // WHERE clause
+        if !self.wheres.is_empty() {
+            sql.push_str(" WHERE ");
+            let conditions: Vec<String> = self
+                .wheres
+                .iter()
+                .map(|w| {
+                    let mut condition = w.condition.clone();
+                    for param in &w.params {
+                        condition = condition.replacen('?', param, 1);
+                    }
+                    condition
+                })
+                .collect();
+            sql.push_str(&conditions.join(" AND "));
+        }
+
+        // GROUP BY clause
+        if !self.group_by.is_empty() {
+            sql.push_str(" GROUP BY ");
+            sql.push_str(&self.group_by.join(", "));
+        }
+
+        // HAVING clause
+        if let Some(having) = &self.having {
+            sql.push_str(" HAVING ");
+            sql.push_str(having);
+        }
+
+        // ORDER BY clause
+        if !self.order_by.is_empty() {
+            sql.push_str(" ORDER BY ");
+            let orderings: Vec<String> = self
+                .order_by
+                .iter()
+                .map(|o| format!("{} {}", o.column, o.direction.as_sql()))
+                .collect();
+            sql.push_str(&orderings.join(", "));
+        }
+
+        // LIMIT clause
+        if let Some(limit) = self.limit.limit {
+            sql.push_str(&format!(" LIMIT {}", limit));
+        }
+
+        // OFFSET clause
+        if let Some(offset) = self.limit.offset {
+            sql.push_str(&format!(" OFFSET {}", offset));
+        }
+
+        sql
+    }
+
+    /// Execute the query and return all results (placeholder)
+    /// 执行查询并返回所有结果（占位符）
+    pub async fn all(&self) -> Result<Vec<M>> {
+        // Placeholder - actual implementation would execute the query
+        Err(Error::unknown("Query execution not yet implemented"))
+    }
+
+    /// Execute the query and return the first result (placeholder)
+    /// 执行查询并返回第一个结果（占位符）
+    pub async fn first(&self) -> Result<Option<M>> {
+        // Placeholder - actual implementation would execute the query
+        Err(Error::unknown("Query execution not yet implemented"))
+    }
+
+    /// Execute the query and return the count (placeholder)
+    /// 执行查询并返回计数（占位符）
+    pub async fn count(&self) -> Result<i64> {
+        // Placeholder - actual implementation would execute the query
+        Err(Error::unknown("Count query not yet implemented"))
+    }
+
+    /// Execute the query and return paginated results (placeholder)
+    /// 执行查询并返回分页结果（占位符）
+    pub async fn paginate(&self, page: u32, per_page: u32) -> Result<nexus_data_commons::Page<M>> {
+        // Placeholder - actual implementation would execute the query
+        Err(Error::unknown("Pagination not yet implemented"))
+    }
+}
+
+impl<M: Model> Default for QueryBuilder<M> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Builder for order by clause
+/// ORDER BY 子句的构建器
+pub struct OrderByBuilder<M: Model> {
+    query_builder: QueryBuilder<M>,
+    column: String,
+}
+
+impl<M: Model> OrderByBuilder<M> {
+    /// Set direction to ascending and return the query builder
+    /// 设置方向为升序并返回查询构建器
+    pub fn asc(self) -> QueryBuilder<M> {
+        let mut builder = self.query_builder;
+        builder.order_by.push(OrderBy {
+            column: self.column,
+            direction: OrderDirection::Asc,
+        });
+        builder
+    }
+
+    /// Set direction to descending and return the query builder
+    /// 设置方向为降序并返回查询构建器
+    pub fn desc(self) -> QueryBuilder<M> {
+        let mut builder = self.query_builder;
+        builder.order_by.push(OrderBy {
+            column: self.column,
+            direction: OrderDirection::Desc,
+        });
+        builder
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Mock model for testing
+    #[derive(Debug, Clone)]
+    struct User;
+
+    impl Model for User {
+        fn meta() -> crate::ModelMeta {
+            let mut meta = crate::ModelMeta::new("users");
+            meta.columns.push(crate::Column::new("id", crate::ColumnType::I64));
+            meta.columns.push(crate::Column::new("name", crate::ColumnType::String));
+            meta.columns.push(crate::Column::new("email", crate::ColumnType::String));
+            meta
+        }
+
+        fn primary_key(&self) -> Result<String> {
+            Ok("1".to_string())
+        }
+
+        fn set_primary_key(&mut self, _value: String) -> Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn test_query_builder_basic() {
+        let query = QueryBuilder::<User>::new()
+            .where_("age > ?", &[&18i32])
+            .to_sql();
+
+        assert!(query.contains("SELECT * FROM users"));
+        assert!(query.contains("WHERE"));
+        assert!(query.contains("age > 18"));
+    }
+
+    #[test]
+    fn test_query_builder_order_by() {
+        let query = QueryBuilder::<User>::new()
+            .order_by("created_at")
+            .desc()
+            .to_sql();
+
+        assert!(query.contains("ORDER BY"));
+        assert!(query.contains("created_at DESC"));
+    }
+
+    #[test]
+    fn test_query_builder_limit_offset() {
+        let query = QueryBuilder::<User>::new()
+            .limit(10)
+            .offset(20)
+            .to_sql();
+
+        assert!(query.contains("LIMIT 10"));
+        assert!(query.contains("OFFSET 20"));
+    }
+
+    #[test]
+    fn test_query_builder_join() {
+        let query = QueryBuilder::<User>::new()
+            .join(JoinType::Inner, "posts", "users.id = posts.user_id")
+            .to_sql();
+
+        assert!(query.contains("INNER JOIN posts"));
+        assert!(query.contains("ON users.id = posts.user_id"));
+    }
+
+    #[test]
+    fn test_to_sql_for_various_types() {
+        assert_eq!(42i32.to_sql(), "42");
+        assert_eq!("hello".to_sql(), "'hello'");
+        assert_eq!("it's".to_sql(), "'it''s'");
+        assert_eq!(true.to_sql(), "TRUE");
+        assert_eq!(false.to_sql(), "FALSE");
+    }
+}
