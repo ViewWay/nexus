@@ -11,6 +11,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0-alpha.5] - 2026-02-01
+
+### HTTP Layer Enhancements / HTTP 层增强
+
+### Added / 新增
+
+#### Exception Handling / 异常处理
+
+- **Global Exception Handling (@ControllerAdvice/@ExceptionHandler)** / **全局异常处理**
+  - `ErrorResponse` struct with RFC 7807 Problem Details support
+  - `IntoErrorResponse` trait for custom error conversion
+  - `ExceptionHandlerRegistry` for dynamic exception handler registration
+  - Common exception types: `NotFoundException`, `BadRequestException`, `UnauthorizedException`,
+    `ForbiddenException`, `ConflictException`, `ValidationException`, `InternalServerException`
+  - Macros: `#[controller_advice]`, `#[rest_controller_advice]`, `#[exception_handler]`
+  - Spring Boot compatible exception handling patterns
+
+- **Unified Response Structure (ApiResponse/ResultCode)** / **统一响应结构**
+  - `ApiResponse<T>` generic response wrapper with success/error states
+  - `ResultCode` enum with common response codes (OK, CREATED, BAD_REQUEST, UNAUTHORIZED, etc.)
+  - `PageResponse<T>` for paginated responses with page metadata
+  - `IntoApiResponse` trait for custom type conversion
+  - Helper methods: `success()`, `created()`, `error()`, `page()`
+
+#### Parameter Validation / 参数校验
+
+- **Validation Macros (@Validated/@Valid)** / **校验宏**
+  - `#[valid]` - Struct-level validation trigger
+  - `#[validated]` - Method-level validation trigger
+  - Field validation macros:
+    - `#[not_null]`, `#[not_blank]`, `#[not_empty]` - Required field validation
+    - `#[size(min=.., max=..)]` - Size validation
+    - `#[min=..]`, `#[max=..]` - Numeric range validation
+    - `#[decimal_min=..]`, `#[decimal_max=..]` - Decimal validation
+    - `#[email]` - Email format validation
+    - `#[pattern=..]` - Regex pattern validation
+    - `#[url]` - URL format validation
+    - `#[assert_true=..]`, `#[assert_false=..]` - Boolean assertion validation
+    - `#[past]`, `#[future]` - Date/time validation
+    - `#[range=..]`, `#[negative]`, `#[positive]` - Numeric constraint validation
+  - `ValidationResult` and `Validator` trait for custom validators
+  - `validate_bean()` function for runtime validation
+  - Spring Boot `@Validated/@Valid` compatible patterns
+
+#### File Upload / 文件上传
+
+- **MultipartFile Support** / **MultipartFile 支持**
+  - `MultipartFile` struct with metadata (filename, content_type, size, name)
+  - `MultipartData` for raw multipart data access
+  - `MultipartForm<T>` extractor for structured multipart form handling
+  - `FromMultipart` trait for custom multipart parsing
+  - `FileSizeLimits` for configurable file size constraints
+  - `save_to_file()`, `save_to_dir()`, `save_to_temp()` utility methods
+  - Spring Boot `MultipartFile` equivalent functionality
+
+#### API Documentation / API 文档
+
+- **utoipa Integration Preparation** / **utoipa 集成准备**
+  - Added `utoipa` (v5) to workspace dependencies
+  - Added `utoipa-swagger-ui` (v8) with actix-web and axum features
+  - Added `nexus-openapi` crate to workspace members
+  - OpenAPI/Swagger documentation infrastructure ready
+
+### Tests / 测试
+
+- Added 12 new tests for exception handling functionality
+- Added 10 new tests for unified response structures
+- Added 28 new tests for parameter validation
+- Added 12 new tests for multipart file handling
+- All 117 nexus-http tests passing (increased from 105)
+
+---
+
 ## [0.1.0-alpha.4] - 2026-02-01
 
 ### Nexus Starter Enhancements / Nexus Starter 增强
@@ -477,7 +550,9 @@ This release marks the completion of Phase 1, delivering a fully functional asyn
 
 ---
 
-[Unreleased]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.3...HEAD
+[Unreleased]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.5...HEAD
+[0.1.0-alpha.5]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.4...v0.1.0-alpha.5
+[0.1.0-alpha.4]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.3...v0.1.0-alpha.4
 [0.1.0-alpha.3]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.2...v0.1.0-alpha.3
 [0.1.0-alpha.2]: https://github.com/nexus-framework/nexus/compare/v0.1.0-alpha.1...v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/nexus-framework/nexus/compare/v0.0.1...v0.1.0-alpha.1
