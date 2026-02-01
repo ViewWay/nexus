@@ -25,6 +25,7 @@ members = [
     "crates/nexus-starter",
     "crates/nexus-benches",
     "crates/nexus-data-commons",
+    "crates/nexus-data-rdbc",
     "examples",
 ]
 resolver = "3"

@@ -51,6 +51,10 @@ pub enum R2dbcError {
     /// Unknown error
     /// 未知错误
     Unknown(String),
+
+    /// Deserialization error
+    /// 反序列化错误
+    Deserialization(String),
 }
 
 impl R2dbcError {
@@ -96,6 +100,12 @@ impl R2dbcError {
         Self::Unknown(msg.into())
     }
 
+    /// Create a deserialization error
+    /// 创建反序列化错误
+    pub fn deserialization(msg: impl Into<String>) -> Self {
+        Self::Deserialization(msg.into())
+    }
+
     /// Check if this is a connection error
     /// 检查是否为连接错误
     pub fn is_connection(&self) -> bool {
@@ -133,6 +143,7 @@ impl R2dbcError {
             Self::DataCommons(_) => "data_commons",
             Self::Sqlx(_) => "sqlx",
             Self::Unknown(_) => "unknown",
+            Self::Deserialization(_) => "deserialization",
         }
     }
 }
@@ -149,6 +160,7 @@ impl fmt::Display for R2dbcError {
             Self::DataCommons(err) => write!(f, "Data commons error: {}", err),
             Self::Sqlx(err) => write!(f, "SQLx error: {}", err),
             Self::Unknown(msg) => write!(f, "Unknown error: {}", msg),
+            Self::Deserialization(msg) => write!(f, "Deserialization error: {}", msg),
         }
     }
 }
@@ -188,7 +200,13 @@ impl From<sqlx::Error> for R2dbcError {
 
 /// Result type for R2DBC operations
 /// R2DBC 操作的 Result 类型
-pub type R2dbcResult<T> = Result<T, R2dbcError>;
+pub type R2dbcResult<T> = std::result::Result<T, R2dbcError>;
+
+/// Alias for R2dbcError for easier imports
+pub use R2dbcError as Error;
+
+/// Alias for R2dbcResult for easier imports
+pub type Result<T> = std::result::Result<T, R2dbcError>;
 
 #[cfg(test)]
 mod tests {

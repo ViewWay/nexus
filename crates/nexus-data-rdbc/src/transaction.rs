@@ -6,7 +6,7 @@
 //! This module provides transaction management for database operations.
 //! 本模块提供数据库操作的事务管理。
 
-use crate::{DatabaseType, R2dbcError, R2dbcResult};
+use crate::{DatabaseType, Error, Result};
 use std::sync::Arc;
 
 /// Transaction isolation level

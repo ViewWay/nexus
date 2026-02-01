@@ -1,49 +1,42 @@
 [package]
 name = "nexus-data-commons"
-version = { workspace = true }
-authors = { workspace = true }
-edition = { workspace = true }
-rust-version = { workspace = true }
-description = """
-Common data types and utilities for Nexus data layer.
-Nexus数据层的通用类型和工具。
-Equivalent to: Spring Data Commons, Spring Data Core
-"""
-homepage = { workspace = true }
-repository = { workspace = true }
-readme = "./README.md"
-keywords = { workspace = true }
-license = { workspace = true }
-categories = { workspace = true }
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Common data access abstractions for Nexus framework"
+keywords = ["nexus", "data", "repository", "spring-data"]
+categories = ["database", "asynchronous"]
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+[features]
+default = []
 
-[lints]
-workspace = true
+# Query wrapper support (MyBatis-Plus style)
+query = []
+
+# Full features
+full = ["query"]
 
 [dependencies]
-# Serialization / 序列化
-# Equivalent to: Spring Jackson JSON
-serde = { workspace = true }
-serde_json = { workspace = true }
+# Async runtime
+nexus-runtime = { path = "../nexus-runtime" }
 
-# Time / 时间
-chrono = { workspace = true }
-
-# Async traits / 异步trait
-async-trait = { workspace = true }
-
-# Error handling / 错误处理
+# Error handling
 thiserror = { workspace = true }
 
-# UUID / UUID
-uuid = { workspace = true, features = ["v4", "serde"] }
+# Serialization
+serde = { workspace = true, features = ["derive"] }
 
-# Utilities / 工具
-hex = { workspace = true }
+# Async trait support
+async-trait = "0.1"
 
-[dev-dependencies]
-# Async runtime / 异步运行时
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+# UUID support (for entity IDs)
+uuid = { version = "1.12", features = ["v4", "serde"] }
+
+# Chrono for datetime
+chrono = { version = "0.4", features = ["serde"] }
+
+# Hex encoding for bytes
+hex = "0.4"

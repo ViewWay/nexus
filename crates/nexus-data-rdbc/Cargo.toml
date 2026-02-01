@@ -1,53 +1,60 @@
 [package]
 name = "nexus-data-rdbc"
-version = { workspace = true }
-authors = { workspace = true }
-edition = { workspace = true }
-rust-version = { workspace = true }
-description = """
-Reactive Database Connectivity (RDBC) for Nexus framework.
-Nexus框架的响应式数据库连接。
-Equivalent to: Spring Data R2DBC, R2DBC
-"""
-homepage = { workspace = true }
-repository = { workspace = true }
-readme = "./README.md"
-keywords = { workspace = true }
-license = { workspace = true }
-categories = { workspace = true }
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Reactive database access for Nexus framework (R2DBC equivalent)"
+keywords = ["nexus", "data", "r2dbc", "database", "reactive"]
+categories = ["database", "asynchronous"]
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+[features]
+default = ["postgres"]
 
-[lints]
-workspace = true
+# PostgreSQL support
+postgres = ["sqlx/postgres"]
+
+# MySQL support
+mysql = ["sqlx/mysql"]
+
+# SQLite support
+sqlite = ["sqlx/sqlite"]
+
+# All databases
+all = ["postgres", "mysql", "sqlite"]
+
+# R2DBC compatibility layer
+r2dbc-compat = []
 
 [dependencies]
-# Data commons / 数据通用
+# Data commons
 nexus-data-commons = { path = "../nexus-data-commons" }
 
-# Async trait / 异步trait
-async-trait = { workspace = true }
+# Async runtime
+nexus-runtime = { path = "../nexus-runtime" }
 
-# Database / 数据库
-sqlx = { workspace = true }
+# SQLx for reactive database access
+sqlx = { version = "0.8", features = ["runtime-tokio", "chrono"] }
 
-# Serialization / 序列化
-serde = { workspace = true }
-serde_json = { workspace = true }
-
-# Error handling / 错误处理
+# Error handling
 thiserror = { workspace = true }
 
-# Utilities / 工具
-futures = { workspace = true }
-futures-util = { workspace = true }
-chrono = { workspace = true }
-uuid = { workspace = true }
+# Serialization
+serde = { workspace = true, features = ["derive"] }
 
-# Logging / 日志
+# Async trait support
+async-trait = "0.1"
+
+# UUID support
+uuid = { version = "1.12", features = ["v4", "serde"] }
+
+# Chrono for datetime
+chrono = { version = "0.4", features = ["serde"] }
+
+# Logging
 tracing = { workspace = true }
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+# Futures support
+futures-util = "0.3"

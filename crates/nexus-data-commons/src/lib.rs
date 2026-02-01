@@ -1,20 +1,16 @@
-//! Nexus Data Commons
-//! Nexus 数据通用层
+//! Nexus Data Commons - Common data access abstractions
+//! Nexus Data Commons - 通用数据访问抽象
 //!
-//! # Overview / 概述
+//! # Equivalent to Spring / 等价于 Spring
 //!
-//! This crate provides the core abstractions for data access in Nexus framework.
-//! It is equivalent to Spring Data Commons in the Spring ecosystem.
-//!
-//! 本 crate 提供 Nexus 框架数据访问的核心抽象。
-//! 它等价于 Spring 生态系统中的 Spring Data Commons。
-//!
-//! # Equivalent to Spring Boot / 等价于 Spring Boot
-//!
-//! - Spring Data Commons
-//! - Repository abstraction
-//! - CrudRepository
-//! - PagingAndSortingRepository
+//! | Nexus | Spring Data |
+//! |-------|-------------|
+//! | `Repository` | `Repository` |
+//! | `CrudRepository` | `CrudRepository` |
+//! | `PagingAndSortingRepository` | `PagingAndSortingRepository` |
+//! | `Page<T>` | `Page<T>` |
+//! | `PageRequest` | `PageRequest` |
+//! | `Sort` | `Sort` |
 //!
 //! # Features / 功能
 //!
@@ -22,68 +18,66 @@
 //! - CRUD operations / CRUD 操作
 //! - Pagination support / 分页支持
 //! - Sorting support / 排序支持
-//! - Query wrappers / 查询包装器
+//! - Type-safe queries / 类型安全查询
+//! - Async/await support / 异步/等待支持
 //!
-//! # Example / 示例
+//! # Quick Start / 快速开始
 //!
-//! ```rust,no_run,ignore
-//! use nexus_data_commons::{Repository, CrudRepository, PageRequest, Sort};
+//! ```rust,ignore
+//! use nexus_data_commons::{CrudRepository, PageRequest};
 //! use async_trait::async_trait;
 //!
-//! struct User {
-//!     id: i32,
-//!     name: String,
-//! }
-//!
-//! struct UserRepository;
-//!
 //! #[async_trait]
-//! impl CrudRepository<User, i32> for UserRepository {
-//!     type Error = nexus_data_commons::Error;
-//!
-//!     async fn save(&self, entity: User) -> Result<User, Self::Error> {
+//! impl CrudRepository<User, u64> for UserRepository {
+//!     async fn save(&self, entity: User) -> Result<User, Error> {
 //!         // Save implementation
 //!         Ok(entity)
 //!     }
 //!
-//!     async fn find_by_id(&self, id: i32) -> Result<Option<User>, Self::Error> {
-//!         // Find implementation
+//!     async fn find_by_id(&self, id: u64) -> Result<Option<User>, Error> {
+//!         // Find by ID implementation
 //!         Ok(None)
 //!     }
+//!
+//!     // ... other methods
 //! }
 //! ```
+//!
+//! # Modules / 模块
+//!
+//! - [`repository`] - Repository trait definitions / Repository trait 定义
+//! - [`page`] - Pagination types / 分页类型
+//! - [`sort`] - Sorting types / 排序类型
+//! - [`error`] - Error types / 错误类型
+//! - [`entity`] - Entity traits / 实体 trait
 
 #![warn(missing_docs)]
 #![warn(unreachable_pub)]
-// Allow dead_code: This is a framework library with many public APIs that are
-// provided for users but not used internally. This is expected and intentional.
-// 允许 dead_code：这是一个框架库，包含许多公共 API 供用户使用但内部未使用。
-// 这是预期且有意的设计。
-#![allow(dead_code)]
 
-mod entity;
-mod error;
-mod page;
-mod query;
-mod repository;
-mod sort;
+pub mod error;
+pub mod entity;
+pub mod repository;
+pub mod page;
+pub mod sort;
+#[cfg(feature = "query")]
+pub mod query;
 
-pub use entity::{AggregateRoot, Auditable, Identifier, LifecycleEvent};
 pub use error::{Error, Result};
-pub use page::{List, Page, PageRequest, Slice};
-pub use query::{
-    Condition, LambdaQueryWrapper, Predicate, QueryOrder, QueryWrapper, Specification, ToValue,
-    ToValueMap, UpdateWrapper, Value,
+pub use repository::{
+    Repository, CrudRepository, PagingAndSortingRepository,
 };
-pub use repository::{CrudRepository, PagingAndSortingRepository, Repository};
-pub use sort::{Direction, Order, Sort};
+pub use page::{Page, PageRequest, Slice, List};
+pub use sort::{Sort, Order, Direction, NullHandling};
 
-/// Core re-exports
-/// 核心重新导出
+/// Version of the data-commons module
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Re-exports of commonly used types
+/// 常用类型的重新导出
 pub mod prelude {
-    pub use crate::{
-        AggregateRoot, Auditable, CrudRepository, Direction, Error, Order, Page, PageRequest,
-        PagingAndSortingRepository, Predicate, QueryWrapper, Repository, Result, Sort,
-        Specification, UpdateWrapper,
+    pub use super::{
+        Error, Result,
+        Repository, CrudRepository, PagingAndSortingRepository,
+        Page, PageRequest, Sort, Order, Direction,
     };
 }

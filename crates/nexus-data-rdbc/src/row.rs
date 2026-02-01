@@ -1,12 +1,12 @@
-//! Row mapping and data extraction
-//! 行映射和数据提取
+//! Row and result types
+//! 行和结果类型
 //!
 //! # Overview / 概述
 //!
-//! This module provides row mapping from database results to Rust types.
-//! 本模块提供从数据库结果到 Rust 类型的行映射。
+//! Types for representing database rows and results.
+//! 表示数据库行和结果的类型。
 
-use crate::{R2dbcError, R2dbcResult};
+use std::any::Any;
 
 /// Database row
 /// 数据库行
@@ -19,29 +19,61 @@ use crate::{R2dbcError, R2dbcResult};
 /// ```rust,no_run,ignore
 /// use nexus_data_rdbc::Row;
 ///
-/// let row: Row = ...;
-///
-/// let id: i32 = row.get("id")?;
+/// let row: Row = // ... obtained from query
+/// let id: i64 = row.get("id")?;
 /// let name: String = row.get("name")?;
-/// let created_at: chrono::DateTime<chrono::Utc> = row.get("created_at")?;
 /// ```
-#[derive(Clone, Debug)]
-pub struct Row {
-    /// Column values
-    /// 列值
-    pub columns: std::collections::HashMap<String, ColumnValue>,
+pub trait Row: Send + Sync {
+    /// Get a value by column name
+    /// 通过列名获取值
+    fn get<'a, T>(&'a self, name: &str) -> Result<T, crate::Error>
+    where
+        T: RowValue<'a>;
 
-    /// Column names in order
-    /// 有序的列名
-    pub column_names: Vec<String>,
+    /// Get a value by column index
+    /// 通过列索引获取值
+    fn get_by_index<'a, T>(&'a self, index: usize) -> Result<T, crate::Error>
+    where
+        T: RowValue<'a>;
+
+    /// Get the number of columns
+    /// 获取列数
+    fn column_count(&self) -> usize;
+
+    /// Get column names
+    /// 获取列名
+    fn column_names(&self) -> Vec<String>;
+
+    /// Try to get a value by column name, returns None if column doesn't exist
+    /// 尝试通过列名获取值，如果列不存在则返回 None
+    fn try_get<'a, T>(&'a self, name: &str) -> Result<Option<T>, crate::Error>
+    where
+        T: RowValue<'a>;
+}
+
+/// Marker trait for types that can be extracted from a row
+/// 可从行中提取的类型的标记 trait
+pub trait RowValue<'a>: Sized {
+    /// Extract this value from a row
+    /// 从行中提取此值
+    fn extract(row: &'a dyn RowInternal) -> Result<Self, crate::Error>;
+}
+
+/// Internal row trait for value extraction
+/// 用于值提取的内部行 trait
+pub trait RowInternal {
+    /// Get raw column value
+    /// 获取原始列值
+    fn get_raw(&self, name: &str) -> Result<ColumnValue, crate::Error>;
+
+    /// Get raw column value by index
+    /// 通过索引获取原始列值
+    fn get_raw_by_index(&self, index: usize) -> Result<ColumnValue, crate::Error>;
 }
 
 /// Column value
 /// 列值
-///
-/// Represents a value from a database column.
-/// 表示数据库列中的值。
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub enum ColumnValue {
     /// Null value
     /// 空值
@@ -51,12 +83,10 @@ pub enum ColumnValue {
     /// 布尔值
     Bool(bool),
 
-    /// Integer value
-    /// 整数值
+    /// Integer value (32-bit)
     I32(i32),
 
-    /// Long integer value
-    /// 长整数值
+    /// Integer value (64-bit)
     I64(i64),
 
     /// Float value
@@ -67,487 +97,154 @@ pub enum ColumnValue {
     /// 字符串值
     String(String),
 
-    /// Byte array value
-    /// 字节数组值
+    /// Bytes value
+    /// 字节值
     Bytes(Vec<u8>),
 
     /// UUID value
     /// UUID 值
     Uuid(uuid::Uuid),
-
-    /// DateTime value
-    /// 日期时间值
-    DateTime(chrono::DateTime<chrono::Utc>),
-
-    /// JSON value
-    /// JSON 值
-    Json(serde_json::Value),
 }
 
-impl Row {
-    /// Create a new empty row
-    /// 创建新的空行
-    pub fn new() -> Self {
-        Self {
-            columns: std::collections::HashMap::new(),
-            column_names: Vec::new(),
+impl ColumnValue {
+    /// Check if value is null
+    /// 检查值是否为空
+    pub fn is_null(&self) -> bool {
+        matches!(self, Self::Null)
+    }
+
+    /// Convert to i64
+    /// 转换为 i64
+    pub fn as_i64(&self) -> Option<i64> {
+        match self {
+            Self::I64(v) => Some(*v),
+            Self::I32(v) => Some(*v as i64),
+            _ => None,
         }
     }
 
-    /// Add a column to this row
-    /// 向此行添加列
-    pub fn add_column(&mut self, name: impl Into<String>, value: ColumnValue) {
-        let name = name.into();
-        self.column_names.push(name.clone());
-        self.columns.insert(name, value);
-    }
-
-    /// Get the number of columns
-    /// 获取列数
-    pub fn column_count(&self) -> usize {
-        self.column_names.len()
-    }
-
-    /// Get column names
-    /// 获取列名
-    pub fn column_names(&self) -> &[String] {
-        &self.column_names
-    }
-
-    /// Check if a column exists
-    /// 检查列是否存在
-    pub fn contains_column(&self, name: &str) -> bool {
-        self.columns.contains_key(name)
-    }
-
-    /// Get a column value by name
-    /// 按名称获取列值
-    pub fn get_value(&self, name: &str) -> Option<&ColumnValue> {
-        self.columns.get(name)
-    }
-
-    /// Get a column value by index
-    /// 按索引获取列值
-    pub fn get_value_by_index(&self, index: usize) -> Option<&ColumnValue> {
-        self.column_names
-            .get(index)
-            .and_then(|name| self.columns.get(name))
-    }
-
-    /// Get a typed value from a column
-    /// 从列中获取类型化值
-    ///
-    /// # Type Conversions / 类型转换
-    ///
-    /// - `bool` - from Bool
-    /// - `i32` - from I32
-    /// - `i64` - from I64
-    /// - `f64` - from F64
-    /// - `String` - from String
-    /// - `Vec<u8>` - from Bytes
-    /// - `uuid::Uuid` - from Uuid
-    /// - `chrono::DateTime<chrono::Utc>` - from DateTime
-    /// - `serde_json::Value` - from Json
-    pub fn get<T: FromColumn>(&self, name: &str) -> Result<T, R2dbcError> {
-        let value = self
-            .get_value(name)
-            .ok_or_else(|| R2dbcError::row_mapping(format!("Column '{}' not found", name)))?;
-
-        T::from_column(value).ok_or_else(|| {
-            R2dbcError::row_mapping(format!(
-                "Failed to convert column '{}' to type {}",
-                name,
-                std::any::type_name::<T>()
-            ))
-        })
-    }
-
-    /// Get a typed value by index
-    /// 按索引获取类型化值
-    pub fn get_by_index<T: FromColumn>(&self, index: usize) -> Result<T, R2dbcError> {
-        let value = self
-            .get_value_by_index(index)
-            .ok_or_else(|| R2dbcError::row_mapping(format!("Index {} out of bounds", index)))?;
-
-        T::from_column(value).ok_or_else(|| {
-            R2dbcError::row_mapping(format!(
-                "Failed to convert index {} to type {}",
-                index,
-                std::any::type_name::<T>()
-            ))
-        })
-    }
-
-    /// Try to get an optional value
-    /// 尝试获取可选值
-    ///
-    /// Returns None if the column is null or doesn't exist.
-    /// 如果列为 null 或不存在，则返回 None。
-    pub fn try_get<T: FromColumn>(&self, name: &str) -> Result<Option<T>, R2dbcError> {
-        match self.get_value(name) {
-            Some(ColumnValue::Null) => Ok(None),
-            Some(value) => T::from_column(value).map(Some).ok_or_else(|| {
-                R2dbcError::row_mapping(format!(
-                    "Failed to convert column '{}' to type {}",
-                    name,
-                    std::any::type_name::<T>()
-                ))
-            }),
-            None => Ok(None),
+    /// Convert to f64
+    /// 转换为 f64
+    pub fn as_f64(&self) -> Option<f64> {
+        match self {
+            Self::F64(v) => Some(*v),
+            Self::I64(v) => Some(*v as f64),
+            _ => None,
         }
     }
 
-    /// Convert row to JSON value
-    /// 将行转换为 JSON 值
-    ///
-    /// This method is used by the query executor to map database rows to entities.
-    /// 此方法被查询执行器用于将数据库行映射到实体。
-    ///
-    /// # Example / 示例
-    ///
-    /// ```rust,no_run,ignore
-    /// let mut row = Row::new();
-    /// row.add_column("id", ColumnValue::I32(1));
-    /// row.add_column("name", ColumnValue::String("Alice".to_string()));
-    ///
-    /// let json = row.to_json()?;
-    /// ```
-    pub fn to_json(&self) -> R2dbcResult<serde_json::Value> {
-        let mut map = serde_json::Map::new();
-
-        for (column_name, column_value) in &self.columns {
-            let json_value = match column_value {
-                ColumnValue::Null => serde_json::Value::Null,
-                ColumnValue::Bool(b) => serde_json::Value::Bool(*b),
-                ColumnValue::I32(i) => serde_json::Value::Number((*i).into()),
-                ColumnValue::I64(i) => serde_json::Value::Number((*i).into()),
-                ColumnValue::F64(f) => {
-                    serde_json::Number::from_f64(*f)
-                        .map(serde_json::Value::Number)
-                        .unwrap_or_else(|| serde_json::json!(0))
-                },
-                ColumnValue::String(s) => serde_json::Value::String(s.clone()),
-                ColumnValue::Bytes(b) => serde_json::Value::Array(
-                    b.iter()
-                        .map(|byte| serde_json::Value::Number((*byte).into()))
-                        .collect(),
-                ),
-                ColumnValue::Uuid(u) => serde_json::Value::String(u.to_string()),
-                ColumnValue::DateTime(dt) => serde_json::Value::String(dt.to_rfc3339()),
-                ColumnValue::Json(j) => j.clone(),
-            };
-
-            map.insert(column_name.clone(), json_value);
+    /// Convert to String
+    /// 转换为 String
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            Self::String(v) => Some(v),
+            _ => None,
         }
-
-        Ok(serde_json::Value::Object(map))
     }
 
-    /// Convert row to JSON value with specific columns
-    /// 使用特定列将行转换为 JSON 值
-    ///
-    /// # Example / 示例
-    ///
-    /// ```rust,no_run,ignore
-    /// let row = ...; // row has columns: id, name, email
-    ///
-    /// let json = row.to_json_selected(&["id", "name"])?;
-    /// // Result: {"id": 1, "name": "Alice"}
-    /// ```
-    pub fn to_json_selected(&self, columns: &[&str]) -> R2dbcResult<serde_json::Value> {
-        let mut map = serde_json::Map::new();
-
-        for column_name in columns {
-            if let Some(column_value) = self.get_value(column_name) {
-                let json_value = match column_value {
-                    ColumnValue::Null => serde_json::Value::Null,
-                    ColumnValue::Bool(b) => serde_json::Value::Bool(*b),
-                    ColumnValue::I32(i) => serde_json::Value::Number((*i).into()),
-                    ColumnValue::I64(i) => serde_json::Value::Number((*i).into()),
-                    ColumnValue::F64(f) => {
-                        serde_json::Number::from_f64(*f)
-                            .map(serde_json::Value::Number)
-                            .unwrap_or_else(|| serde_json::json!(0))
-                    },
-                    ColumnValue::String(s) => serde_json::Value::String(s.clone()),
-                    ColumnValue::Bytes(b) => serde_json::Value::Array(
-                        b.iter()
-                            .map(|byte| serde_json::Value::Number((*byte).into()))
-                            .collect(),
-                    ),
-                    ColumnValue::Uuid(u) => serde_json::Value::String(u.to_string()),
-                    ColumnValue::DateTime(dt) => serde_json::Value::String(dt.to_rfc3339()),
-                    ColumnValue::Json(j) => j.clone(),
-                };
-
-                map.insert(column_name.to_string(), json_value);
-            }
-        }
-
-        Ok(serde_json::Value::Object(map))
-    }
-}
-
-impl Default for Row {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Trait for converting column values to Rust types
-/// 将列值转换为 Rust 类型的 trait
-pub trait FromColumn: Sized {
-    /// Try to convert a column value to this type
-    /// 尝试将列值转换为此类型
-    fn from_column(value: &ColumnValue) -> Option<Self>;
-}
-
-// Implement FromColumn for primitive types
-impl FromColumn for bool {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Bool(b) => Some(*b),
+    /// Convert to bytes
+    /// 转换为字节
+    pub fn as_bytes(&self) -> Option<&[u8]> {
+        match self {
+            Self::Bytes(v) => Some(v),
             _ => None,
         }
     }
 }
 
-impl FromColumn for i32 {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::I32(i) => Some(*i),
-            ColumnValue::I64(i) => i32::try_from(*i).ok(),
-            _ => None,
-        }
-    }
-}
-
-impl FromColumn for i64 {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::I64(i) => Some(*i),
-            ColumnValue::I32(i) => Some(*i as i64),
-            _ => None,
-        }
-    }
-}
-
-impl FromColumn for f64 {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::F64(f) => Some(*f),
-            ColumnValue::I32(i) => Some(*i as f64),
-            ColumnValue::I64(i) => Some(*i as f64),
-            _ => None,
-        }
-    }
-}
-
-impl FromColumn for String {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::String(s) => Some(s.clone()),
-            ColumnValue::Bool(b) => Some(b.to_string()),
-            ColumnValue::I32(i) => Some(i.to_string()),
-            ColumnValue::I64(i) => Some(i.to_string()),
-            ColumnValue::F64(f) => Some(f.to_string()),
-            ColumnValue::Uuid(u) => Some(u.to_string()),
-            ColumnValue::DateTime(dt) => Some(dt.to_rfc3339()),
-            ColumnValue::Json(j) => Some(j.to_string()),
-            ColumnValue::Null => None,
-            ColumnValue::Bytes(_) => None,
-        }
-    }
-}
-
-impl FromColumn for Vec<u8> {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Bytes(b) => Some(b.clone()),
-            ColumnValue::String(s) => Some(s.as_bytes().to_vec()),
-            _ => None,
-        }
-    }
-}
-
-impl FromColumn for uuid::Uuid {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Uuid(u) => Some(*u),
-            ColumnValue::String(s) => uuid::Uuid::parse_str(s).ok(),
-            _ => None,
-        }
-    }
-}
-
-impl FromColumn for chrono::DateTime<chrono::Utc> {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::DateTime(dt) => Some(*dt),
-            ColumnValue::String(s) => chrono::DateTime::parse_from_rfc3339(s)
-                .ok()
-                .map(|dt| dt.with_timezone(&chrono::Utc)),
-            ColumnValue::I64(i) => Some(chrono::DateTime::from_timestamp(*i, 0)?),
-            _ => None,
-        }
-    }
-}
-
-impl FromColumn for serde_json::Value {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Json(j) => Some(j.clone()),
-            ColumnValue::String(s) => serde_json::from_str(s).ok(),
-            ColumnValue::Null => Some(serde_json::Value::Null),
-            ColumnValue::Bool(b) => Some(serde_json::Value::Bool(*b)),
-            ColumnValue::I32(i) => Some(serde_json::Value::Number((*i).into())),
-            ColumnValue::I64(i) => Some(serde_json::Value::Number((*i).into())),
-            ColumnValue::F64(f) => serde_json::Number::from_f64(*f).map(serde_json::Value::Number),
-            _ => None,
-        }
-    }
-}
-
-impl FromColumn for Option<bool> {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Null => Some(None),
-            _ => FromColumn::from_column(value).map(Some),
-        }
-    }
-}
-
-impl FromColumn for Option<i32> {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Null => Some(None),
-            _ => FromColumn::from_column(value).map(Some),
-        }
-    }
-}
-
-impl FromColumn for Option<i64> {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Null => Some(None),
-            _ => FromColumn::from_column(value).map(Some),
-        }
-    }
-}
-
-impl FromColumn for Option<f64> {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Null => Some(None),
-            _ => FromColumn::from_column(value).map(Some),
-        }
-    }
-}
-
-impl FromColumn for Option<String> {
-    fn from_column(value: &ColumnValue) -> Option<Self> {
-        match value {
-            ColumnValue::Null => Some(None),
-            _ => FromColumn::from_column(value).map(Some),
-        }
-    }
-}
-
-/// Row mapper trait
-/// 行映射器 trait
+/// Database rows (result set)
+/// 数据库行（结果集）
 ///
-/// Defines how to map a database row to a Rust type.
-/// 定义如何将数据库行映射到 Rust 类型。
-///
-/// # Example / 示例
-///
-/// ```rust,no_run,ignore
-/// use nexus_data_rdbc::{Row, RowMapper};
-///
-/// struct User {
-///     id: i32,
-///     name: String,
-/// }
-///
-/// struct UserRowMapper;
-///
-/// impl RowMapper<User> for UserRowMapper {
-///     fn map(&self, row: &Row) -> Result<User, Box<dyn std::error::Error>> {
-///         Ok(User {
-///             id: row.get("id")?,
-///             name: row.get("name")?,
-///         })
-///     }
-/// }
-/// ```
-pub trait RowMapper<T>: Send + Sync {
-    /// Map a row to the target type
-    /// 将行映射到目标类型
-    fn map(&self, row: &Row) -> Result<T, Box<dyn std::error::Error>>;
+/// Represents a collection of rows from a query result.
+/// 表示查询结果的行集合。
+pub trait Rows: Send + Sync {
+    /// Get the next row
+    /// 获取下一行
+    fn next(&mut self) -> Result<Option<Box<dyn Row>>, crate::Error>;
+
+    /// Collect all rows into a Vec
+    /// 收集所有行到 Vec
+    fn collect(self) -> Result<Vec<Box<dyn Row>>, crate::Error>
+    where
+        Self: Sized;
 }
 
-/// Function-based row mapper
-/// 基于函数的行映射器
-///
-/// A row mapper that uses a closure to map rows.
-/// 使用闭包映射行的行映射器。
-pub(crate) struct FnRowMapper<T, F>
-where
-    F: Fn(&Row) -> Result<T, Box<dyn std::error::Error>> + Send + Sync,
-{
-    f: F,
-    _phantom: std::marker::PhantomData<T>,
+/// Column metadata
+/// 列元数据
+#[derive(Debug, Clone)]
+pub struct Column {
+    /// Column name
+    /// 列名
+    pub name: String,
+
+    /// Column type
+    /// 列类型
+    pub type_: ColumnType,
+
+    /// Whether the column is nullable
+    /// 列是否可为空
+    pub nullable: bool,
 }
 
-impl<T, F> FnRowMapper<T, F>
-where
-    F: Fn(&Row) -> Result<T, Box<dyn std::error::Error>> + Send + Sync,
-{
-    /// Create a new function-based row mapper
-    /// 创建新的基于函数的行映射器
-    pub(crate) fn new(f: F) -> Self {
-        Self {
-            f,
-            _phantom: std::marker::PhantomData,
+/// Column type
+/// 列类型
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ColumnType {
+    /// Boolean type
+    /// 布尔类型
+    Bool,
+
+    /// Integer type
+    /// 整数类型
+    I64,
+
+    /// Float type
+    /// 浮点类型
+    F64,
+
+    /// String type
+    /// 字符串类型
+    String,
+
+    /// Bytes type
+    /// 字节类型
+    Bytes,
+
+    /// UUID type
+    /// UUID 类型
+    Uuid,
+
+    /// Timestamp type
+    /// 时间戳类型
+    Timestamp,
+
+    /// Date type
+    /// 日期类型
+    Date,
+
+    /// Unknown type
+    /// 未知类型
+    Unknown,
+}
+
+// Implement RowValue for common types
+impl<'a> RowValue<'a> for i64 {
+    fn extract(row: &'a dyn RowInternal) -> Result<Self, crate::Error> {
+        match row.get_raw("id")? {
+            ColumnValue::I64(v) => Ok(v),
+            ColumnValue::I32(v) => Ok(v as i64),
+            _ => Err(crate::Error::Deserialization("Expected i64".to_string())),
         }
     }
 }
 
-impl<T, F> RowMapper<T> for FnRowMapper<T, F>
-where
-    T: Send + Sync,
-    F: Fn(&Row) -> Result<T, Box<dyn std::error::Error>> + Send + Sync,
-{
-    fn map(&self, row: &Row) -> Result<T, Box<dyn std::error::Error>> {
-        (self.f)(row)
+impl<'a> RowValue<'a> for String {
+    fn extract(row: &'a dyn RowInternal) -> Result<Self, crate::Error> {
+        match row.get_raw("name")? {
+            ColumnValue::String(v) => Ok(v),
+            _ => Err(crate::Error::Deserialization("Expected String".to_string())),
+        }
     }
-}
-
-/// Derive macro for RowMapper
-/// RowMapper 的派生宏
-///
-/// Automatically implements RowMapper for a type.
-/// 自动为类型实现 RowMapper。
-///
-/// # Example / 示例
-///
-/// ```rust,no_run,ignore
-/// use nexus_data_rdbc::Row;
-/// use nexus_data_macros::RowMapper;
-///
-/// #[derive(RowMapper)]
-/// struct User {
-///     #[column = "id"]
-///     id: i32,
-///
-///     #[column = "user_name"]
-///     name: String,
-/// }
-/// ```
-pub(crate) trait DeriveRowMapper: Sized {
-    /// Map a row to this type
-    /// 将行映射到此类型
-    fn from_row(row: &Row) -> Result<Self, Box<dyn std::error::Error>>;
 }
 
 #[cfg(test)]
@@ -555,74 +252,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_row_new() {
-        let row = Row::new();
-        assert_eq!(row.column_count(), 0);
+    fn test_column_value_null() {
+        let value = ColumnValue::Null;
+        assert!(value.is_null());
+        assert!(value.as_i64().is_none());
     }
 
     #[test]
-    fn test_row_add_column() {
-        let mut row = Row::new();
-        row.add_column("id", ColumnValue::I32(42));
-        row.add_column("name", ColumnValue::String("Alice".to_string()));
-
-        assert_eq!(row.column_count(), 2);
-        assert!(row.contains_column("id"));
-        assert!(row.contains_column("name"));
+    fn test_column_value_i64() {
+        let value = ColumnValue::I64(42);
+        assert!(!value.is_null());
+        assert_eq!(value.as_i64(), Some(42));
+        assert_eq!(value.as_f64(), Some(42.0));
     }
 
     #[test]
-    fn test_row_get() {
-        let mut row = Row::new();
-        row.add_column("id", ColumnValue::I32(42));
-        row.add_column("name", ColumnValue::String("Alice".to_string()));
-
-        let id: i32 = row.get("id").unwrap();
-        assert_eq!(id, 42);
-
-        let name: String = row.get("name").unwrap();
-        assert_eq!(name, "Alice");
-    }
-
-    #[test]
-    fn test_from_column_bool() {
-        assert_eq!(FromColumn::from_column(&ColumnValue::Bool(true)), Some(true));
-        let result: Option<bool> = FromColumn::from_column(&ColumnValue::Null);
-        assert_eq!(result, None);
-    }
-
-    #[test]
-    fn test_from_column_i32() {
-        assert_eq!(FromColumn::from_column(&ColumnValue::I32(42)), Some(42));
-        assert_eq!(FromColumn::from_column(&ColumnValue::I64(42)), Some(42));
-        let result: Option<i32> = FromColumn::from_column(&ColumnValue::Null);
-        assert_eq!(result, None);
-    }
-
-    #[test]
-    fn test_from_column_string() {
-        assert_eq!(
-            FromColumn::from_column(&ColumnValue::String("hello".to_string())),
-            Some("hello".to_string())
-        );
-        assert_eq!(FromColumn::from_column(&ColumnValue::Bool(true)), Some("true".to_string()));
-    }
-
-    #[test]
-    fn test_try_get_null() {
-        let mut row = Row::new();
-        row.add_column("optional", ColumnValue::Null);
-
-        let result: Option<i32> = row.try_get("optional").unwrap();
-        assert_eq!(result, None);
-    }
-
-    #[test]
-    fn test_try_get_value() {
-        let mut row = Row::new();
-        row.add_column("value", ColumnValue::I32(42));
-
-        let result: Option<i32> = row.try_get("value").unwrap();
-        assert_eq!(result, Some(42));
+    fn test_column_value_string() {
+        let value = ColumnValue::String("hello".to_string());
+        assert_eq!(value.as_str(), Some("hello"));
     }
 }
