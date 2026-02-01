@@ -17,6 +17,31 @@ use super::autoconfig::AutoConfiguration;
 use crate::config::ConfigurationLoader;
 
 // ============================================================================
+// DummyAutoConfig / 虚拟自动配置（用于 swap 技巧）
+// ============================================================================
+
+/// 虚拟自动配置
+/// Dummy auto-configuration
+///
+/// 用于在 swap 技巧中作为占位符。
+/// Used as a placeholder in swap tricks.
+struct DummyAutoConfig;
+
+impl AutoConfiguration for DummyAutoConfig {
+    fn name(&self) -> &'static str {
+        "DummyAutoConfig"
+    }
+
+    fn configure(&self, _ctx: &mut ApplicationContext) -> AnyhowResult<()> {
+        Ok(())
+    }
+
+    fn is_optional(&self) -> bool {
+        true
+    }
+}
+
+// ============================================================================
 // ApplicationContext / 应用上下文
 // ============================================================================
 
@@ -287,19 +312,26 @@ impl ApplicationContext {
     ///
     /// 执行所有自动配置并启动应用。
     /// Executes all auto-configurations and starts the application.
-    pub async fn start(&self) -> AnyhowResult<()> {
-        let mut started = self.started.write().unwrap();
-        if *started {
-            return Ok(());
+    pub async fn start(&mut self) -> AnyhowResult<()> {
+        // Check if already started
+        // 检查是否已启动
+        {
+            let started = self.started.read().unwrap();
+            if *started {
+                return Ok(());
+            }
         }
 
         tracing::info!("Starting Nexus ApplicationContext...");
         let start = std::time::Instant::now();
 
         // 执行自动配置
+        // Execute auto-configurations
         self.run_auto_configurations().await?;
 
-        *started = true;
+        // Mark as started
+        // 标记为已启动
+        *self.started.write().unwrap() = true;
         let elapsed = start.elapsed();
 
         tracing::info!(
@@ -312,12 +344,14 @@ impl ApplicationContext {
 
     /// 执行所有自动配置
     /// Run all auto-configurations
-    async fn run_auto_configurations(&self) -> AnyhowResult<()> {
+    async fn run_auto_configurations(&mut self) -> AnyhowResult<()> {
         // 记录已处理的配置索引（用于依赖解析）
+        // Record processed configuration indices (for dependency resolution)
         let mut processed: HashSet<usize> = HashSet::new();
         let remaining_count = self.auto_configurations.len();
 
         // 处理配置（可能需要多次迭代以解决依赖）
+        // Process configurations (may need multiple iterations to resolve dependencies)
         for _iteration in 0..10 {
             let remaining = remaining_count - processed.len();
             if remaining == 0 {
@@ -327,15 +361,18 @@ impl ApplicationContext {
             let mut progress = false;
 
             // 获取配置数量
+            // Get configuration count
             let config_count = self.auto_configurations.len();
 
             for idx in 0..config_count {
                 // 跳过已处理的
+                // Skip already processed
                 if processed.contains(&idx) {
                     continue;
                 }
 
-                // 获取配置（在非 async 代码块中）
+                // 获取配置并检查条件
+                // Get configuration and check conditions
                 let should_process = {
                     let config = &self.auto_configurations[idx];
                     if !config.condition() {
@@ -343,13 +380,12 @@ impl ApplicationContext {
                     } else {
                         // 检查依赖：所有 after 依赖必须已处理
                         // Check dependencies: all 'after' dependencies must be processed
-                        let deps_satisfied = Self::check_dependencies_satisfied(
+                        Self::check_dependencies_satisfied(
                             config,
                             &self.auto_configurations,
                             &processed,
                             idx,
-                        );
-                        deps_satisfied
+                        )
                     }
                 };
 
@@ -357,10 +393,41 @@ impl ApplicationContext {
                     continue;
                 }
 
-                // TODO: 执行配置（需要重新设计以避免克隆）
-                // 由于不能克隆 trait object，这里暂时跳过实际配置
+                // 执行配置
+                // Execute configuration
                 let config_name = self.auto_configurations[idx].name();
-                tracing::info!("Would apply auto-configuration: {}", config_name);
+                tracing::info!("Applying auto-configuration: {}", config_name);
+
+                // 使用 mem::replace 取出配置，调用 configure，然后放回
+                // Use mem::replace to take out config, call configure, then put back
+                let config = std::mem::replace(
+                    &mut self.auto_configurations[idx],
+                    Box::new(DummyAutoConfig),
+                );
+
+                let is_optional = config.is_optional();
+                let result = config.configure(self);
+
+                // 放回配置
+                // Put back the configuration
+                self.auto_configurations[idx] = config;
+
+                if let Err(e) = result {
+                    if is_optional {
+                        tracing::warn!(
+                            "Optional auto-configuration {} failed: {}",
+                            config_name,
+                            e
+                        );
+                    } else {
+                        return Err(anyhow::anyhow!(
+                            "Auto-configuration {} failed: {}",
+                            config_name,
+                            e
+                        ));
+                    }
+                }
+
                 processed.insert(idx);
                 progress = true;
             }
