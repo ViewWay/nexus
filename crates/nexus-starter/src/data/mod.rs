@@ -5,6 +5,121 @@
 
 use crate::core::{AutoConfiguration, ApplicationContext};
 
+// Re-export data types
+// 重新导出数据类型
+pub use nexus_data_rdbc::{
+    ConnectionPool, DatabaseClient, TransactionManager, PoolConfig, DatabaseType,
+};
+
+// ============================================================================
+// DataSourceConfig / 数据源配置
+// ============================================================================
+
+/// 数据源配置
+/// Data source configuration
+///
+/// 保存数据库连接配置，用于创建实际的连接池。
+/// Holds database connection configuration for creating the actual connection pool.
+#[derive(Clone, Debug)]
+pub struct DataSourceConfig {
+    /// 数据库连接 URL
+    /// Database connection URL
+    pub url: String,
+
+    /// 用户名
+    pub username: Option<String>,
+
+    /// 密码
+    pub password: Option<String>,
+
+    /// 最大连接数
+    pub max_connections: u32,
+
+    /// 最小空闲连接数
+    pub min_idle: u32,
+
+    /// 数据库类型
+    pub database_type: DatabaseType,
+}
+
+impl DataSourceConfig {
+    /// 创建新的数据源配置
+    /// Create new data source configuration
+    pub fn new(url: impl Into<String>) -> Self {
+        let url_str = url.into();
+        let database_type = Self::detect_database_type(&url_str);
+
+        Self {
+            url: url_str,
+            username: None,
+            password: None,
+            max_connections: 10,
+            min_idle: 1,
+            database_type,
+        }
+    }
+
+    /// 设置用户名和密码
+    /// Set username and password
+    pub fn with_credentials(mut self, username: impl Into<String>, password: impl Into<String>) -> Self {
+        self.username = Some(username.into());
+        self.password = Some(password.into());
+        self
+    }
+
+    /// 设置最大连接数
+    /// Set max connections
+    pub fn with_max_connections(mut self, max: u32) -> Self {
+        self.max_connections = max;
+        self
+    }
+
+    /// 设置最小空闲连接数
+    /// Set min idle connections
+    pub fn with_min_idle(mut self, min: u32) -> Self {
+        self.min_idle = min;
+        self
+    }
+
+    /// 检测数据库类型
+    /// Detect database type from URL
+    fn detect_database_type(url: &str) -> DatabaseType {
+        if url.starts_with("postgresql://") || url.starts_with("postgres://") {
+            DatabaseType::PostgreSQL
+        } else if url.starts_with("mysql://") || url.starts_with("mariadb://") {
+            DatabaseType::MySQL
+        } else if url.starts_with("sqlite://") || url.starts_with("sqlite:") {
+            DatabaseType::SQLite
+        } else if url.starts_with("h2://") || url.starts_with("jdbc:h2:") {
+            DatabaseType::H2
+        } else {
+            // Default to PostgreSQL
+            DatabaseType::PostgreSQL
+        }
+    }
+
+    /// 创建连接池配置
+    /// Create pool configuration
+    pub fn pool_config(&self) -> PoolConfig {
+        PoolConfig::new()
+            .with_max_size(self.max_connections)
+            .with_min_idle(self.min_idle)
+    }
+
+    /// 异步创建连接池
+    /// Create connection pool asynchronously
+    ///
+    /// # 示例 / Example
+    ///
+    /// ```rust,no_run,ignore
+    /// let config = DataSourceConfig::new("postgresql://localhost/mydb");
+    /// let pool = config.create_pool().await?;
+    /// ```
+    pub async fn create_pool(&self) -> Result<ConnectionPool, nexus_data_rdbc::R2dbcError> {
+        ConnectionPool::connect_with_config(&self.url, self.pool_config()).await
+    }
+}
+
 // ============================================================================
 // DataSourceAutoConfiguration / 数据源自动配置
 // ============================================================================
@@ -80,9 +195,19 @@ impl AutoConfiguration for DataSourceAutoConfiguration {
             tracing::info!("  URL: {}", url);
             tracing::info!("  Max connections: {}", self.max_connections);
 
-            // TODO: 创建并注册 DataSource Bean
-            // let datasource = DataSource::new(url, username, password);
-            // ctx.register_bean(datasource);
+            // Create DataSourceConfig from configuration
+            // 从配置创建 DataSourceConfig
+            let mut config = DataSourceConfig::new(url);
+            if let (Some(ref username), Some(ref password)) = (&self.username, &self.password) {
+                config = config.with_credentials(username, password);
+            }
+            config = config
+                .with_max_connections(self.max_connections);
+
+            // Register as bean
+            // 注册为 bean
+            ctx.register_bean(config);
+            tracing::info!("Registered DataSourceConfig bean");
         }
 
         Ok(())
@@ -110,7 +235,7 @@ impl AutoConfiguration for TransactionAutoConfiguration {
         50  // 在数据源配置之后
     }
 
-    fn configure(&self, ctx: &mut ApplicationContext) -> anyhow::Result<()> {
+    fn configure(&self, _ctx: &mut ApplicationContext) -> anyhow::Result<()> {
         tracing::info!("Configuring Transaction Manager");
 
         // TODO: 创建并注册 TransactionManager
@@ -131,5 +256,67 @@ mod tests {
         let config = DataSourceAutoConfiguration::new();
         assert!(config.url.is_none());
         assert_eq!(config.max_connections, 10);
+    }
+
+    #[test]
+    fn test_data_source_config_new() {
+        let config = DataSourceConfig::new("postgresql://localhost/mydb");
+        assert_eq!(config.url, "postgresql://localhost/mydb");
+        assert_eq!(config.database_type, DatabaseType::PostgreSQL);
+        assert_eq!(config.max_connections, 10);
+        assert!(config.username.is_none());
+    }
+
+    #[test]
+    fn test_data_source_config_with_credentials() {
+        let config = DataSourceConfig::new("mysql://localhost/test")
+            .with_credentials("user", "pass")
+            .with_max_connections(20);
+
+        assert_eq!(config.url, "mysql://localhost/test");
+        assert_eq!(config.database_type, DatabaseType::MySQL);
+        assert_eq!(config.username, Some("user".to_string()));
+        assert_eq!(config.password, Some("pass".to_string()));
+        assert_eq!(config.max_connections, 20);
+    }
+
+    #[test]
+    fn test_data_source_config_registers_bean() {
+        let auto_config = DataSourceAutoConfiguration {
+            url: Some("postgresql://localhost/test".to_string()),
+            username: Some("user".to_string()),
+            password: Some("pass".to_string()),
+            max_connections: 15,
+        };
+
+        let mut ctx = ApplicationContext::new();
+        auto_config.configure(&mut ctx).unwrap();
+
+        // Verify DataSourceConfig was registered
+        // 验证 DataSourceConfig 已注册
+        assert!(ctx.contains_bean::<DataSourceConfig>());
+    }
+
+    #[test]
+    fn test_data_source_config_detect_database_type() {
+        let pg_config = DataSourceConfig::new("postgresql://localhost/db");
+        assert_eq!(pg_config.database_type, DatabaseType::PostgreSQL);
+
+        let mysql_config = DataSourceConfig::new("mysql://localhost/db");
+        assert_eq!(mysql_config.database_type, DatabaseType::MySQL);
+
+        let sqlite_config = DataSourceConfig::new("sqlite://test.db");
+        assert_eq!(sqlite_config.database_type, DatabaseType::SQLite);
+    }
+
+    #[test]
+    fn test_data_source_config_pool_config() {
+        let config = DataSourceConfig::new("postgresql://localhost/db")
+            .with_max_connections(20)
+            .with_min_idle(5);
+
+        let pool_config = config.pool_config();
+        assert_eq!(pool_config.max_size, 20);
+        assert_eq!(pool_config.min_idle, 5);
     }
 }
