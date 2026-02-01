@@ -240,13 +240,6 @@ impl Schema {
         self
     }
 
-    /// Set reference
-    /// 设置引用
-    pub fn reference(mut self, ref_: impl Into<String>) -> Self {
-        self.ref_ = Some(ref_.into());
-        self
-    }
-
     /// Set enum values
     /// 设置枚举值
     pub fn enum_values(mut self, values: Vec<serde_json::Value>) -> Self {

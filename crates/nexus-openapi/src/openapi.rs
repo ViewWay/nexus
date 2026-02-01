@@ -101,7 +101,9 @@ impl OpenApi {
         if let Some(ref mut components) = self.components {
             components.add_schema(name, schema);
         } else {
-            self.components = Some(Components::new().add_schema(name, schema));
+            let mut c = Components::new();
+            c.add_schema(name, schema);
+            self.components = Some(c);
         }
         self
     }
@@ -112,7 +114,9 @@ impl OpenApi {
         if let Some(ref mut components) = self.components {
             components.add_response(name, response);
         } else {
-            self.components = Some(Components::new().add_response(name, response));
+            let mut c = Components::new();
+            c.add_response(name, response);
+            self.components = Some(c);
         }
         self
     }

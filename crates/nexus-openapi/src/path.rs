@@ -303,7 +303,7 @@ impl Components {
 
     /// Add schema
     /// 添加模式
-    pub fn add_schema(mut self, name: impl Into<String>, schema: Schema) -> Self {
+    pub fn add_schema(&mut self, name: impl Into<String>, schema: Schema) -> &mut Self {
         self.schemas
             .get_or_insert_with(HashMap::new)
             .insert(name.into(), schema);
@@ -312,7 +312,7 @@ impl Components {
 
     /// Add response
     /// 添加响应
-    pub fn add_response(mut self, name: impl Into<String>, response: crate::Response) -> Self {
+    pub fn add_response(&mut self, name: impl Into<String>, response: crate::Response) -> &mut Self {
         self.responses
             .get_or_insert_with(HashMap::new)
             .insert(name.into(), response);
@@ -321,7 +321,7 @@ impl Components {
 
     /// Add parameter
     /// 添加参数
-    pub fn add_parameter(mut self, name: impl Into<String>, parameter: crate::Parameter) -> Self {
+    pub fn add_parameter(&mut self, name: impl Into<String>, parameter: crate::Parameter) -> &mut Self {
         self.parameters
             .get_or_insert_with(HashMap::new)
             .insert(name.into(), parameter);
@@ -369,10 +369,10 @@ mod tests {
 
     #[test]
     fn test_components() {
-        let components = Components::new()
-            .add_schema("User", Schema::object());
+        let mut components = Components::new();
+        components.add_schema("User", Schema::object());
 
         assert!(components.schemas.is_some());
-        assert!(components.schemas.unwrap().contains_key("User"));
+        assert!(components.schemas.as_ref().unwrap().contains_key("User"));
     }
 }

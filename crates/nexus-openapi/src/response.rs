@@ -265,7 +265,7 @@ impl ApiResponse {
         Response::ok("Paginated response")
             .json(
                 crate::Schema::object()
-                    .add_property("content", crate::Schema::array(crate::Schema::reference(format!("#/components/schemas/{}", data_type.into())))).into())
+                    .add_property("content", crate::Schema::array(crate::Schema::reference(format!("#/components/schemas/{}", data_type.into()))).into())
                     .add_property("page", crate::Schema::integer().description("Current page").into())
                     .add_property("size", crate::Schema::integer().description("Page size").into())
                     .add_property("totalElements", crate::Schema::long().description("Total elements").into())

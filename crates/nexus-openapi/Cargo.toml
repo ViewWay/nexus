@@ -24,8 +24,8 @@ rustdoc-args = ["--cfg", "docsrs"]
 default = ["swagger", "json"]
 swagger = ["utoipa-swagger-ui"]
 json = ["utoipa"]
-actix = ["utoipa-swagger-ui/actix-web"]
-axum = ["utoipa-swagger-ui/axum"]
+actix = ["utoipa-swagger-ui/actix-web", "utoipa/actix_extras"]
+axum = ["utoipa-swagger-ui/axum", "utoipa/axum_extras"]
 rocket = []
 
 [dependencies]
@@ -36,12 +36,15 @@ serde_json = { workspace = true }
 
 # OpenAPI/Swagger / OpenAPI/Swagger
 # Equivalent to: SpringDoc OpenAPI (Swagger 3)
-utoipa = { workspace = true }
-utoipa-swagger-ui = { workspace = true }
+utoipa = { workspace = true, optional = true }
+utoipa-swagger-ui = { workspace = true, optional = true }
 
 # Core types / 核心类型
 nexus-http = { path = "../nexus-http" }
 nexus-core = { path = "../nexus-core" }
+
+# YAML support / YAML支持
+serde_yaml = { workspace = true }
 
 # Error handling / 错误处理
 thiserror = { workspace = true }

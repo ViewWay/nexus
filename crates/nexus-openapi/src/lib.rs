@@ -52,11 +52,11 @@ pub mod path;
 pub mod openapi;
 pub mod macros;
 
-pub use config::{OpenApiConfig, ServerConfig, ContactConfig, LicenseConfig};
+pub use config::{OpenApiConfig, ServerConfig, ContactConfig, LicenseConfig, InfoConfig, TagConfig, ExternalDocsConfig};
 pub use schema::{Schema, SchemaType, SchemaFormat, SchemaProperty};
-pub use operation::{Operation, Parameter, ParameterLocation, SecurityScheme};
+pub use operation::{Operation, Parameter, ParameterLocation, SecurityScheme, RequestBody};
 pub use response::{Response, ResponseContent, ApiResponse};
-pub use path::{PathItem, PathMethod, PathOperation};
+pub use path::{PathItem, PathMethod, PathOperation, Components};
 pub use openapi::OpenApi;
 
 /// Version of the OpenAPI module

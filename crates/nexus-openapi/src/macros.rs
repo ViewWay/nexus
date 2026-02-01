@@ -5,8 +5,8 @@
 //! 为了方便重新导出utoipa宏
 
 pub use utoipa::{
-    IntoParams, ToSchema, ToResponse, ToSchema,
-    openapi, openapi_routes, 
+    IntoParams, ToSchema, ToResponse,
+    openapi,
 };
 
 /// Macro for defining OpenAPI operations
@@ -61,8 +61,6 @@ pub use utoipa::{
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_macros_exist() {
         // Just verify that utoipa macros are accessible
