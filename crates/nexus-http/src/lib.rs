@@ -39,6 +39,7 @@ pub mod body;
 pub mod builder;
 pub mod conn;
 pub mod error;
+pub mod exception;
 pub mod ext;
 pub mod http2;
 pub mod method;
@@ -58,6 +59,10 @@ pub use body::{Body, EmptyBody, FullBody, HttpBody};
 pub use builder::{Uri, UriBuilder};
 pub use conn::{Connection, ConnectionState};
 pub use error::{Error, Result};
+pub use exception::{
+    ApplicationException, ErrorResponse, ExceptionHandlerRegistry, FieldError,
+    IntoErrorResponse, ResourceNotFoundException, ValidationException,
+};
 pub use http2::{
     ErrorCode, FrameType, Http2Config, Http2Error, Priority, SettingsParameter, StreamId,
     StreamReset, StreamState,
@@ -245,6 +250,30 @@ impl IntoResponse for StatusCode {
             .status(self)
             .body(Body::empty())
             .unwrap()
+    }
+}
+
+// ============================================================================
+// Exception handling (equivalent to Spring @ControllerAdvice/@ExceptionHandler)
+// 异常处理（等价于 Spring @ControllerAdvice/@ExceptionHandler）
+// ============================================================================
+
+impl IntoResponse for ErrorResponse {
+    fn into_response(self) -> Response {
+        self.to_response()
+    }
+}
+
+impl<E: IntoErrorResponse + std::any::Any> IntoResponse for E {
+    fn into_response(self) -> Response {
+        self.into_error_response().to_response()
+    }
+}
+
+impl IntoResponse for error::ResponseStatusException {
+    fn into_response(self) -> Response {
+        ErrorResponse::new(self.status.as_u16(), "STATUS_EXCEPTION", &self.reason)
+            .to_response()
     }
 }
 

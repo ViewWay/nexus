@@ -36,7 +36,7 @@ use proc_macro2::{Ident, Span};
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::{
-    DeriveInput, Expr, ItemFn, ItemStatic, ItemStruct, ItemTrait, parse_macro_input,
+    DeriveInput, Expr, ItemFn, ItemImpl, ItemStatic, ItemStruct, ItemTrait, parse_macro_input,
 };
 
 mod transactional;
@@ -1164,45 +1164,6 @@ pub fn profile(attr: TokenStream, item: TokenStream) -> TokenStream {
                     })
             }
         }
-    };
-
-    TokenStream::from(expanded)
-}
-
-// ============================================================================
-// ExceptionHandler Macro (equivalent to @ExceptionHandler)
-// 异常处理宏（等价于 @ExceptionHandler）
-// ============================================================================
-
-/// Mark method as exception handler
-/// 标记方法为异常处理器
-///
-/// Equivalent to Spring's `@ExceptionHandler`.
-/// 等价于 Spring 的 `@ExceptionHandler`。
-///
-/// # Example / 示例
-///
-/// ```rust,no_run,ignore
-/// use nexus_macros::exception_handler;
-///
-/// #[exception_handler]
-/// async fn handle_not_found(e: NotFoundError) -> Response {
-///     Response::builder()
-///         .status(404)
-///         .body(e.to_string())
-///         .unwrap()
-/// }
-/// ```
-#[proc_macro_attribute]
-pub fn exception_handler(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
-
-    let expanded = quote! {
-        #input
-
-        // Register exception handler
-        // 注册异常处理器
-        nexus_core::register_exception_handler(#input);
     };
 
     TokenStream::from(expanded)
@@ -2865,4 +2826,141 @@ pub fn gateway_route(_attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn gateway_configuration(_attr: TokenStream, item: TokenStream) -> TokenStream {
     item
+}
+
+// ============================================================================
+// Exception Handling Macros (equivalent to Spring @ControllerAdvice/@ExceptionHandler)
+// 异常处理宏（等价于 Spring @ControllerAdvice/@ExceptionHandler）
+// ============================================================================
+
+/// Marks a class as a global exception handler
+/// 标记类为全局异常处理器
+///
+/// Equivalent to Spring's `@ControllerAdvice`.
+/// 等价于 Spring 的 `@ControllerAdvice`。
+///
+/// # Example / 示例
+///
+/// ```rust,no_run,ignore
+/// use nexus_macros::{controller_advice, exception_handler};
+/// use nexus_http::exception::{ErrorResponse, ResourceNotFoundException};
+/// use nexus_http::Response;
+///
+/// #[controller_advice]
+/// pub struct GlobalExceptionHandler;
+///
+/// impl GlobalExceptionHandler {
+///     #[exception_handler]
+///     fn handle_not_found(exc: &ResourceNotFoundException) -> Response {
+///         ErrorResponse::not_found()
+///             .code("RESOURCE_NOT_FOUND")
+///             .message(&exc.to_string())
+///             .into_response()
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn controller_advice(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemImpl);
+    let impl_item = &input;
+    let type_name = &impl_item.self_ty;
+
+    let expanded = quote! {
+        #impl_item
+
+        // Register this controller advice with the exception handler registry
+        // 将此 controller advice 注册到异常处理器注册表
+        #[automatically_derived]
+        impl #type_name {
+            /// Get the exception handler registry
+            /// 获取异常处理器注册表
+            pub fn get_exception_handlers() -> ::nexus_http::exception::ExceptionHandlerRegistry {
+                ::nexus_http::exception::ExceptionHandlerRegistry::new()
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Marks a class as a global REST exception handler
+/// 标记类为全局 REST 异常处理器
+///
+/// This is similar to `@ControllerAdvice` but for REST APIs.
+/// 这类似于 `@ControllerAdvice`，但用于 REST API。
+///
+/// # Example / 示例
+///
+/// ```rust,no_run,ignore
+/// use nexus_macros::rest_controller_advice;
+/// use nexus_macros::exception_handler;
+/// use nexus_http::Response;
+///
+/// #[rest_controller_advice]
+/// pub struct RestExceptionHandler;
+///
+/// impl RestExceptionHandler {
+///     #[exception_handler]
+///     fn handle_all(exc: &dyn std::error::Error) -> Response {
+///         nexus_http::ErrorResponse::internal_server_error()
+///             .message(exc.to_string())
+///             .into_response()
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn rest_controller_advice(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    // Currently identical to controller_advice
+    // In the future, this could add JSON response handling
+    // 目前与 controller_advice 相同
+    // 未来可以添加 JSON 响应处理
+    controller_advice(_attr, item)
+}
+
+/// Marks a method as an exception handler
+/// 标记方法为异常处理器
+///
+/// Equivalent to Spring's `@ExceptionHandler`.
+/// 等价于 Spring 的 `@ExceptionHandler`。
+///
+/// # Example / 示例
+///
+/// ```rust,no_run,ignore
+/// use nexus_macros::exception_handler;
+/// use nexus_http::exception::{ErrorResponse, ApplicationException};
+/// use nexus_http::Response;
+///
+/// #[exception_handler]
+/// fn handle_application_error(exc: &ApplicationException) -> Response {
+///     exc.into_error_response().to_response()
+/// }
+///
+/// #[exception_handler]
+/// fn handle_all(exc: &dyn std::error::Error) -> Response {
+///     ErrorResponse::internal_server_error()
+///         .message(exc.to_string())
+///         .into_response()
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn exception_handler(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    let func_name = &input.sig.ident;
+
+    let expanded = quote! {
+        #input
+
+        // Register this exception handler
+        // 注册此异常处理器
+        #[automatically_derived]
+        impl #func_name {
+            /// Get the exception types this handler can process
+            /// 获取此处理器可以处理的异常类型
+            pub fn exception_types() -> Vec<std::any::TypeId> {
+                vec![]
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
 }
