@@ -341,9 +341,15 @@ impl ApplicationContext {
                     if !config.condition() {
                         false
                     } else {
-                        // 暂时跳过依赖检查，因为 TypeId 比较比较复杂
-                        // TODO: 实现正确的依赖检查
-                        true
+                        // 检查依赖：所有 after 依赖必须已处理
+                        // Check dependencies: all 'after' dependencies must be processed
+                        let deps_satisfied = Self::check_dependencies_satisfied(
+                            config,
+                            &self.auto_configurations,
+                            &processed,
+                            idx,
+                        );
+                        deps_satisfied
                     }
                 };
 
@@ -393,6 +399,67 @@ impl ApplicationContext {
     /// Get the number of registered beans
     pub fn bean_count(&self) -> usize {
         self.singletons.read().unwrap().len()
+    }
+
+    // ========================================================================
+    // 依赖检查辅助方法 / Dependency Check Helper Methods
+    // ========================================================================
+
+    /// 检查依赖是否满足
+    /// Check if dependencies are satisfied
+    ///
+    /// 一个配置的依赖满足条件是：
+    /// - `after()` 中的所有配置都已处理
+    /// - `before()` 中的所有配置都未处理
+    ///
+    /// Dependencies are satisfied when:
+    /// - All configs in `after()` have been processed
+    /// - All configs in `before()` have NOT been processed
+    fn check_dependencies_satisfied(
+        config: &Box<dyn AutoConfiguration>,
+        all_configs: &[Box<dyn AutoConfiguration>],
+        processed: &HashSet<usize>,
+        _current_idx: usize,
+    ) -> bool {
+        // 检查 after 依赖：所有 after 依赖必须已处理
+        // Check after dependencies: all 'after' dependencies must be processed
+        for after_type_id in config.after() {
+            let mut found_and_processed = false;
+            for (idx, other_config) in all_configs.iter().enumerate() {
+                if other_config.type_id() == *after_type_id {
+                    // 找到了依赖配置，检查是否已处理
+                    // Found the dependency config, check if it's been processed
+                    if processed.contains(&idx) {
+                        found_and_processed = true;
+                    }
+                    break;
+                }
+            }
+            // 如果依赖的配置存在但未处理，则依赖不满足
+            // If the dependency exists but isn't processed, dependency is not satisfied
+            if !found_and_processed {
+                return false;
+            }
+        }
+
+        // 检查 before 依赖：所有 before 依赖都未处理
+        // Check before dependencies: all 'before' dependencies must NOT be processed
+        for before_type_id in config.before() {
+            for (idx, other_config) in all_configs.iter().enumerate() {
+                if other_config.type_id() == *before_type_id {
+                    // 找到了依赖配置，检查是否已处理
+                    // 如果已处理，则不能执行当前配置
+                    // Found the dependency config, check if it's been processed
+                    // If processed, we cannot execute the current config
+                    if processed.contains(&idx) {
+                        return false;
+                    }
+                    break;
+                }
+            }
+        }
+
+        true
     }
 }
 
@@ -563,7 +630,7 @@ mod tests {
     fn test_named_bean() {
         let ctx = ApplicationContext::new();
 
-        ctx.register_named_bean("test".to_string(), "value");
+        ctx.register_named_bean("test".to_string(), "value".to_string());
 
         let bean = ctx.get_bean_by_name::<String>("test");
         assert!(bean.is_some());
