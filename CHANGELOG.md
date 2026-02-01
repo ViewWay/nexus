@@ -11,6 +11,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0-alpha.4] - 2026-02-01
+
+### Nexus Starter Enhancements / Nexus Starter 增强
+
+### Added / 新增
+
+#### Data Layer / 数据层
+
+- **DataSourceConfig Bean** / **DataSourceConfig Bean**
+  - Auto-configuration for database connections
+  - Support for PostgreSQL, MySQL, SQLite, H2 database types
+  - Configurable connection pool (max_connections, min_idle)
+  - Credential support (username/password)
+  - Async pool creation with `create_pool()` method
+
+- **TransactionManager Bean Registration** / **TransactionManager Bean 注册**
+  - Automatic registration of `TransactionManager` in `TransactionAutoConfiguration`
+  - Ready for transaction management integration
+
+#### Core Container / 核心容器
+
+- **Enhanced Dependency Checking** / **增强的依赖检查**
+  - Implemented `check_dependencies_satisfied()` method
+  - Properly checks `after()` and `before()` dependencies
+  - Prevents configuration execution when dependencies are unmet
+
+- **Priority Extraction** / **优先级提取**
+  - Support for 7 different priority annotation formats:
+    - `#priority:100`, `# priority:100`
+    - `#order:100`, `//priority:100`
+    - `@Order(100)`, `@Order("order", 100)`
+    - `[order=100]`, `[priority=100]`
+
+- **Configuration Execution Redesign** / **配置执行重新设计**
+  - Changed `start(&self)` to `start(&mut self)` for proper mutability
+  - Implemented actual configuration logic using `mem::replace`
+  - Removed "would apply" placeholder - configurations now execute
+
+#### Scheduling / 调度
+
+- **TaskScheduler Enhancement** / **TaskScheduler 增强**
+  - Added `register_task()` method for runtime task registration
+  - Added `task_count()` and `is_running()` query methods
+  - Added `ScheduledTaskEntry` internal struct for task tracking
+  - Foundation for automatic scheduled task discovery
+
+#### Macros / 宏
+
+- **Prelude Module Updates** / **Prelude 模块更新**
+  - Enabled `nexus_main` macro re-export
+  - Enabled all component annotation macros:
+    - `controller`, `service`, `repository`, `component`, `configuration`, `bean`
+  - Enabled routing macros: `get`, `post`, `put`, `delete`, `patch`, etc.
+  - Enabled configuration, caching, transaction, scheduling, security, and validation macros
+
+### Changed / 变更
+
+- **ApplicationContext API** / **ApplicationContext API**
+  - `start()` now requires `&mut self` instead of `&self`
+  - Better reflects the mutable nature of application initialization
+
+### Fixed / 修复
+
+- **test_named_bean Type Mismatch** / **test_named_bean 类型不匹配**
+  - Fixed test to register `String` instead of `&str`
+  - Ensures type consistency between registration and retrieval
+
+### Tests / 测试
+
+- Added 5 tests for DataSourceConfig functionality
+- Added 2 tests for TaskScheduler enhancements
+- All 75 nexus-starter tests passing
+
+---
+
 ## [0.1.0-alpha.3] - 2026-01-30
 
 ### Phase 7: Production Ready Complete / 生产就绪完成
