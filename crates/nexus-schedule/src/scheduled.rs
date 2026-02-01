@@ -11,9 +11,13 @@
 //! - `initialDelay` - initial_delay parameter
 
 use crate::DEFAULT_INITIAL_DELAY_MS;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::{interval, sleep};
 use tracing::info;
+
+/// Task function type / 任务函数类型
+pub type TaskFn = Arc<dyn Fn() + Send + Sync + 'static>;
 
 /// Schedule type
 /// 调度类型
@@ -119,7 +123,25 @@ impl ScheduledTask {
 pub struct TaskScheduler {
     /// Running state
     /// 运行状态
-    running: std::sync::Arc<tokio::sync::RwLock<bool>>,
+    running: Arc<tokio::sync::RwLock<bool>>,
+
+    /// Registered tasks
+    /// 已注册的任务
+    tasks: Arc<tokio::sync::RwLock<Vec<ScheduledTaskEntry>>>,
+}
+
+/// Scheduled task entry / 定时任务条目
+#[derive(Debug, Clone)]
+#[allow(dead_code)]  // Fields will be used when task execution is implemented
+struct ScheduledTaskEntry {
+    /// Task name
+    name: String,
+
+    /// Schedule type
+    schedule_type: ScheduleType,
+
+    /// Initial delay
+    initial_delay: Duration,
 }
 
 impl TaskScheduler {
@@ -127,15 +149,33 @@ impl TaskScheduler {
     /// 创建新的任务调度器
     pub fn new() -> Self {
         Self {
-            running: std::sync::Arc::new(tokio::sync::RwLock::new(false)),
+            running: Arc::new(tokio::sync::RwLock::new(false)),
+            tasks: Arc::new(tokio::sync::RwLock::new(Vec::new())),
         }
+    }
+
+    /// Register a scheduled task
+    /// 注册定时任务
+    pub async fn register_task(&self, task: ScheduledTask) {
+        let entry = ScheduledTaskEntry {
+            name: task.name.clone(),
+            schedule_type: task.schedule_type.clone(),
+            initial_delay: task.initial_delay,
+        };
+        info!("Registered scheduled task: {} ({:?})", task.name, task.schedule_type);
+        self.tasks.write().await.push(entry);
     }
 
     /// Run the scheduler
     /// 运行调度器
     pub async fn run(&self) {
         *self.running.write().await = true;
-        info!("Task scheduler started");
+        info!("Task scheduler started with {} tasks", self.tasks.read().await.len());
+
+        // Note: In a full implementation, we would spawn tasks for each scheduled entry
+        // For now, this is a placeholder for future enhancement
+        // 注意：在完整实现中，我们会为每个调度条目生成任务
+        // 目前，这是未来增强的占位符
     }
 
     /// Shutdown the scheduler
@@ -143,6 +183,18 @@ impl TaskScheduler {
     pub async fn shutdown(&self) {
         *self.running.write().await = false;
         info!("Task scheduler shut down");
+    }
+
+    /// Get the number of registered tasks
+    /// 获取已注册任务数量
+    pub async fn task_count(&self) -> usize {
+        self.tasks.read().await.len()
+    }
+
+    /// Check if the scheduler is running
+    /// 检查调度器是否正在运行
+    pub async fn is_running(&self) -> bool {
+        *self.running.read().await
     }
 }
 
@@ -211,5 +263,32 @@ mod tests {
     fn test_task_scheduler() {
         let scheduler = TaskScheduler::new();
         assert!(!*scheduler.running.try_read().unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_register_task() {
+        let scheduler = TaskScheduler::new();
+
+        // Register a scheduled task
+        scheduler.register_task(ScheduledTask::fixed_rate("test_task", 5000)).await;
+
+        // Verify the task was registered
+        assert_eq!(scheduler.task_count().await, 1);
+    }
+
+    #[tokio::test]
+    async fn test_scheduler_run() {
+        let scheduler = TaskScheduler::new();
+
+        // Register tasks
+        scheduler.register_task(ScheduledTask::fixed_rate("task1", 1000)).await;
+        scheduler.register_task(ScheduledTask::fixed_delay("task2", 2000)).await;
+
+        // Run the scheduler
+        scheduler.run().await;
+
+        // Verify it's running
+        assert!(scheduler.is_running().await);
+        assert_eq!(scheduler.task_count().await, 2);
     }
 }
